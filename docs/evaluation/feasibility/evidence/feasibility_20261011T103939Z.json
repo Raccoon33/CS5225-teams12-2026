@@ -1,0 +1,470 @@
+{
+  "script": "verify_feasibility.py",
+  "version": "2.0.0",
+  "issue": 3,
+  "repo": "horiiiiii032929/CS5225-teams12-2026",
+  "runAt": "2026-10-11T10:39:39.794757+00:00",
+  "tokenUserId": 26849,
+  "tokenHoursLeft": 70.6,
+  "geocoding": {
+    "rows": [
+      {
+        "query": "NUS",
+        "found": 20,
+        "top": "NUS (RIDGE VIEW RESIDENTIAL COLLEGE (RVRC))",
+        "lat": "1.29795051423399",
+        "lon": "103.7759508147812",
+        "tokenWarning": null,
+        "elapsedMs": 91
+      },
+      {
+        "query": "NTU",
+        "found": 36,
+        "top": "NANYANG TECHNOLOGICAL UNIVERSITY",
+        "lat": "1.352949370203277",
+        "lon": "103.6892235086704",
+        "tokenWarning": null,
+        "elapsedMs": 69
+      },
+      {
+        "query": "Raffles Place",
+        "found": 21,
+        "top": "ASCOTT SINGAPORE RAFFLES PLACE",
+        "lat": "1.28208376510921",
+        "lon": "103.8515597312935",
+        "tokenWarning": null,
+        "elapsedMs": 65
+      },
+      {
+        "query": "Changi Business Park",
+        "found": 18,
+        "top": "CHANGI BUSINESS PARK",
+        "lat": "1.33825748396958",
+        "lon": "103.9670496789726",
+        "tokenWarning": null,
+        "elapsedMs": 93
+      },
+      {
+        "query": "one-north",
+        "found": 10,
+        "top": "ONE-NORTH EDEN",
+        "lat": "1.303446024835805",
+        "lon": "103.7890680960957",
+        "tokenWarning": null,
+        "elapsedMs": 94
+      },
+      {
+        "query": "Marina Bay Financial Centre",
+        "found": 6,
+        "top": "MARINA BAY FINANCIAL CENTRE",
+        "lat": "1.279514836431062",
+        "lon": "103.8542518085573",
+        "tokenWarning": null,
+        "elapsedMs": 94
+      },
+      {
+        "query": "Tampines Hub",
+        "found": 4,
+        "top": "ENABLING SERVICES HUB (ESH) @ TAMPINES",
+        "lat": "1.348722647705288",
+        "lon": "103.9358509470165",
+        "tokenWarning": null,
+        "elapsedMs": 91
+      },
+      {
+        "query": "Singapore Management University",
+        "found": 13,
+        "top": "SINGAPORE MANAGEMENT UNIVERSITY (ADMIN BLDG)",
+        "lat": "1.296846713984232",
+        "lon": "103.8522079431716",
+        "tokenWarning": null,
+        "elapsedMs": 92
+      }
+    ],
+    "latencyMs": {
+      "n": 8,
+      "min": 65,
+      "p50": 92,
+      "p95": 94,
+      "max": 94
+    },
+    "verdict": "PASS"
+  },
+  "stationSnapping": {
+    "rows": [
+      {
+        "probe": "Dhoby Ghaut (CC/NE/NS)",
+        "lat": 1.2989116,
+        "lon": 103.846292,
+        "stations": [
+          {
+            "stationKey": "DHOBY_GHAUT",
+            "name": "DHOBY GHAUT MRT STATION",
+            "codes": [
+              "CC1",
+              "NE6",
+              "NS24"
+            ],
+            "lat": 1.29886885771,
+            "lon": 103.846307946,
+            "road": "ORCHARD ROAD",
+            "lines": [
+              "Circle",
+              "North East",
+              "North South"
+            ]
+          }
+        ],
+        "elapsedMs": 106
+      },
+      {
+        "probe": "Jurong East (EW/NS/JE)",
+        "lat": 1.3330275,
+        "lon": 103.74237,
+        "stations": [
+          {
+            "stationKey": "JURONG_EAST",
+            "name": "JURONG EAST MRT STATION",
+            "codes": [
+              "EW24",
+              "JE5",
+              "NS1"
+            ],
+            "lat": 1.33307484838,
+            "lon": 103.742265441,
+            "road": "JURONG EAST STREET 12",
+            "lines": [
+              "East West",
+              "Jurong Region",
+              "North South"
+            ]
+          }
+        ],
+        "elapsedMs": 103
+      },
+      {
+        "probe": "Outram Park (EW/NE/TE)",
+        "lat": 1.2802415,
+        "lon": 103.840052,
+        "stations": [
+          {
+            "stationKey": "OUTRAM_PARK",
+            "name": "OUTRAM PARK MRT STATION",
+            "codes": [
+              "EW16",
+              "NE3",
+              "TE17"
+            ],
+            "lat": 1.27973970679,
+            "lon": 103.839513521,
+            "road": "EU TONG SEN STREET",
+            "lines": [
+              "East West",
+              "North East",
+              "Thomson-East Coast"
+            ]
+          }
+        ],
+        "elapsedMs": 102
+      },
+      {
+        "probe": "Bugis (EW/DT)",
+        "lat": 1.300465,
+        "lon": 103.855706,
+        "stations": [
+          {
+            "stationKey": "BUGIS",
+            "name": "BUGIS MRT STATION",
+            "codes": [
+              "DT14",
+              "EW12"
+            ],
+            "lat": 1.30024768064,
+            "lon": 103.855551003,
+            "road": "VICTORIA STREET",
+            "lines": [
+              "Downtown",
+              "East West"
+            ]
+          }
+        ],
+        "elapsedMs": 113
+      }
+    ],
+    "c6Refuted": true,
+    "note": "同一實體車站回傳多個路線代碼，證實 C6「轉乘站只用一個代碼」不成立；cache key 必須用正規化站名。",
+    "verdict": "C6_REFUTED"
+  },
+  "routing": {
+    "rows": [
+      {
+        "town": "ANG MO KIO",
+        "status": "ok",
+        "minutes": 45.1,
+        "transfers": 1,
+        "walkMetres": 111.5,
+        "walkSeconds": 92,
+        "transitSeconds": 2428,
+        "waitingSeconds": 188,
+        "elapsedMs": 150
+      },
+      {
+        "town": "TAMPINES",
+        "status": "ok",
+        "minutes": 56.5,
+        "transfers": 1,
+        "walkMetres": 506.9,
+        "walkSeconds": 438,
+        "transitSeconds": 2731,
+        "waitingSeconds": 223,
+        "elapsedMs": 233
+      },
+      {
+        "town": "WOODLANDS",
+        "status": "ok",
+        "minutes": 45.3,
+        "transfers": 2,
+        "walkMetres": 244.6,
+        "walkSeconds": 220,
+        "transitSeconds": 2148,
+        "waitingSeconds": 348,
+        "elapsedMs": 154
+      },
+      {
+        "town": "JURONG WEST",
+        "status": "ok",
+        "minutes": 26.0,
+        "transfers": 1,
+        "walkMetres": 173.5,
+        "walkSeconds": 150,
+        "transitSeconds": 1204,
+        "waitingSeconds": 208,
+        "elapsedMs": 119
+      },
+      {
+        "town": "CLEMENTI",
+        "status": "ok",
+        "minutes": 14.5,
+        "transfers": 1,
+        "walkMetres": 244.9,
+        "walkSeconds": 228,
+        "transitSeconds": 433,
+        "waitingSeconds": 208,
+        "elapsedMs": 130
+      },
+      {
+        "town": "PUNGGOL",
+        "status": "ok",
+        "minutes": 47.5,
+        "transfers": 1,
+        "walkMetres": 128.5,
+        "walkSeconds": 128,
+        "transitSeconds": 2580,
+        "waitingSeconds": 143,
+        "elapsedMs": 109
+      },
+      {
+        "town": "BEDOK",
+        "status": "ok",
+        "minutes": 42.8,
+        "transfers": 1,
+        "walkMetres": 163.9,
+        "walkSeconds": 139,
+        "transitSeconds": 2268,
+        "waitingSeconds": 160,
+        "elapsedMs": 231
+      },
+      {
+        "town": "YISHUN",
+        "status": "ok",
+        "minutes": 57.0,
+        "transfers": 1,
+        "walkMetres": 118.1,
+        "walkSeconds": 97,
+        "transitSeconds": 3134,
+        "waitingSeconds": 188,
+        "elapsedMs": 127
+      }
+    ],
+    "latencyMs": {
+      "n": 8,
+      "min": 109,
+      "p50": 140,
+      "p95": 233,
+      "max": 233
+    },
+    "coverage": "8/8",
+    "verdict": "PASS"
+  },
+  "failureModes": {
+    "rows": [
+      {
+        "case": "起訖點相同",
+        "outcome": "NoRouteFound",
+        "httpStatus": 404,
+        "message": "No route found between the specified locations",
+        "retryable": false,
+        "action": "標記 UNAVAILABLE"
+      },
+      {
+        "case": "座標在新加坡境外",
+        "outcome": "InvalidRequest",
+        "httpStatus": 400,
+        "message": "Coordinates are outside Singapore's valid range.",
+        "retryable": false,
+        "action": "拒絕請求"
+      },
+      {
+        "case": "日期超過一年前",
+        "outcome": "InvalidRequest",
+        "httpStatus": 400,
+        "message": "Date cannot be more than 1 year in the past.",
+        "retryable": false,
+        "action": "拒絕請求"
+      },
+      {
+        "case": "深夜 03:00 無班次",
+        "outcome": "NoRouteFound",
+        "httpStatus": 404,
+        "message": "No route found between the specified locations",
+        "retryable": false,
+        "action": "標記 UNAVAILABLE"
+      }
+    ],
+    "verdict": "DOCUMENTED"
+  },
+  "shortestItinerary": {
+    "rows": [
+      {
+        "town": "ANG MO KIO",
+        "n1Minutes": 45.1,
+        "n3Minutes": 45.1,
+        "n3AllMinutes": [
+          45.1
+        ],
+        "upstreamOrderedByDuration": true,
+        "n1MissedShortest": false,
+        "deltaMinutes": 0.0
+      },
+      {
+        "town": "TAMPINES",
+        "n1Minutes": 58.3,
+        "n3Minutes": 56.5,
+        "n3AllMinutes": [
+          56.5,
+          58.3
+        ],
+        "upstreamOrderedByDuration": true,
+        "n1MissedShortest": true,
+        "deltaMinutes": 1.8
+      },
+      {
+        "town": "WOODLANDS",
+        "n1Minutes": 45.3,
+        "n3Minutes": 45.3,
+        "n3AllMinutes": [
+          45.3,
+          47.0,
+          69.7
+        ],
+        "upstreamOrderedByDuration": true,
+        "n1MissedShortest": false,
+        "deltaMinutes": 0.0
+      },
+      {
+        "town": "JURONG WEST",
+        "n1Minutes": 26.0,
+        "n3Minutes": 26.0,
+        "n3AllMinutes": [
+          26.0
+        ],
+        "upstreamOrderedByDuration": true,
+        "n1MissedShortest": false,
+        "deltaMinutes": 0.0
+      },
+      {
+        "town": "CLEMENTI",
+        "n1Minutes": 14.5,
+        "n3Minutes": 14.5,
+        "n3AllMinutes": [
+          14.5
+        ],
+        "upstreamOrderedByDuration": true,
+        "n1MissedShortest": false,
+        "deltaMinutes": 0.0
+      },
+      {
+        "town": "PUNGGOL",
+        "n1Minutes": 47.5,
+        "n3Minutes": 47.5,
+        "n3AllMinutes": [
+          47.5
+        ],
+        "upstreamOrderedByDuration": true,
+        "n1MissedShortest": false,
+        "deltaMinutes": 0.0
+      },
+      {
+        "town": "BEDOK",
+        "n1Minutes": 42.8,
+        "n3Minutes": 42.8,
+        "n3AllMinutes": [
+          42.8
+        ],
+        "upstreamOrderedByDuration": true,
+        "n1MissedShortest": false,
+        "deltaMinutes": 0.0
+      },
+      {
+        "town": "YISHUN",
+        "n1Minutes": 57.0,
+        "n3Minutes": 57.0,
+        "n3AllMinutes": [
+          57.0
+        ],
+        "upstreamOrderedByDuration": true,
+        "n1MissedShortest": false,
+        "deltaMinutes": 0.0
+      }
+    ],
+    "upstreamAlwaysOrderedByDuration": true,
+    "casesWhereNumItineraries1MissedShortest": 1,
+    "totalCases": 8,
+    "maxItinerariesNote": "numItineraries=99 未被拒絕（client 已先夾到 3）",
+    "verdict": "ORDERED_BUT_N1_UNSAFE",
+    "conclusion": "上游確實依 duration 由短到長排序，但 numItineraries=1 取得的行程不保證是最短的——要求 3 條再自行取最小值才安全。"
+  },
+  "clientStats": {
+    "calls": 45,
+    "retries": 4,
+    "rate_limited": 4,
+    "errors": 4
+  },
+  "rawExchanges": {
+    "path": "evidence/feasibility_raw_20261011T103939Z.jsonl",
+    "count": 45,
+    "redaction": "Authorization header 不記錄，只留 token 指紋"
+  },
+  "assumptions": {
+    "C4": {
+      "text": "OneMap 能用自由文字查到座標並吸附到地鐵站",
+      "verdict": "CONFIRMED"
+    },
+    "C5": {
+      "text": "通勤 = 鎮參考點 → 目的地站，平日 08:30，最短行程",
+      "verdict": "CONFIRMED",
+      "gap": "「鎮參考點」合約未定義；本工具包以 onemap/towns.py 補上",
+      "shortestItinerary": "上游確實依 duration 由短到長排序，但 numItineraries=1 取得的行程不保證是最短的——要求 3 條再自行取最小值才安全。"
+    },
+    "C6": {
+      "text": "站碼是穩定 cache key，轉乘站只用一個代碼",
+      "verdict": "REFUTED",
+      "fix": "改用 stations.canonical_key() 的正規化站名"
+    },
+    "C7": {
+      "text": "限流約 250 routing calls/min",
+      "verdict": "OUTDATED",
+      "correction": "官方 300/min（2025-10-01 起）"
+    }
+  }
+}

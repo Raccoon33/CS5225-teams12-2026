@@ -1,56 +1,77 @@
 # OneMap feasibility evidence (#3)
 
-Raw evidence behind the GO decision in [#3](https://github.com/horiiiiii032929/CS5225-teams12-2026/issues/3), which is the source of record for the conclusions. This directory holds the artifacts so the numbers quoted in #3, #6 and #46 can be checked rather than taken on trust.
+Evidence behind the GO decision in [#3](https://github.com/horiiiiii032929/CS5225-teams12-2026/issues/3), which remains the source of record for the conclusions. Everything quoted in #3, #6 and #46 can be checked here against raw data.
 
-**Run date:** 11 October 2026. **Operator:** @lukerspace. **Target:** `https://www.onemap.gov.sg`, measured from outside Singapore.
+**Run date:** 11 October 2026 (UTC). **Operator:** @lukerspace. **Target:** `https://www.onemap.gov.sg`, measured from outside Singapore.
 
-> Raw files are unedited console output. Their section headings are in the operator's working language (Chinese); the tables below say what each section shows.
+> Script docstrings and the generated `note` fields are in the operator's working language (Chinese). The tables below are the English index.
 
-## What each file supports
+## Layout
 
-| Claim (as stated in #3)                                                                                           | File                                                    | Section      |
-| ----------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------- | ------------ |
-| Search works untokenised but is throttled — 4 of 10 sample queries resolved (86–110 ms), 6 returned 429           | `raw/2026-10-11/probe_out.txt`                          | A            |
-| **429 bodies are HTML, not JSON, when no token is sent** — a bare `json.loads()` on the error path raises         | `raw/2026-10-11/probe_out.txt`                          | A            |
-| Search returns HTTP 200 with full results _and_ an `Authentication token missing` error field (grace period)      | `raw/2026-10-11/probe_out.txt`, `sample_ok.json`        | B            |
-| Error and boundary shapes for search (empty, 2-char, SQL-injection syntax → 403 WAF)                              | `raw/2026-10-11/probe_out.txt`                          | C            |
-| Token-gated endpoints and their failure shapes                                                                    | `raw/2026-10-11/probe_out.txt`                          | D, E         |
-| **C6 refuted** — Dhoby Ghaut returns `CC1`, `NS24`, `NE6` with one identical name ~100 m apart                    | `raw/2026-10-11/routing_out.txt`                        | 2            |
-| **C6 refuted** — search returns slash-combined (`EW24 / NS1`), split and code-less entries for one station        | `raw/2026-10-11/stations_out.txt`                       | whole file   |
-| Town names resolve to blocks, not centroids (ANG MO KIO → "ANG MO KIO 22")                                        | `raw/2026-10-11/stations_out.txt`                       | town section |
-| Public-transport routing returns usable itineraries with legs, transfers and walk distance                        | `raw/2026-10-11/routing_out.txt`                        | 3            |
-| Routing latency: min 131 ms, p50 861 ms, p95 1226 ms, max 1585 ms (n=10)                                          | `raw/2026-10-11/measure_out.txt`                        | A            |
-| 404 on same origin/destination and on a 03:00 departure — must be marked `unavailable`, never 0 minutes           | `raw/2026-10-11/measure2_out.txt`                       | C-重測       |
-| 400 on coordinates outside Singapore and on a date more than a year in the past                                   | `raw/2026-10-11/measure_out.txt`                        | C            |
-| `numItineraries=1` missed the shortest route in 1 of 8 towns (TAMPINES 58.3 → 56.5 min); ordering was correct 8/8 | `raw/2026-10-11/itin_out.txt`                           | whole file   |
-| Untokenised search sustains ~60/min; burst capacity ≈ 1                                                           | `raw/2026-10-11/threshold_out.txt`, `ratelimit_out.txt` | see note 2   |
-| 26-town → principal MRT station table, with the `stationKey` normalisation proposed for C6                        | `data/towns.json`                                       | —            |
+| Path              | What it is                                                                                                                                            |
+| ----------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `onemap/`         | Instrumented client: token loading, retry and backoff, error classification, station-name canonicalisation, the 26-town table, and the JSONL archiver |
+| `scripts/`        | Five measurement scripts. Each writes a summary JSON and a raw JSONL archive into `evidence/`                                                         |
+| `scripts/adhoc/`  | The four earlier console probes, kept because two of their results are still the best measurements we have (see supersessions 1 and 6)                |
+| `evidence/`       | Summary JSON plus raw HTTP archives. Authorization headers are never recorded; each archive carries a 12-character SHA-256 token fingerprint instead  |
+| `raw/2026-10-11/` | Unedited console output of the ad-hoc probes                                                                                                          |
+| `data/towns.json` | 26-town → principal MRT station table, generated by `scripts/build_town_points.py`                                                                    |
 
-## Notes and corrections
+## Claim → evidence
 
-1. **The rate-limit numbers in `measure_out.txt` §B are wrong and are kept only as the counter-example.** That run reused identical query parameters and reported 3,959 calls/min with routing p50 118 ms. It was measuring OneMap's upstream cache, not the absence of a limit — uncached routing p50 is 861–990 ms in the same file's §A. `measure2_out.txt` §B-重測 is the corrected form (unique parameters per request, concurrency 20: 57×200, 3×429 at an attempted 249 calls/min). **Any load test against OneMap must vary its parameters**, which is why this appears as an addition to D-E1 in #46.
-2. **The untokenised sustainable rate was revised after this run.** `ratelimit_out.txt` §3 estimates ~12 req/min from 8 samples at one request per 5 s; `threshold_out.txt` is the better measurement — clean at a 1.00 s interval (61.5/min) and throttled at 0.50 s — so ~60/min with burst 1 is the figure quoted in #3. Burst capacity ≈ 1 is from `ratelimit_out.txt` §2.
-3. **Official quota.** 250 calls/min raised to 300 calls/min from 1 October 2025, per the SLA OneMap Workshop deck of 26 August 2025, slide 17. The deck is third-party material marked © Singapore Land Authority and is not redistributed here; it is cited only.
-4. **Measurement limits**, to be restated in the report: single account and IP, so per-account versus per-IP is untested; measured from outside Singapore, so `ap-southeast-1` should be faster; OneMap returns no `X-RateLimit-*` headers and no `Retry-After` on any 429 observed, so remaining allowance can only be inferred from behaviour.
+| Claim as stated in #3                                                                                                  | File                                                                                               | Where                                                              |
+| ---------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------ |
+| Geocoding resolves 8/8 sample destinations; search p50 92 ms (n=8)                                                     | `evidence/feasibility_20261011T103939Z.json`                                                       | `geocoding`                                                        |
+| 8/8 town → Kent Ridge routes returned, 14.5–58.3 min                                                                   | same                                                                                               | `routing`, `coverage: 8/8`                                         |
+| **C6 refuted** — Dhoby Ghaut returns `CC1`, `NE6`, `NS24` under one identical name                                     | same, and `raw/2026-10-11/routing_out.txt`                                                         | `stationSnapping.c6Refuted`, §2                                    |
+| Search returns three different code formats for one station (`EW24 / NS1` slash-combined, split, code-less)            | `raw/2026-10-11/stations_out.txt`                                                                  | whole file                                                         |
+| Proposed fix: cache key from a canonicalised station name                                                              | `onemap/stations.py`                                                                               | `canonical_key()`                                                  |
+| Town names resolve to blocks, not centroids (ANG MO KIO → "ANG MO KIO 22", found=310)                                  | `raw/2026-10-11/stations_out.txt`                                                                  | town section                                                       |
+| 26-town table built on exact canonical-name matches, not fuzzy search                                                  | `data/towns.json`, `onemap/towns.py`                                                               | —                                                                  |
+| `numItineraries=1` missed the shortest route in 1 of 8 towns (TAMPINES 58.3 → 56.5 min); upstream ordering correct 8/8 | `evidence/feasibility_20261011T103939Z.json`, `raw/2026-10-11/itin_out.txt`                        | `shortestItinerary`                                                |
+| Six failure shapes classified; 404 is permanent and must be marked `unavailable`                                       | `evidence/feasibility_20261011T103939Z.json`, `raw/2026-10-11/probe_out.txt`                       | `failureModes`, §C–D                                               |
+| **429 bodies are HTML, not JSON, without a token** — a bare `json.loads()` on the error path raises                    | `raw/2026-10-11/probe_out.txt`                                                                     | §A                                                                 |
+| Search grace period: HTTP 200 with full results _and_ an `Authentication token missing` error field                    | `raw/2026-10-11/probe_out.txt`, `raw/2026-10-11/sample_ok.json`                                    | §B                                                                 |
+| Paced rate: **search** clean at every rate tested up to 420/min                                                        | `evidence/ratelimit_20261011T102549Z.json`                                                         | `search.windows`                                                   |
+| Paced rate: **routing** clean up to 300/min (100 requests attempted, 0 throttled)                                      | `evidence/ratelimit_20261011T101954Z.json`                                                         | `routing.windows`                                                  |
+| Throttling is concurrency-driven: 0/30 rejections at concurrency 20, **2/30 at 30**; achieved 26 → 395/min             | `evidence/ratelimit_20261011T103254Z.json`                                                         | `concurrencySweep`                                                 |
+| Allowance appears shared across endpoints — 1 of 6 concurrent routing probes rejected while search was saturated       | `evidence/ratelimit_20261011T103254Z.json`                                                         | `endpointSharing.probeResults`                                     |
+| Untokenised search sustains ~60/min; burst capacity ≈ 1                                                                | `raw/2026-10-11/threshold_out.txt`, `ratelimit_out.txt`                                            | see supersession 2                                                 |
+| Uncached routing latency: min 131, p50 861, p95 1226, max 1585 ms (n=10)                                               | `raw/2026-10-11/measure_out.txt`                                                                   | §A, see supersession 6                                             |
+| Station snapping error: median 3.6 min, max 28.2 min (NTU 87.3 → 59.1); route coverage 24/24                           | `evidence/coverage_20261011T093111Z.json`                                                          | `snapError`, `coverage`                                            |
+| Seeding throughput: 52 pairs in 42.5 s = 73.4 pairs/min, no failures                                                   | `evidence/commute_seed_20261011T093301Z.json`                                                      | `stats`                                                            |
+| Bounded fallback matrix in the contract's Commute item shape                                                           | `evidence/commute_seed_20261011T093301Z.json`                                                      | `items`, `cacheKeyNote`                                            |
+| Token is a 3-day JWT with no auto-renewal (70.6 h left at run time)                                                    | `evidence/feasibility_20261011T103939Z.json`                                                       | `tokenHoursLeft`                                                   |
+| Archive sizes: 45 feasibility exchanges, 1,037 rate-limit exchanges                                                    | `evidence/feasibility_raw_20261011T103939Z.jsonl`, `evidence/ratelimit_raw_20261011T103254Z.jsonl` | one JSON object per line                                           |
+| Official quota 250 → 300 calls/min from 1 October 2025                                                                 | `evidence/ratelimit_20261011T103254Z.json`                                                         | `officialLimit` (cites SLA OneMap Workshop, 26 Aug 2025, slide 17) |
 
-## Not in this commit
+## Supersessions and discrepancies
 
-Stated plainly so the gap is not mistaken for completeness:
+Raw output is never edited, so superseded runs stay and are labelled here.
 
-- **The 12 October re-run is missing**: `measure_rate_limit.py` (paced fixed-window sweep plus a separate concurrency dimension) and its JSONL archive of 45 + 1,037 HTTP exchanges with redacted authorization headers. The concurrency sweep quoted in #3 and in the proposed D-E7 wording — 0/30 rejections at concurrency 20, 2/30 at 30, achieved rates 26 → 395/min — comes from that run, and the working copy that produced it is no longer available. It has to be re-run or recovered before D-E7's numbers can be checked against raw data.
-- **`measure_out.txt`, `measure2_out.txt` and `itin_out.txt` have no script here.** They were produced by inline scripts that were not retained, so these three files do not meet D-E5's "script version" requirement. The four scripts in `scripts/` are complete and re-runnable.
-- **The tokenised feasibility run is missing.** #3's acceptance criteria quote 8/8 destinations geocoded, 8/8 town → Kent Ridge routes returned and a search latency table of n=12 (p50 90 ms, p95 120 ms). In the run kept here the sample was throttled after 4 queries because it carried no token, so `probe_out.txt` §F reports n=4 (min 86 ms, p50 90 ms, max 110 ms). The latencies agree; the sample size does not.
-- **The 12 October snapping-error table** (ANG MO KIO → NTU, 87.3 min exact versus 59.1 min snapped, 28.2 min maximum error) is also from the missing run. `measure2_out.txt` §D is the earlier attempt, in which two of three destinations were lost to 429s.
+1. **The ad-hoc rate-limit numbers are wrong and are kept as the counter-example.** `raw/2026-10-11/measure_out.txt` §B reports 3,959 calls/min at p50 118 ms. It reused identical query parameters and was measuring OneMap's upstream cache, not the absence of a limit. `scripts/measure_rate_limit.py` replaced it with unique parameters per request, which is why "load tests must vary their parameters" is proposed as an addition to D-E1 in #46.
+2. **Untokenised sustainable rate.** `ratelimit_out.txt` §3 estimated ~12 req/min from 8 samples at one request per 5 s. `threshold_out.txt` is the better measurement — clean at a 1.00 s interval (61.5/min), throttled at 0.50 s — so ~60/min is the figure quoted in #3. Burst ≈ 1 comes from `ratelimit_out.txt` §2.
+3. **#3's search latency table says n=12; no artifact here has n=12.** The instrumented run has n=8 (p50 92 ms, max 94 ms); the ad-hoc probe `probe_out.txt` §F has n=4 (p50 90 ms, max 110 ms) because it carried no token and was throttled after four queries. The p50s agree with the issue; the sample size matches neither file.
+4. **The 300/min routing figure comes from runs 1.0.0 and 1.1.0, not the final one.** `measure_rate_limit.py` v1.2.0 re-tested routing only at 250/min, because that run spent its budget on the concurrency sweep. Anyone citing the routing boundary in D-E7 should cite `ratelimit_20261011T101954Z.json`.
+5. **Endpoint sharing was observed once in three runs.** `appearsShared` is `true` in v1.2.0 (probes `[200, 200, 200, 200, 429, 200]`) and `false` in v1.0.0 and v1.1.0, where all six probes returned 200. Treat it as suggestive, as #3 does, not settled.
+6. **Routing latency must come from the ad-hoc run.** The instrumented run reports routing p50 140 ms for the same 8 town → Kent Ridge pairs that measured p50 861 ms minutes earlier. That is OneMap's upstream cache again, not a faster path; `measure_out.txt` §A holds the uncached figures.
+7. **`measure_out.txt`, `measure2_out.txt` and `itin_out.txt` have no script.** They came from inline one-off scripts that were not retained, so those three files do not meet D-E5's script-version requirement. Everything in `scripts/` is re-runnable and versioned.
+8. **Two earlier rate-limit archives are summarised but not committed raw.** `ratelimit_raw_*101954Z.jsonl` (645 exchanges) and `*102549Z.jsonl` (1,573 exchanges) are 8.1 MB and 12.5 MB; their summary JSONs are here and carry the paced-window results, including the 300/min routing window. Ask if the raw bodies are needed.
+
+## Measurement limitations
+
+To be restated in the report: 20-second observation windows locate short-term throttling but cannot establish an hourly or daily quota; a single account and IP, so per-account versus per-IP is untested; measured from outside Singapore, so `ap-southeast-1` should be faster; OneMap returns no `X-RateLimit-*` headers and no `Retry-After` on any 429 observed, so remaining allowance can only be inferred from behaviour.
 
 ## Reproducing
 
 ```bash
-# No credentials are stored in this tree. Search needs no token; routing does.
-export ONEMAP_TOKEN="<token>"          # RS256 JWT, 3-day validity, no auto-renewal
-python3 docs/evaluation/feasibility/scripts/probe.py        # feasibility + failure shapes
-python3 docs/evaluation/feasibility/scripts/stations.py     # C6: station code representations
-python3 docs/evaluation/feasibility/scripts/threshold.py    # untokenised rate threshold
-python3 docs/evaluation/feasibility/scripts/ratelimit.py    # burst capacity and recovery
+cd docs/evaluation/feasibility
+export ONEMAP_TOKEN="<token>"        # see .env.example; RS256 JWT, 3-day validity, no auto-renewal
+python3 scripts/verify_feasibility.py       # C4–C7, failure modes, shortest itinerary
+python3 scripts/measure_rate_limit.py      # D-E7: paced windows + concurrency sweep
+python3 scripts/measure_route_coverage.py  # #19 / E8: snapping error and coverage
+python3 scripts/seed_commute_cache.py      # #15: bounded fallback matrix
+python3 scripts/build_town_points.py       # regenerates data/towns.json
 ```
 
-`threshold.py` and `ratelimit.py` deliberately drive the API into 429 and take several minutes; they consume shared quota, so do not run them while someone else is testing.
+Each script writes a timestamped summary and raw archive into `evidence/`. `measure_rate_limit.py` and the ad-hoc `scripts/adhoc/threshold.py` deliberately drive the API into 429 and consume shared quota — do not run them while someone else is testing.
