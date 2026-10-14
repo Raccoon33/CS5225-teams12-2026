@@ -3,6 +3,7 @@ import { HttpApi, HttpStage } from 'aws-cdk-lib/aws-apigatewayv2';
 import { HttpLambdaIntegration } from 'aws-cdk-lib/aws-apigatewayv2-integrations';
 import { Architecture, Function, Runtime } from 'aws-cdk-lib/aws-lambda';
 import { LogGroup, RetentionDays } from 'aws-cdk-lib/aws-logs';
+import { Secret } from 'aws-cdk-lib/aws-secretsmanager';
 import { Construct } from 'constructs';
 import { pythonApiCode } from './python-code.js';
 
@@ -16,9 +17,22 @@ export class Api extends Construct {
   readonly httpApi: HttpApi;
   /** Hostname CloudFront uses as the /api/* origin. */
   readonly originDomain: string;
+  /** Rotate this by hand; see onemapToken below. */
+  readonly onemapTokenSecretName: string;
 
   constructor(scope: Construct, id: string, props: ApiProps) {
     super(scope, id);
+
+    // The OneMap token is a three-day JWT with no automatic renewal (#3), so
+    // it cannot be generated here. CDK seeds a random placeholder and the real
+    // token is put in by hand until a refresh path exists (#27). Keeping it in
+    // Secrets Manager is what lets /places proxy OneMap server-side without
+    // the token ever reaching the browser (docs/backend-design.md).
+    const onemapToken = new Secret(this, 'OneMapToken', {
+      description: `OneMap API token for FlatSplit ${props.stage} — rotate manually every 3 days`,
+      removalPolicy: props.removalPolicy,
+    });
+    this.onemapTokenSecretName = onemapToken.secretName;
 
     const handler = new Function(this, 'HttpHandler', {
       runtime: Runtime.PYTHON_3_13,
@@ -31,12 +45,15 @@ export class Api extends Construct {
         POWERTOOLS_SERVICE_NAME: 'flatsplit-api',
         POWERTOOLS_LOG_LEVEL: 'INFO',
         STAGE: props.stage,
+        ONEMAP_SECRET_NAME: onemapToken.secretName,
       },
       logGroup: new LogGroup(this, 'HttpHandlerLogs', {
         retention: RetentionDays.ONE_WEEK,
         removalPolicy: props.removalPolicy,
       }),
     });
+
+    onemapToken.grantRead(handler);
 
     this.httpApi = new HttpApi(this, 'HttpApi', {
       description: `FlatSplit ${props.stage} API`,
