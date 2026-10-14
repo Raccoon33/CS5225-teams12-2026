@@ -68,3 +68,11 @@ For future entries, record the requested issue, tool, contribution, checks actua
 - Tool: Codex, directed by Hikaru to review and merge the open stack.
 - Corrections: aligned the measured search URL with the API contract, assigned E4 usage evidence to the owner of #34, and distinguished the 20 requests/s admission limit from the proposed 50 requests/s capacity workload. Specified isolated local worker processes for the fixed-instance comparison to avoid benchmarking the resolver’s safety lock as compute capacity.
 - Verification: documentation formatting and diff checks pass; the combined stack passes checks, 35 tests, build and synth. Evaluation owner agreement and decisions D-E1–D-E7 remain pending; no experiment results or AWS deployment are claimed.
+
+## 14 October 2026 — project management and blocker reconciliation
+
+- Tool: Codex, directed by Hikaru to act as PM and audit existing discussions before seeking missing information.
+- Evidence: inspected all 46 task bodies, seven PRs, 15 issue/PR comments, the recorded pair review, project fields/statuses, repository collaborators and pending invitations. GitHub discussions and reviews remain the source of owner statements; proposed recovery targets are not owner commitments.
+- Contribution: reconciled stale repository-access blockers and restored assignees from the existing allocation; updated issue #44 with an evidence-linked recovery plan for the at-risk 18 October milestone. Clarified deployment/billing setup, group-contract handoff, canonical station keys and snapping policy, the 27-town mismatch, pending reviews, evaluation amendments and work that can proceed against fixtures. Corrected project statuses only where discussions or reviews document progress.
+- Limits: no implementation, merge, deployment, billing activation, experiment completion or teammate approval is claimed. AWS payer/deployer responsibility remains unconfirmed in the audited discussions. PR #52 has Ming's approval; #51/#53 still await pair review. Existing baseline milestones remain visible alongside PM recovery checkpoints.
+- Verification: GitHub issue bodies and assignees were read back after updates; project status updates were read back. Local Markdown formatting and `git diff --check` passed. Application tests, build and synth were not rerun for tracking/documentation changes.
