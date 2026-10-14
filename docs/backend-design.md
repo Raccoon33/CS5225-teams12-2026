@@ -6,15 +6,15 @@ This document turns the preliminary report (sections 3, 4.2, 5.2, 6) and the wir
 
 ## Changes from the preliminary report
 
-| Report says                             | Proposal                                                                  | Why                                                                                                          |
-| --------------------------------------- | ------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------ |
-| API Gateway REST API                    | API Gateway **HTTP API**                                                  | ~70% cheaper per request, lower latency; stage throttling covers our needs                                   |
-| Optional Cognito / "Cognito JWT"        | **Capability tokens** (invite and per-member), stored only as hashes      | Report scope says no login; matches D11. Final report must be corrected                                      |
-| Commutes via OneMap and LTA             | **OneMap PT routing**; LTA DataMall optional (station list only)          | LTA DataMall has no journey-planner endpoint                                                                 |
-| Web on S3 + CloudFront, separate API    | CloudFront serves the SPA **and** `/api/*` → HTTP API                     | Same origin: no CORS, one URL, matches the Vite `/api` proxy                                                 |
-| Destination per member                  | Free-text address, geocoded by OneMap, **snapped to nearest MRT station** | Bounded cache: ~200 stations × 26 towns ≈ 5,200 pairs, ≈21 min of OneMap calls at 250/min to fill completely |
-| PITR to recover bad data                | **Versioned rent snapshots + `CURRENT` pointer**, PITR kept as backup     | "Searches continue on the last validated snapshot" becomes an atomic pointer flip                            |
-| Provisioned Concurrency for cold starts | Measure first; arm64, small package, Powertools                           | Provisioned Concurrency is billed while idle, which conflicts with the "zero idle cost" goal                 |
+| Report says                             | Proposal                                                                  | Why                                                                                                                      |
+| --------------------------------------- | ------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------ |
+| API Gateway REST API                    | API Gateway **HTTP API**                                                  | ~70% cheaper per request, lower latency; stage throttling covers our needs                                               |
+| Optional Cognito / "Cognito JWT"        | **Capability tokens** (invite and per-member), stored only as hashes      | Report scope says no login; matches D11. Final report must be corrected                                                  |
+| Commutes via OneMap and LTA             | **OneMap PT routing**; LTA DataMall optional (station list only)          | LTA DataMall has no journey-planner endpoint                                                                             |
+| Web on S3 + CloudFront, separate API    | CloudFront serves the SPA **and** `/api/*` → HTTP API                     | Same origin: no CORS, one URL, matches the Vite `/api` proxy                                                             |
+| Destination per member                  | Free-text address, geocoded by OneMap, **snapped to nearest MRT station** | Bounded cache: ~200 stations × 27 current HDB towns ≈ 5,400 pairs, ≈22 min of OneMap calls at 250/min to fill completely |
+| PITR to recover bad data                | **Versioned rent snapshots + `CURRENT` pointer**, PITR kept as backup     | "Searches continue on the last validated snapshot" becomes an atomic pointer flip                                        |
+| Provisioned Concurrency for cold starts | Measure first; arm64, small package, Powertools                           | Provisioned Concurrency is billed while idle, which conflicts with the "zero idle cost" goal                             |
 
 ## Architecture
 
@@ -44,9 +44,9 @@ Search status is derived when it is read: if any required commute pair is `pendi
 
 ## Data assumptions
 
-- **Rent:** data.gov.sg "Renting Out of Flats" (2021 onwards). Statistic: trailing 12-month median whole-flat rent per town and flat type. Rent per person is that median divided by group size; utilities are excluded (D03). _Verify the dataset id and API limits in the data spike._
+- **Rent:** data.gov.sg "Renting Out of Flats" (2021 onwards), dataset `d_c9f57187485a850908655db0e8cfe651`; see the [source profile and version 1 aggregation rules](hdb-rental-data-profile.md). Store trailing-12-month median, P25 and P75 whole-flat rent for every non-empty town/flat-type group. Only summaries whose block-cluster bootstrap 95% median interval is at most 10% of the median are eligible for recommendations. Rent per person is the eligible median divided by group size; utilities are excluded (D03).
 - **Flat type by group size (D12, Open):** proposed 2 → 3-ROOM, 3 → 4-ROOM, 4–5 → 5-ROOM.
-- **Town point:** each of the 26 HDB towns is represented by its main MRT station or interchange (a static file in the repository).
+- **Town point:** each source-controlled HDB town is represented by its main MRT station or interchange (a static file in the repository). The September 2026 rental source has 27 town values, including `TENGAH`.
 - **Commute:** OneMap public-transport route from the town point to the destination's snapped station, on a weekday at 08:30 departure, taking the shortest itinerary. A route that cannot be found is UNAVAILABLE; it is never treated as zero minutes (D06).
 - **Ranking:** a port of `evaluateAreas` (same weights and scales), with parity tests on the wireframe fixtures. Scales stay _Open_ until the ranking task validates them (D07).
 

@@ -76,3 +76,9 @@ For future entries, record the requested issue, tool, contribution, checks actua
 - Contribution: reconciled stale repository-access blockers and restored assignees from the existing allocation; updated issue #44 with an evidence-linked recovery plan for the at-risk 18 October milestone. Clarified deployment/billing setup, group-contract handoff, canonical station keys and snapping policy, the 27-town mismatch, pending reviews, evaluation amendments and work that can proceed against fixtures. Corrected project statuses only where discussions or reviews document progress.
 - Limits: no implementation, merge, deployment, billing activation, experiment completion or teammate approval is claimed. AWS payer/deployer responsibility remains unconfirmed in the audited discussions. PR #52 has Ming's approval; #51/#53 still await pair review. Existing baseline milestones remain visible alongside PM recovery checkpoints.
 - Verification: GitHub issue bodies and assignees were read back after updates; project status updates were read back. Local Markdown formatting and `git diff --check` passed. Application tests, build and synth were not rerun for tracking/documentation changes.
+## 12–14 October 2026 — HDB rental profile and evaluation evidence
+
+- Tool: Codex, directed by Mani.
+- Human contribution: Mani drafted the rent schema from the system design and decided the aggregation statistics, confidence method and threshold, duplicate-row handling, supported flat types, and low-confidence API behavior.
+- AI assistance: profiled the official HDB datasets, validated the draft against the source data, generated the reproducible E8 audit, helped document the E6 procedure, and performed formatting and consistency checks.
+- Verification: 65 of 72 comparable published medians matched exactly; documentation, JSON, sample-data and audit assertions passed. E6 was documented but not run; no AWS deployment was performed.
