@@ -35,4 +35,4 @@ One row per assumption that must become a measurement before E9 / #45 can be com
 
 ## Blocking action, not a measurement
 
-Activate `project` as a **cost allocation tag** in the Billing console. `infra/aws/src/app.ts` already applies `project=flatsplit` and `stage=<stage>` to every resource, but Cost Explorer cannot group by an unactivated tag, and activation is **not retroactive**. Until someone with account access does this, E9 has no measured breakdown to report. Raised as open question 2 in `docs/cost-model.md`.
+Activate `project` as a cost allocation tag through a billing-authorised management/payer-account operator. CDK applies `project=flatsplit` to resources, but deployment access does not prove billing access. Record activation status and the available measurement window. [Eligible historical resource tags can be backfilled](https://docs.aws.amazon.com/awsaccountbilling/latest/aboutv2/cost-allocation-backfill.html) for up to twelve months; verify account eligibility and the impact on all tag keys before requesting it. See [open question 2](../cost-model.md#open-questions-for-the-team).
