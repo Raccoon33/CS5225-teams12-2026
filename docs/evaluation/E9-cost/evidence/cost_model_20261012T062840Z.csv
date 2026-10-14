@@ -1,0 +1,97 @@
+scenario,option,line_item,driver,list_price_usd,free_tier_usd,payable_usd
+quiet,aws_serverless,Lambda requests,5;061 invocations,0.001,0.001,0.0
+quiet,aws_serverless,Lambda compute (arm64),457 GB-s @256 MB,0.0061,0.0061,0.0
+quiet,aws_serverless,API Gateway HTTP API,3;500 requests,0.0044,0.0044,0.0
+quiet,aws_serverless,DynamoDB reads,31;400 RRU,0.0045,0.0,0.0045
+quiet,aws_serverless,DynamoDB writes,6;075 WRU,0.0043,0.0,0.0043
+quiet,aws_serverless,DynamoDB storage,0.5 GB,0.1425,0.1425,0.0
+quiet,aws_serverless,DynamoDB PITR,0.5 GB,0.114,0.0,0.114
+quiet,aws_serverless,S3 storage (web build + raw rent files),0.055 GB,0.0014,0.0014,0.0
+quiet,aws_serverless,CloudFront data transfer out,0.25 GB,0.03,0.03,0.0
+quiet,aws_serverless,CloudFront HTTPS requests,8;300 requests,0.01,0.01,0.0
+quiet,aws_serverless,CloudFront -> origin transfer,0.03 GB,0.0016,0.0,0.0016
+quiet,aws_serverless,SQS requests (jobs + idle long polls),654;680 requests,0.2619,0.2619,0.0
+quiet,aws_serverless,Secrets Manager,1 secret + 253 API calls,0.4013,0.0,0.4013
+quiet,aws_serverless,CloudWatch logs ingest,0.01 GB,0.0068,0.0068,0.0
+quiet,aws_serverless,CloudWatch logs storage (1-week retention),0.00 GB-month,0.0001,0.0,0.0001
+quiet,aws_serverless,CloudWatch custom metrics,12 metrics,3.6,3.0,0.6
+quiet,aws_serverless,CloudWatch alarms,6 alarms,0.6,0.6,0.0
+quiet,aws_serverless,CloudWatch dashboard,1 dashboard,3.0,3.0,0.0
+quiet,aws_serverless,AWS Budgets,1 cost budget,0.0,0.0,0.0
+quiet,aws_always_on_vm,EC2 t4g.small x2 (24x7),1;460 instance-hours,30.952,0.0,30.952
+quiet,aws_always_on_vm,EBS gp3,40 GB,3.84,0.0,3.84
+quiet,aws_always_on_vm,Internet data transfer out,0.25 GB (first 100 GB free),0.0,0.0,0.0
+quiet,aws_always_on_vm,DynamoDB (same data layer),31;400 RRU + 6;075 WRU,0.2653,0.0,0.2653
+quiet,aws_always_on_vm,S3 (backups + raw files),0.10 GB,0.0025,0.0,0.0025
+quiet,aws_always_on_vm,CloudWatch (agent logs; alarms; dashboard),same observability set,3.6068,0.0,3.6068
+quiet,on_premise,Hardware depreciation (2 node(s) + UPS/switch/disks; 36 mo),S$3;350 capex,72.6997,0.0,72.6997
+quiet,on_premise,Electricity (incl. PUE),42.7 kWh/month @ S$0.3191/kWh,10.6462,0.0,10.6462
+quiet,on_premise,Room cooling share,assumption,11.7188,0.0,11.7188
+quiet,on_premise,Business internet + static IP,assumption,62.5,0.0,62.5
+quiet,on_premise,Offsite backup,nightly dumps to object storage,6.25,0.0,6.25
+quiet,on_premise,Domain + TLS,Let's Encrypt = 0,1.5625,0.0,1.5625
+quiet,on_premise,Operational effort,4 h/month @ S$25/h,78.125,0.0,78.125
+typical,aws_serverless,Lambda requests,42;801 invocations,0.0086,0.0086,0.0
+typical,aws_serverless,Lambda compute (arm64),2;806 GB-s @256 MB,0.0374,0.0374,0.0
+typical,aws_serverless,API Gateway HTTP API,35;000 requests,0.0438,0.0438,0.0
+typical,aws_serverless,DynamoDB reads,314;000 RRU,0.0447,0.0,0.0447
+typical,aws_serverless,DynamoDB writes,35;595 WRU,0.0253,0.0,0.0253
+typical,aws_serverless,DynamoDB storage,0.5 GB,0.1425,0.1425,0.0
+typical,aws_serverless,DynamoDB PITR,0.5 GB,0.114,0.0,0.114
+typical,aws_serverless,S3 storage (web build + raw rent files),0.055 GB,0.0014,0.0014,0.0
+typical,aws_serverless,CloudFront data transfer out,2.50 GB,0.3003,0.3003,0.0
+typical,aws_serverless,CloudFront HTTPS requests,83;000 requests,0.0996,0.0996,0.0
+typical,aws_serverless,CloudFront -> origin transfer,0.27 GB,0.016,0.0,0.016
+typical,aws_serverless,SQS requests (jobs + idle long polls),673;400 requests,0.2694,0.2694,0.0
+typical,aws_serverless,Secrets Manager,1 secret + 2;140 API calls,0.4107,0.0,0.4107
+typical,aws_serverless,CloudWatch logs ingest,0.08 GB,0.0571,0.0571,0.0
+typical,aws_serverless,CloudWatch logs storage (1-week retention),0.02 GB-month,0.0006,0.0,0.0006
+typical,aws_serverless,CloudWatch custom metrics,12 metrics,3.6,3.0,0.6
+typical,aws_serverless,CloudWatch alarms,6 alarms,0.6,0.6,0.0
+typical,aws_serverless,CloudWatch dashboard,1 dashboard,3.0,3.0,0.0
+typical,aws_serverless,AWS Budgets,1 cost budget,0.0,0.0,0.0
+typical,aws_always_on_vm,EC2 t4g.small x2 (24x7),1;460 instance-hours,30.952,0.0,30.952
+typical,aws_always_on_vm,EBS gp3,40 GB,3.84,0.0,3.84
+typical,aws_always_on_vm,Internet data transfer out,2.50 GB (first 100 GB free),0.0,0.0,0.0
+typical,aws_always_on_vm,DynamoDB (same data layer),314;000 RRU + 35;595 WRU,0.3265,0.0,0.3265
+typical,aws_always_on_vm,S3 (backups + raw files),0.10 GB,0.0025,0.0,0.0025
+typical,aws_always_on_vm,CloudWatch (agent logs; alarms; dashboard),same observability set,3.6571,0.0,3.6571
+typical,on_premise,Hardware depreciation (2 node(s) + UPS/switch/disks; 36 mo),S$3;350 capex,72.6997,0.0,72.6997
+typical,on_premise,Electricity (incl. PUE),42.7 kWh/month @ S$0.3191/kWh,10.6462,0.0,10.6462
+typical,on_premise,Room cooling share,assumption,11.7188,0.0,11.7188
+typical,on_premise,Business internet + static IP,assumption,62.5,0.0,62.5
+typical,on_premise,Offsite backup,nightly dumps to object storage,6.25,0.0,6.25
+typical,on_premise,Domain + TLS,Let's Encrypt = 0,1.5625,0.0,1.5625
+typical,on_premise,Operational effort,4 h/month @ S$25/h,78.125,0.0,78.125
+bursty,aws_serverless,Lambda requests,463;201 invocations,0.0926,0.0926,0.0
+bursty,aws_serverless,Lambda compute (arm64),50;401 GB-s @256 MB,0.672,0.672,0.0
+bursty,aws_serverless,API Gateway HTTP API,276;000 requests,0.345,0.345,0.0
+bursty,aws_serverless,DynamoDB reads,1;884;000 RRU,0.2685,0.0,0.2685
+bursty,aws_serverless,DynamoDB writes,633;795 WRU,0.45,0.0,0.45
+bursty,aws_serverless,DynamoDB storage,0.5 GB,0.1425,0.1425,0.0
+bursty,aws_serverless,DynamoDB PITR,0.5 GB,0.114,0.0,0.114
+bursty,aws_serverless,S3 storage (web build + raw rent files),0.055 GB,0.0014,0.0014,0.0
+bursty,aws_serverless,CloudFront data transfer out,15.52 GB,1.862,1.862,0.0
+bursty,aws_serverless,CloudFront HTTPS requests,564;000 requests,0.6768,0.6768,0.0
+bursty,aws_serverless,CloudFront -> origin transfer,2.11 GB,0.1263,0.0,0.1263
+bursty,aws_serverless,SQS requests (jobs + idle long polls),1;211;600 requests,0.4846,0.4,0.0846
+bursty,aws_serverless,Secrets Manager,1 secret + 23;160 API calls,0.5158,0.0,0.5158
+bursty,aws_serverless,CloudWatch logs ingest,0.88 GB,0.6184,0.6184,0.0
+bursty,aws_serverless,CloudWatch logs storage (1-week retention),0.21 GB-month,0.0062,0.0,0.0062
+bursty,aws_serverless,CloudWatch custom metrics,12 metrics,3.6,3.0,0.6
+bursty,aws_serverless,CloudWatch alarms,6 alarms,0.6,0.6,0.0
+bursty,aws_serverless,CloudWatch dashboard,1 dashboard,3.0,3.0,0.0
+bursty,aws_serverless,AWS Budgets,1 cost budget,0.0,0.0,0.0
+bursty,aws_always_on_vm,EC2 t4g.small x3 (24x7),2;190 instance-hours,46.428,0.0,46.428
+bursty,aws_always_on_vm,EBS gp3,60 GB,5.76,0.0,5.76
+bursty,aws_always_on_vm,Internet data transfer out,15.52 GB (first 100 GB free),0.0,0.0,0.0
+bursty,aws_always_on_vm,DynamoDB (same data layer),1;884;000 RRU + 633;795 WRU,0.975,0.0,0.975
+bursty,aws_always_on_vm,S3 (backups + raw files),0.10 GB,0.0025,0.0,0.0025
+bursty,aws_always_on_vm,CloudWatch (agent logs; alarms; dashboard),same observability set,4.2184,0.0,4.2184
+bursty,on_premise,Hardware depreciation (3 node(s) + UPS/switch/disks; 36 mo),S$4;550 capex,98.7413,0.0,98.7413
+bursty,on_premise,Electricity (incl. PUE),64.1 kWh/month @ S$0.3191/kWh,15.9693,0.0,15.9693
+bursty,on_premise,Room cooling share,assumption,11.7188,0.0,11.7188
+bursty,on_premise,Business internet + static IP,assumption,62.5,0.0,62.5
+bursty,on_premise,Offsite backup,nightly dumps to object storage,6.25,0.0,6.25
+bursty,on_premise,Domain + TLS,Let's Encrypt = 0,1.5625,0.0,1.5625
+bursty,on_premise,Operational effort,4 h/month @ S$25/h,78.125,0.0,78.125

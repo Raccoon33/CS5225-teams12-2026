@@ -1,0 +1,98 @@
+{
+  "meta": {
+    "region": "ap-southeast-1",
+    "currency": "USD",
+    "retrieved": "2026-10-12",
+    "source": "AWS Price List bulk API: https://pricing.us-east-1.amazonaws.com/offers/v1.0/aws/<serviceCode>/current/ap-southeast-1/index.json (publication date 2026-10-01). CloudFront values come from the global CloudFront offer file, usage-type prefix AP- (Asia Pacific price class, which serves Singapore).",
+    "verify": [
+      "cloudwatch.dashboard_per_month is AWS's published list price (US$3.00/dashboard/month). It is not exported in the Price List offer file, so it is the only unverified figure in this table.",
+      "Free-tier allowances below are the public always-free / 12-month figures. Which of them our account actually gets depends on the account type (new-account credit plan vs AWS Academy/classroom). #34 must confirm this against the real bill."
+    ]
+  },
+
+  "lambda": {
+    "request_per_request": 0.0000002,
+    "arm64_gb_second": 0.0000133334,
+    "x86_gb_second": 0.0000166667,
+    "free_requests_per_month": 1000000,
+    "free_gb_seconds_per_month": 400000,
+    "free_tier_type": "always free"
+  },
+
+  "api_gateway_http": {
+    "request_per_request": 0.00000125,
+    "free_requests_per_month": 1000000,
+    "free_tier_type": "12 months only"
+  },
+
+  "dynamodb_on_demand": {
+    "read_request_unit": 0.0000001425,
+    "write_request_unit": 0.00000071,
+    "storage_gb_month": 0.285,
+    "free_storage_gb": 25,
+    "pitr_gb_month": 0.228,
+    "backup_gb_month": 0.114,
+    "restore_per_gb": 0.171,
+    "free_tier_type": "25 GB storage always free"
+  },
+
+  "s3_standard": {
+    "storage_gb_month": 0.025,
+    "put_per_1000": 0.005,
+    "get_per_10000": 0.004,
+    "free_storage_gb": 5,
+    "free_tier_type": "12 months only"
+  },
+
+  "cloudfront": {
+    "data_transfer_out_gb": 0.12,
+    "data_transfer_to_origin_gb": 0.06,
+    "https_request_per_10000": 0.012,
+    "invalidation_free_urls_per_month": 1000,
+    "invalidation_per_url": 0.005,
+    "free_data_transfer_gb_per_month": 1024,
+    "free_https_requests_per_month": 10000000,
+    "free_tier_type": "always free"
+  },
+
+  "sqs_standard": {
+    "request_per_request": 0.0000004,
+    "free_requests_per_month": 1000000,
+    "free_tier_type": "always free"
+  },
+
+  "secrets_manager": {
+    "secret_per_month": 0.4,
+    "api_per_10000": 0.05,
+    "free_tier_type": "none (30-day trial per secret)"
+  },
+
+  "cloudwatch": {
+    "logs_ingest_gb_standard_class": 0.7,
+    "logs_storage_gb_month": 0.03,
+    "custom_metric_per_month_first_10k": 0.3,
+    "alarm_per_month_standard_resolution": 0.1,
+    "get_metric_data_per_1000_metrics": 0.01,
+    "dashboard_per_month": 3.0,
+    "free_logs_ingest_gb_per_month": 5,
+    "free_custom_metrics": 10,
+    "free_alarms": 10,
+    "free_dashboards": 3,
+    "free_tier_type": "always free (dashboards: 3 free with up to 50 metrics)"
+  },
+
+  "ec2": {
+    "t4g_small_linux_on_demand_hour": 0.0212,
+    "ebs_gp3_gb_month": 0.096,
+    "ebs_gp3_free_iops": 3000,
+    "ebs_gp3_iops_month": 0.006,
+    "data_transfer_out_gb": 0.12,
+    "free_data_transfer_out_gb_per_month": 100,
+    "hours_per_month": 730
+  },
+
+  "aws_budgets": {
+    "note": "First 2 action-enabled budgets are free; cost budgets with notifications are free. Ops construct creates 1.",
+    "monthly": 0.0
+  }
+}

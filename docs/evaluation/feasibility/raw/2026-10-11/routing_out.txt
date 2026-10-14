@@ -1,0 +1,64 @@
+============================================================================
+1. getNearestMrtStops（#14 站點吸附）
+============================================================================
+HTTP 200  155ms
+[
+  {
+    "id": "DT22",
+    "name": "JALAN BESAR MRT STATION",
+    "lat": 1.30553287743,
+    "lon": 103.855412818,
+    "road": "JALAN BESAR"
+  },
+  {
+    "id": "DT13",
+    "name": "ROCHOR MRT STATION",
+    "lat": 1.30393450918,
+    "lon": 103.852474327,
+    "road": "ROCHOR CANAL ROAD"
+  }
+]
+
+============================================================================
+2. 轉乘站吸附會回什麼？(C6 關鍵) — Dhoby Ghaut 座標
+============================================================================
+HTTP 200  136ms  筆數=3
+[
+  {
+    "id": "CC1",
+    "name": "DHOBY GHAUT MRT STATION",
+    "lat": 1.29886885771,
+    "lon": 103.846307946,
+    "road": "ORCHARD ROAD"
+  },
+  {
+    "id": "NS24",
+    "name": "DHOBY GHAUT MRT STATION",
+    "lat": 1.29868872292,
+    "lon": 103.846122838,
+    "road": "ORCHARD ROAD"
+  },
+  {
+    "id": "NE6",
+    "name": "DHOBY GHAUT MRT STATION",
+    "lat": 1.2996206158,
+    "lon": 103.845375944,
+    "road": "ORCHARD ROAD"
+  }
+]
+
+============================================================================
+3. ★ PT 路線規劃（#15 核心，之前 401）
+============================================================================
+Ang Mo Kio → Kent Ridge   HTTP 200  2129ms
+top-level keys: ['requestParameters', 'plan', 'metadata', 'previousPageCursor', 'nextPageCursor', 'debugOutput', 'elevationMetadata']
+plan keys: ['date', 'from', 'to', 'itineraries']
+itineraries: 1
+itinerary keys: ['duration', 'startTime', 'endTime', 'walkTime', 'transitTime', 'waitingTime', 'walkDistance', 'walkLimitExceeded', 'generalizedCost', 'elevationLost', 'elevationGained', 'transfers', 'fare', 'legs', 'tooSloped', 'arrivedAtDestinationWithRentedBicycle']
+  duration=2272s (37.9min) walkTime=463s transitTime=1686s waitingTime=123s transfers=1
+  walkDistance=485.92m  legs=5
+    - WALK            171s  Origin                       → BLK 324
+    - BUS      88     524s  BLK 324                      → BISHAN STN
+    - WALK            265s  BISHAN STN                   → BISHAN MRT STATION
+    - SUBWAY   CC     1162s  BISHAN MRT STATION           → KENT RIDGE MRT STATION
+    - WALK            27s  KENT RIDGE MRT STATION       → Destination
