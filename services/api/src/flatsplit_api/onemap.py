@@ -14,10 +14,9 @@ documentation, because the two disagree in ways that change the code:
   parsed blindly and the backoff schedule is ours.
 - 403 is the WAF and also returns HTML.
 
-Deliberately not here yet, because contract assumption C6 is still open in #6:
-the commute cache key (`stationKey`) and a maximum snapping distance. Until C6
-is settled this module reports the station OneMap gives it and leaves the key
-decision to the caller.
+The reconciled #6 baseline uses canonical physical-station keys, explicit
+unsupported results and a 1,000 m selection bound. Persistent query/place
+caching and station-coordinate pinning remain #14 acceptance work.
 """
 
 import hashlib
@@ -25,6 +24,7 @@ import json
 import math
 import os
 import re
+import time
 import urllib.error
 import urllib.parse
 import urllib.request
@@ -33,6 +33,7 @@ from typing import Any, Protocol
 from aws_lambda_powertools import Logger
 
 logger = Logger(child=True)
+_secret_provider: Any = None
 
 BASE_URL = "https://www.onemap.gov.sg"
 SEARCH_PATH = "/api/common/elastic/search"
@@ -41,6 +42,9 @@ NEAREST_PATH = "/api/public/nearbysvc/getNearestMrtStops"
 TIMEOUT_SECONDS = 4.0
 #: OneMap caps this at 5000 m (SLA workshop, slide 16).
 SNAP_RADIUS_METRES = 2000
+MAX_SNAP_METRES = 1000
+SNAP_WARNING_METRES = 800
+LOOKUP_BUDGET_SECONDS = 8.0
 #: The contract returns at most five candidates and never auto-picks one.
 MAX_RESULTS = 5
 
@@ -81,7 +85,7 @@ def haversine_metres(lat1: float, lon1: float, lat2: float, lon2: float) -> floa
         math.sin(d_phi / 2) ** 2
         + math.cos(phi1) * math.cos(phi2) * math.sin(d_lambda / 2) ** 2
     )
-    return 2 * _EARTH_RADIUS_METRES * math.asin(math.sqrt(a))
+    return 2 * _EARTH_RADIUS_METRES * math.asin(math.sqrt(min(1.0, max(0.0, a))))
 
 
 def resolve_token() -> str:
@@ -101,9 +105,24 @@ def resolve_token() -> str:
 
     # Lazy import: boto3 ships with the Lambda runtime and is not a test
     # dependency, so importing it at module scope would break local runs.
-    from aws_lambda_powertools.utilities import parameters
+    global _secret_provider
+    try:
+        from aws_lambda_powertools.utilities import parameters
+        from botocore.config import Config  # type: ignore[import-not-found]
 
-    secret = parameters.get_secret(secret_name, max_age=900)
+        if _secret_provider is None:
+            _secret_provider = parameters.SecretsProvider(
+                boto_config=Config(
+                    connect_timeout=1,
+                    read_timeout=1,
+                    retries={"total_max_attempts": 1},
+                )
+            )
+        secret = _secret_provider.get(secret_name, max_age=900)
+    except Exception as exc:
+        # Local missing SDKs, access denial and secret-read failures use the
+        # public upstream error; never expose credentials or provider details.
+        raise OneMapUnavailable("The OneMap credential could not be loaded.") from exc
     if isinstance(secret, bytes):
         secret = secret.decode("utf-8")
     if not isinstance(secret, str) or not secret.strip():
@@ -131,14 +150,21 @@ def _message_from(payload: Any, fallback: str) -> str:
     return fallback
 
 
-def http_get(path: str, params: dict[str, Any]) -> Any:
+def http_get(
+    path: str, params: dict[str, Any], *, timeout: float = TIMEOUT_SECONDS
+) -> Any:
     """Single GET against OneMap. No retry: `/places` is a user-facing read."""
+    started = time.monotonic()
+    token = resolve_token()
+    timeout -= time.monotonic() - started
+    if timeout <= 0:
+        raise OneMapUnavailable("Credential loading exceeded the request budget.")
     url = f"{BASE_URL}{path}?{urllib.parse.urlencode(params)}"
     request = urllib.request.Request(
-        url, headers={"Authorization": resolve_token(), "Accept": "application/json"}
+        url, headers={"Authorization": token, "Accept": "application/json"}
     )
     try:
-        with urllib.request.urlopen(request, timeout=TIMEOUT_SECONDS) as response:
+        with urllib.request.urlopen(request, timeout=timeout) as response:
             return _decode(response.read())
     except urllib.error.HTTPError as exc:
         payload = _decode(exc.read())
@@ -187,6 +213,11 @@ def station_display_name(raw_name: str) -> str:
     return stem.title() or raw_name.strip()
 
 
+def canonical_station_key(name: str) -> str:
+    stem = _STATION_SUFFIX.sub("", _PARENTHESISED.sub("", name.upper()))
+    return re.sub(r"[^A-Z0-9]+", "_", stem).strip("_")
+
+
 def _station_codes(entry: dict[str, Any]) -> list[str]:
     raw = str(entry.get("id", "")).strip().upper()
     # Jurong East's raw id is literally the string "EW24 / NS1" (#3).
@@ -195,12 +226,13 @@ def _station_codes(entry: dict[str, Any]) -> list[str]:
 
 def _coordinate(value: Any) -> float | None:
     try:
-        return float(value)
+        result = float(value)
+        return result if math.isfinite(result) else None
     except (TypeError, ValueError):
         return None
 
 
-def find_places(query: str, transport: Transport | None = None) -> list[dict[str, Any]]:
+def find_places(query: str, transport: Transport | None = None) -> dict[str, Any]:
     """Up to five candidates for a free-text query, each snapped to a station.
 
     Candidates are returned in OneMap's relevance order and never collapsed to
@@ -208,7 +240,15 @@ def find_places(query: str, transport: Transport | None = None) -> list[dict[str
     PUNGGOL COAST and TAMPINES EAST instead of the intended stations, so
     choosing between similar hits belongs to the person, not the server.
     """
-    get = transport or http_get
+    deadline = time.monotonic() + LOOKUP_BUDGET_SECONDS
+
+    def get(path: str, params: dict[str, Any]) -> Any:
+        remaining = deadline - time.monotonic()
+        if remaining <= 0:
+            raise OneMapUnavailable("Destination lookup exceeded its request budget.")
+        if transport is not None:
+            return transport(path, params)
+        return http_get(path, params, timeout=min(TIMEOUT_SECONDS, remaining))
 
     payload = get(
         SEARCH_PATH,
@@ -226,35 +266,53 @@ def find_places(query: str, transport: Transport | None = None) -> list[dict[str
     if isinstance(warning, str) and warning:
         # Grace period: results still arrive, so this is the only signal that
         # the token is unhealthy. #27 wires it to a CloudWatch alarm.
-        logger.warning("OneMap token warning", extra={"onemapTokenWarning": warning})
+        logger.warning("OneMap token warning", extra={"onemapTokenWarning": True})
 
     results = payload.get("results")
     if not isinstance(results, list):
-        return []
+        raise OneMapUnavailable("OneMap search returned malformed candidates.")
 
     places: list[dict[str, Any]] = []
-    for result in results[:MAX_RESULTS]:
+    unsupported: list[dict[str, Any]] = []
+    seen: set[str] = set()
+    for result in results:
+        if len(places) + len(unsupported) >= MAX_RESULTS:
+            break
         if not isinstance(result, dict):
             continue
         lat = _coordinate(result.get("LATITUDE"))
         lon = _coordinate(result.get("LONGITUDE"))
-        if lat is None or lon is None:
-            continue
+        if lat is None or lon is None or abs(lat) > 90 or abs(lon) > 180:
+            raise OneMapUnavailable("OneMap returned invalid place coordinates.")
 
-        station = nearest_station(lat, lon, get)
-        if station is None:
-            # No station within the radius: the place exists but we cannot
-            # compute a commute for it, so it is not offered as a destination.
+        candidate_id = _place_id(result)
+        if candidate_id in seen:
             continue
+        seen.add(candidate_id)
+        station = nearest_station(lat, lon, get)
+        if station is None or station["snapMetres"] > MAX_SNAP_METRES:
+            unsupported.append(
+                {
+                    "label": str(result.get("SEARCHVAL", "")).strip(),
+                    "address": _address_of(result),
+                    "code": "NO_STATION" if station is None else "STATION_TOO_FAR",
+                    "message": "Choose a nearby MRT station or a more precise address.",
+                    "snapMetres": None
+                    if station is None
+                    else round(station["snapMetres"]),
+                }
+            )
+            continue
+        station["snapMetres"] = round(station["snapMetres"])
         places.append(
             {
-                "placeId": _place_id(result),
+                "placeId": candidate_id,
                 "label": str(result.get("SEARCHVAL", "")).strip(),
                 "address": _address_of(result),
                 "station": station,
             }
         )
-    return places
+    return {"places": places, "unsupported": unsupported, "ambiguous": len(places) > 1}
 
 
 def nearest_station(lat: float, lon: float, get: Transport) -> dict[str, Any] | None:
@@ -267,7 +325,9 @@ def nearest_station(lat: float, lon: float, get: Transport) -> dict[str, Any] | 
             "radius_in_meters": SNAP_RADIUS_METRES,
         },
     )
-    entries = payload if isinstance(payload, list) else []
+    if not isinstance(payload, list):
+        raise OneMapUnavailable("OneMap station search returned a malformed body.")
+    entries = payload
 
     best: dict[str, Any] | None = None
     best_distance = float("inf")
@@ -277,7 +337,13 @@ def nearest_station(lat: float, lon: float, get: Transport) -> dict[str, Any] | 
         station_lat = _coordinate(entry.get("lat") or entry.get("latitude"))
         station_lon = _coordinate(entry.get("lon") or entry.get("longitude"))
         name = str(entry.get("name", "")).strip()
-        if station_lat is None or station_lon is None or not name:
+        if (
+            station_lat is None
+            or station_lon is None
+            or not name
+            or abs(station_lat) > 90
+            or abs(station_lon) > 180
+        ):
             continue
         distance = haversine_metres(lat, lon, station_lat, station_lon)
         if distance >= best_distance:
@@ -285,11 +351,24 @@ def nearest_station(lat: float, lon: float, get: Transport) -> dict[str, Any] | 
         codes = _station_codes(entry)
         best_distance = distance
         best = {
-            # Provisional: contract assumption C6 is refuted, because one
-            # physical interchange returns several ids with the same name.
-            # #6 replaces this with an application-owned stationKey.
-            "stationId": codes[0] if codes else station_display_name(name).upper(),
+            "stationKey": canonical_station_key(name),
+            "codes": codes,
+            "lat": station_lat,
+            "lng": station_lon,
             "name": station_display_name(name),
-            "walkMetres": round(distance),
+            "snapMetres": distance,
+            "snapWarning": distance > SNAP_WARNING_METRES,
         }
+    if best is not None:
+        # Merge interchange aliases without treating each line as a station.
+        aliases = {
+            code
+            for entry in entries
+            if isinstance(entry, dict)
+            and canonical_station_key(str(entry.get("name", ""))) == best["stationKey"]
+            for code in _station_codes(entry)
+        }
+        best["codes"] = sorted(aliases)
+        # Preserve the exact distance for the hard-bound decision. Response models
+        # receive rounded metres only after the candidate has passed that decision.
     return best

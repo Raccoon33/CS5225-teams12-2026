@@ -11,16 +11,15 @@ class HealthResponse(BaseModel):
 
 
 class Station(BaseModel):
-    """The MRT station a destination is snapped to.
+    """Physical-station identity; persistent coordinate pinning is #14 cache work."""
 
-    `stationId` is provisional while contract assumption C6 is open in #6: one
-    physical interchange can return several OneMap ids under the same name, so
-    this field is not yet safe to use as a cache key.
-    """
-
-    stationId: str
+    stationKey: str
+    codes: list[str]
     name: str
-    walkMetres: int
+    lat: float
+    lng: float
+    snapMetres: int
+    snapWarning: bool
 
 
 class Place(BaseModel):
@@ -30,7 +29,17 @@ class Place(BaseModel):
     station: Station
 
 
+class UnsupportedPlace(BaseModel):
+    label: str
+    address: str
+    code: Literal["STATION_TOO_FAR", "NO_STATION"]
+    message: str
+    snapMetres: int | None
+
+
 class PlacesResponse(BaseModel):
-    """At most five candidates; an empty list means no match."""
+    """Selectable candidates, explicit unsupported results, and ambiguity."""
 
     places: list[Place]
+    unsupported: list[UnsupportedPlace]
+    ambiguous: bool

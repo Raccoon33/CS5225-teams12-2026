@@ -1,6 +1,6 @@
 # FlatSplit
 
-A React and TanStack monorepo with Python Lambda handlers and an AWS CDK app. The frontend includes an interactive group flat-hunting wireframe with fictional data. The backend currently exposes a health endpoint; its CDK stack defines DynamoDB, an HTTP API Lambda, and CloudFront serving the web app with `/api`. See the [backend and AWS design](docs/backend-design.md).
+A React and TanStack monorepo with Python Lambda handlers and an AWS CDK app. The frontend includes an interactive group flat-hunting wireframe with fictional data. The backend exposes health and server-side destination lookup endpoints; destination caching and group/search APIs remain implementation work. Its CDK stack defines DynamoDB, an HTTP API Lambda, and CloudFront serving the web app with `/api`. See the [backend and AWS design](docs/backend-design.md).
 
 For issue #1, start with the [user journey and responsive wireframes](docs/user-journey.md). Run `pnpm dev:web`, then use the Design review selector to explore group creation, member input, processing, ranked comparisons, and recovery states. This prototype runs locally without the API, does not share groups across devices, and resets on refresh.
 
@@ -45,7 +45,7 @@ The root orchestrates commands. Each workspace owns its dependencies and scripts
 | `pnpm deploy:aws`   | Build, then deploy the dev stack with your AWS credentials            |
 | `pnpm setup:python` | Recreate the Python environment from its lockfile                     |
 
-Run `pnpm test` for the wireframe’s readiness, validation, feasibility and ranking tests and the API handler tests. CI runs these alongside formatting, linting, types, builds and local CDK synthesis. Browser verification remains necessary for visible changes.
+Run `pnpm test` for wireframe behavior, API error/destination handling, CDK admission-limit assertions, and offline rental-to-station reference regressions. CI runs these alongside formatting, linting, types, builds and local CDK synthesis. Browser verification remains necessary for visible changes.
 
 CDK synthesis warns when `apps/web/dist` is missing; run `pnpm build` first to include the web app. The current TanStack route CLI may also emit a dependency circular-import warning while completing generation.
 
