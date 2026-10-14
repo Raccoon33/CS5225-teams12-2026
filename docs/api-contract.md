@@ -1,9 +1,9 @@
 # FlatSplit API contract and DynamoDB access patterns
 
 **Issue:** [#6 — Agree API contracts and DynamoDB access patterns](https://github.com/horiiiiii032929/CS5225-teams12-2026/issues/6)
-**Draft:** 10 October 2026 · **Owner:** Shyam · **Reviewer:** WK · **Status:** Provisional. The rent shape is backed by the initial [#2 data profile](hdb-rental-data-profile.md); the flat-type policy and commute fields still wait on team review and #3 (see [Assumptions to confirm](#assumptions-to-confirm)).
+**Updated:** 14 October 2026 · **Owner:** Shyam · **Reviewer:** WK · **Status:** Implementation baseline. Incorporates the reviewed rental profile (#52), OneMap evidence (#51), and WK/Ming's contract corrections. Product defaults below are PM implementation decisions under Hikaru's request to clear blockers; they do not claim six-person approval or completed endpoints.
 
-**Rent review:** Ming can review the [source-backed sample and aggregation notes](hdb-rental-data-profile.md), including the [September 2026 sample rows](data/hdb-rental-sample-2026-09.csv).
+**Rent evidence:** Ming approved PR #52. See the [source-backed aggregation notes](hdb-rental-data-profile.md) and [sample rows](data/hdb-rental-sample-2026-09.csv).
 
 This is the interface the frontend (#7, #8, #13, #17, #23), data (#10, #14, #15) and API (#11, #12, #16, #18, #21, #22) tasks build against. Architecture and cost are covered in [backend-design.md](backend-design.md).
 
@@ -12,7 +12,7 @@ Once #12 starts, the Pydantic models in `services/api` become the source of trut
 ## Conventions
 
 - **Base path:** `/api` in the browser. CloudFront and the Vite dev proxy both route it to the API.
-- **Format:** JSON with camelCase fields. Money is Singapore dollars per month as a number; durations are whole minutes; timestamps are ISO 8601 UTC strings.
+- **Format:** JSON with camelCase fields. Money is Singapore dollars per month as a number; commute durations are numeric minutes (fractional values retained for constraint comparisons); timestamps are ISO 8601 UTC strings.
 - **IDs:** `groupId`, `memberId` and `searchId` are random 22-character URL-safe strings. They are not secrets.
 - **Tokens:** random 43-character URL-safe strings (256 bits), sent as `Authorization: Bearer <token>`. The server stores only their SHA-256 hashes, so a lost token cannot be recovered.
 
@@ -22,7 +22,7 @@ Once #12 starts, the Pydantic models in `services/api` become the source of trut
 | `inviteToken` | Anyone with the invite link | Join the group, and nothing else                          |
 
 - **Invite link:** `https://<site>/join/<groupId>#<inviteToken>`. The token sits in the URL fragment, so browsers never send it to the server, CloudFront logs or `Referer` headers. The frontend reads it from the fragment and sends it as a bearer token.
-- **Reload and device recovery:** the frontend keeps `{groupId, memberId, memberToken}` in `localStorage`, plus the `inviteToken` in the organiser’s browser. A member who loses it can rejoin through the invite link as a new member while there is still space (see open question Q3).
+- **Reload and device recovery:** the frontend keeps `{groupId, memberId, memberToken}` in `localStorage`, plus the `inviteToken` in the organiser’s browser. A member who loses it can rejoin through the invite link as a new member while there is still space (see the device-recovery policy below).
 - **Organiser:** the member who created the group. Creation returns the invite token once; the organiser’s browser retains it to re-share the link. `GET /groups/{groupId}` cannot return it because the server stores only its hash. Losing that browser copy means the original invite link must be recovered from another recipient; server-side token recovery or rotation is outside this version. Any ready member may start a search (D02).
 
 ### Errors
@@ -96,7 +96,15 @@ type Destination = {
   placeId: string;
   label: string; // e.g. "National University of Singapore"
   address: string;
-  station: { stationId: string; name: string; walkMetres: number }; // nearest MRT, used for commutes
+  station: {
+    stationKey: string; // application-owned canonical physical-station name
+    codes: string[]; // upstream line-code aliases; never cache identities
+    name: string;
+    lat: number; // pinned canonical routing coordinate
+    lng: number;
+    snapMetres: number; // straight-line place-to-station distance, not a walking route
+    snapWarning: boolean; // true above 800 m; selection requires explicit confirmation
+  };
 };
 
 type SearchSummary = {
@@ -187,7 +195,15 @@ Authorization: Bearer mem_Q2wE4rT6yU8iO0pA1sD3fG5hJ7kL9zX2cV4bN6mQw8E
 
 ### `GET /places?q=<text>` — destination search
 
-No authentication; throttled. `q` is 3–100 characters. The server calls OneMap search (#14) and snaps each result to its nearest MRT station.
+No authentication; throttled. `q` is 3–100 characters after trimming/collapsing whitespace. Reject control characters. The server calls OneMap search (#14), returns up to five distinct Singapore address/coordinate candidates, and resolves each candidate's nearest physical MRT station. It never saves the first search hit automatically: the user selects the intended label/address. The caller must disambiguate different addresses even when the query resembles a unique campus or landmark.
+
+A selected station must be at most **1,000 m** from the place coordinates, measured as straight-line distance. A result beyond that bound is not a valid `placeId`; return it in `unsupported` with `STATION_TOO_FAR` and an instruction to choose an explicit nearby station or more precise address. Above 800 m and within the bound, require a visible distance/approximation confirmation. This conservative prototype bound is a PM default, not a measured guarantee of commute accuracy. NUS/NTU/SUSS examples in the evidence can exceed it; do not silently accept a distant station or relabel a selected station as the campus.
+
+`places` contains only selectable candidates; `unsupported` contains `{label, address, code, message, snapMetres}` with `code` equal to `STATION_TOO_FAR` or `NO_STATION`. `ambiguous` is true when distinct selectable address candidates require user choice. No upstream result returns `{places: [], unsupported: [], ambiguous: false}`; an upstream/authentication failure is 503 rather than an empty success. Query/lookup cache entries expire after 24 hours. A valid preference save copies its destination and canonical station into the member so an already-saved preference is not lost when lookup cache TTL passes.
+
+Canonicalise physical names using the [station normaliser](evaluation/feasibility/onemap/stations.py): strip line-code parentheses, the `MRT STATION` suffix and exit labels; uppercase and join alphanumeric words with `_`. Thus all Dhoby Ghaut line entries become `DHOBY_GHAUT`. Split `EW24 / NS1` into aliases `EW24` and `NS1`. Routes for a key use one pinned coordinate in a `STATION#<stationKey>/META` record, not whichever interchange exit happened to be nearest to a particular address. #14 obtains an exact canonical-name match, creates that station record conditionally, and reuses the winning record for every saved destination; aliases can be merged without changing its coordinate. Changing the coordinate requires an explicit cache refresh before serving results for that key.
+
+An uncached candidate lookup uses search plus nearest-station calls; multi-candidate responses may require one nearest-station call per candidate and an exact-name search for a station record not yet pinned. Count all actual upstream calls, including retries, in E3/E4; do not assume every request costs exactly two. Debounce on the client and cache repeated queries/candidates.
 
 ```http
 GET /api/places?q=kent%20ridge
@@ -200,19 +216,25 @@ GET /api/places?q=kent%20ridge
   "places": [
     {
       "placeId": "pl_nus_kent_ridge",
-      "label": "National University of Singapore",
-      "address": "21 Lower Kent Ridge Road, Singapore 119077",
+      "label": "Kent Ridge MRT Station",
+      "address": "Kent Ridge MRT Station, Singapore",
       "station": {
-        "stationId": "CC24",
+        "stationKey": "KENT_RIDGE",
+        "codes": ["CC24"],
         "name": "Kent Ridge",
-        "walkMetres": 650
+        "lat": 1.29330347372,
+        "lng": 103.784516185,
+        "snapMetres": 0,
+        "snapWarning": false
       }
     }
-  ]
+  ],
+  "unsupported": [],
+  "ambiguous": false
 }
 ```
 
-Returns up to 5 places; an empty list means no match. The client should debounce input by 300 ms.
+Return up to five selectable places. The client debounces by 300 ms, displays all returned choices and any unsupported reason, and requires selection before saving.
 
 ### `POST /groups/{groupId}/searches` — start a search
 
@@ -429,53 +451,66 @@ There is one on-demand table with keys `pk` and `sk` (both strings). Items with 
 
 ### Items
 
-| Item         | pk                    | sk                              | Attributes                                                                                                                                                                                                                                                                           | Written by                                 |
-| ------------ | --------------------- | ------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ------------------------------------------ |
-| Group        | `GROUP#<groupId>`     | `META`                          | groupName, size, revision, memberCount, organiserMemberId, inviteTokenHash, createdAt, ttl                                                                                                                                                                                           | groups API                                 |
-| Member       | `GROUP#<groupId>`     | `MEMBER#<joinedAt>#<memberId>`  | memberId, name, nameKey (lower case), tokenHash, ready, placeId, destination, budget, maxCommute, ttl                                                                                                                                                                                | groups API                                 |
-| Search       | `GROUP#<groupId>`     | `SEARCH#<createdAt>#<searchId>` | searchId, groupRevision, pairs (list of stationId × town), rentSnapshotId, ttl                                                                                                                                                                                                       | search API                                 |
-| Place        | `PLACE#<placeId>`     | `META`                          | label, address, lat, lng, station, ttl (24 hours)                                                                                                                                                                                                                                    | places API                                 |
-| Rent pointer | `RENT`                | `CURRENT`                       | schemaVersion, snapshotId, period, sourceMonthTo, validatedAt                                                                                                                                                                                                                        | rent ingestion (#10)                       |
-| Rent summary | `RENT#<snapshotId>`   | `TOWN#<town>#<flatType>`        | schemaVersion, sourceDatasetId, sourceUpdatedAt, sourceMonthFrom, sourceMonthTo, period, town, flatType, currency, unit, statistic, median, p25, p75, count, blockCount, bootstrapMethod, bootstrapReplicates, medianCi95Low, medianCi95High, medianCi95RelativeWidth, qualityStatus | rent ingestion (#10)                       |
-| Commute      | `COMMUTE#<stationId>` | `TOWN#<town>`                   | status (`pending`/`ok`/`unavailable`), minutes, transfers, walkMinutes, attempts, computedAt, error                                                                                                                                                                                  | search API (pending), commute worker (#15) |
+| Item         | pk                     | sk                              | Attributes                                                                                                                                                                                                                                                                           | Written by                                 |
+| ------------ | ---------------------- | ------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ------------------------------------------ |
+| Group        | `GROUP#<groupId>`      | `META`                          | groupName, size, revision, memberCount, organiserMemberId, inviteTokenHash, createdAt, ttl                                                                                                                                                                                           | groups API                                 |
+| Member       | `GROUP#<groupId>`      | `MEMBER#<joinedAt>#<memberId>`  | memberId, name, nameKey (lower case), tokenHash, ready, placeId, destination, budget, maxCommute, ttl                                                                                                                                                                                | groups API                                 |
+| Search       | `GROUP#<groupId>`      | `SEARCH#<createdAt>#<searchId>` | searchId, groupRevision, pairs (list of stationKey × town), rentSnapshotId, ttl                                                                                                                                                                                                      | search API                                 |
+| Place        | `PLACE#<placeId>`      | `META`                          | label, address, lat, lng, station, ttl (24 hours)                                                                                                                                                                                                                                    | places API                                 |
+| Rent pointer | `RENT`                 | `CURRENT`                       | schemaVersion, snapshotId, period, sourceMonthTo, validatedAt                                                                                                                                                                                                                        | rent ingestion (#10)                       |
+| Rent summary | `RENT#<snapshotId>`    | `TOWN#<town>#<flatType>`        | schemaVersion, sourceDatasetId, sourceUpdatedAt, sourceMonthFrom, sourceMonthTo, period, town, flatType, currency, unit, statistic, median, p25, p75, count, blockCount, bootstrapMethod, bootstrapReplicates, medianCi95Low, medianCi95High, medianCi95RelativeWidth, qualityStatus | rent ingestion (#10)                       |
+| Commute      | `COMMUTE#<stationKey>` | `TOWN#<town>`                   | status (`pending`/`ok`/`unavailable`), minutes, transfers, walkMinutes, attempts, computedAt, error                                                                                                                                                                                  | search API (pending), commute worker (#15) |
 
 Sort keys start with timestamps so members come back in join order and the latest search is last. Group reads and writes check `META.ttl` against the current time; DynamoDB TTL deletion is asynchronous and must not be relied on for access expiry. Name uniqueness uses a `NAME#<nameKey>` reservation item in the group partition (memberId and ttl), created in the same transaction as a join and replaced transactionally on a rename.
 
 ### Access patterns
 
-| #   | Pattern                                | Operation                                                                                                                                                                                                                                                                                                                                                    |
-| --- | -------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| A1  | Read a group with members and searches | `Query pk = GROUP#<id>`; paginate if `LastEvaluatedKey` is present. Token checks use the hashes in this result                                                                                                                                                                                                                                               |
-| A2  | Create a group                         | `TransactWriteItems`: put `META`, the organiser `MEMBER` and its `NAME#<nameKey>` reservation, all `attribute_not_exists(pk)`                                                                                                                                                                                                                                |
-| A3  | Join                                   | `TransactWriteItems`: update `META` with condition `memberCount < size`, then `memberCount += 1, revision += 1`; put the new `MEMBER` and its `NAME#<nameKey>` reservation with `attribute_not_exists(pk)`. A capacity condition failure becomes `GROUP_FULL`; a name reservation conflict becomes 422. Two people taking the last place cannot both succeed |
-| A4  | Save preferences                       | `TransactWriteItems`: update `MEMBER` with condition `tokenHash = :hash`; update `META` with `revision += 1`; a rename also conditions on the previous `nameKey`, reserves the new name and releases the old reservation in this transaction                                                                                                                 |
-| A5  | Resolve a place for a preference save  | `GetItem PLACE#<placeId> / META`                                                                                                                                                                                                                                                                                                                             |
-| A6  | Rent for a search                      | `GetItem RENT / CURRENT`, then `Query pk = RENT#<snapshotId>, begins_with(sk, "TOWN#")` and filter to the chosen flat type in code (up to 27 towns × 6 flat types = 162 small items; the profiled trailing window produces 129 non-empty items)                                                                                                              |
-| A7  | Commutes for a search                  | One `Query pk = COMMUTE#<stationId>` per distinct member station: at most 5 queries of about 27 items; the source-controlled town set may change                                                                                                                                                                                                             |
-| A8  | Queue a missing pair once              | `PutItem COMMUTE#…/TOWN#…` with `status = pending`, a new `jobId` and bounded `leaseExpiresAt`; claim only an absent item, expired pending lease or retry-eligible unavailable item. The claimant sends SQS; other requests leave an active lease alone                                                                                                      |
-| A9  | Store a commute result                 | Worker `UpdateItem` to `ok` with minutes, or to `unavailable` with `retryAfter` after the final attempt/DLQ; condition on matching `jobId` and `status = pending`; an old attempt cannot overwrite a newer claim or completed result                                                                                                                         |
-| A10 | Data freshness                         | `GetItem RENT / CURRENT`                                                                                                                                                                                                                                                                                                                                     |
+| #   | Pattern                                | Operation                                                                                                                                                                                                                                                                                                                                                                                              |
+| --- | -------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| A1  | Read a group with members and searches | `Query pk = GROUP#<id>`; paginate if `LastEvaluatedKey` is present. Token checks use the hashes in this result                                                                                                                                                                                                                                                                                         |
+| A2  | Create a group                         | `TransactWriteItems`: put `META`, the organiser `MEMBER` and its `NAME#<nameKey>` reservation, all `attribute_not_exists(pk)`                                                                                                                                                                                                                                                                          |
+| A3  | Join                                   | `TransactWriteItems`: update `META` with condition `memberCount < size AND ttl > now AND inviteTokenHash = :hash`, then `memberCount += 1, revision += 1`; put the new `MEMBER` and its `NAME#<nameKey>` reservation with `attribute_not_exists(pk)`. A capacity condition failure becomes `GROUP_FULL`; a name reservation conflict becomes 422. Two people taking the last place cannot both succeed |
+| A4  | Save preferences                       | `TransactWriteItems`: update `MEMBER` with condition `tokenHash = :hash`; update `META` with `revision += 1` and condition `ttl > now`; a rename also conditions on the previous `nameKey`, reserves the new name and releases the old reservation in this transaction                                                                                                                                 |
+| A5  | Resolve a place for a preference save  | `GetItem PLACE#<placeId> / META`                                                                                                                                                                                                                                                                                                                                                                       |
+| A6  | Rent for a search                      | `GetItem RENT / CURRENT`, then `Query pk = RENT#<snapshotId>, begins_with(sk, "TOWN#")` and filter to the chosen flat type in code (up to 27 towns × 6 flat types = 162 small items; the profiled trailing window produces 129 non-empty items)                                                                                                                                                        |
+| A7  | Commutes for a search                  | One `Query pk = COMMUTE#<stationKey>` per distinct member station: at most 5 queries of about 27 items; the source-controlled town set may change                                                                                                                                                                                                                                                      |
+| A8  | Queue a missing pair once              | `PutItem COMMUTE#…/TOWN#…` with `status = pending`, a new `jobId` and bounded `leaseExpiresAt`; claim only an absent item, expired pending lease or retry-eligible unavailable item. The claimant sends SQS; other requests leave an active lease alone                                                                                                                                                |
+| A9  | Store a commute result                 | Worker `UpdateItem` to `ok` with minutes, or to `unavailable` with `retryAfter` after the final attempt/DLQ; condition on matching `jobId` and `status = pending`; an old attempt cannot overwrite a newer claim or completed result                                                                                                                                                                   |
+| A10 | Data freshness                         | `GetItem RENT / CURRENT`                                                                                                                                                                                                                                                                                                                                                                               |
 
-There are no scans and no secondary indexes. A first search uses A1 + A6 + A7: 8 single-partition requests when the group query fits one page (one group query, one rent-pointer read, one rent query and five commute queries). Later result reads use the search’s pinned `rentSnapshotId` and skip the pointer, so they use 7 under the same assumption. A long search history may require extra group-query pages; #12 must paginate and #30 must measure this case. These counts are a design budget; the 500 ms latency target still needs measurement in #30. Commute and rent items carry no TTL. Commutes are refreshed by the monthly job.
+There are no scans and no secondary indexes. A first search uses A1 + A6 + A7: 8 single-partition requests when the group query fits one page (one group query, one rent-pointer read, one rent query and five commute queries). Later result reads use the search’s pinned `rentSnapshotId` and skip the pointer, so they use 7 under the same assumption. A long search history may require extra group-query pages; #12 must paginate and #30 must measure this case. These counts are a design budget; the 500 ms latency target still needs measurement in #30. Commute and rent items carry no TTL. Commutes are refreshed by the monthly job. A place lookup also pins or reads `STATION#<stationKey>/META` (canonical name, aliases, lat/lng); this extra read/write is on the lookup path and is not included in the search-read budget. Search uses the station coordinate copied into the member/search snapshot.
 
-## Assumptions to confirm
+### Routing baseline
 
-| ID  | Assumption                                                                                                                                                                                                                     | Confirm with                                                           |
-| --- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ---------------------------------------------------------------------- |
-| C1  | Rent summaries store trailing-12-month R-7 median/P25/P75 values for all six source flat types; only summaries whose block-cluster bootstrap 95% median interval is at most 10% of the median are eligible for recommendations | Approved by Mani in the [#2 data profile](hdb-rental-data-profile.md)  |
-| C2  | Flat type by group size: 2 → 3-ROOM, 3 → 4-ROOM, 4–5 → 5-ROOM                                                                                                                                                                  | #2 and team (D12)                                                      |
-| C3  | Town names follow HDB's dataset spelling, upper case, and are used as keys; the September 2026 source has 27 values, including `CENTRAL` and `TENGAH`                                                                          | Confirmed in the initial [#2 data profile](hdb-rental-data-profile.md) |
-| C4  | OneMap search gives coordinates for free-text Singapore places, and stations can be snapped from them                                                                                                                          | #3, #14                                                                |
-| C5  | Commute = OneMap public-transport route from a town's reference point to the destination station, weekday 08:30, shortest itinerary                                                                                            | #3, #15                                                                |
-| C6  | Station codes (for example `CC24`) are stable cache keys; interchanges use one code                                                                                                                                            | #3, #14                                                                |
-| C7  | OneMap rate limits allow about 250 routing calls per minute                                                                                                                                                                    | #3                                                                     |
+Use the [27-town principal-station reference table](evaluation/feasibility/data/towns.json) with HDB spelling. `CENTRAL` is the rental key; archived `CENTRAL AREA` observations map to it for interpretation. `TENGAH` is retained with its documented non-routable reference; unavailable routes and weak/missing rents exclude it honestly, rather than removing it from the source inventory.
 
-## Open questions
+Route from the pinned town point to the pinned destination station at weekday 08:30 Singapore time. Choose the next weekday in Singapore at refresh and record `routingDate`, `routingTime`, `routingProfileVersion` and source timestamp with the cached result. Request `numItineraries=3` and take the minimum returned duration (one upstream request, not three). A monthly refresh or changed routing profile invalidates prior results before reuse; an older `jobId`/profile must not overwrite a newer refresh. Do not mix routing profiles in one search.
 
-- **Q1** Group expiry: 30 days from creation. Is that long enough for a house hunt?
-- **Q2** Should the organiser be able to remove a member (for example, a duplicate after a lost device)? Not in this version.
-- **Q3** Device recovery: rejoining as a new member needs a free place. Should the organiser be able to reissue a member's link instead?
-- **Q4** Should `size` be editable after creation? Not in this version; create a new group instead.
+Commute is **station-to-station**, not door-to-door; display that label and the snap distance alongside the original selected address. No invented walking time is added. #19/#20 quantify the approximation. A 404/no-itinerary result is `unavailable`, never zero, including TENGAH or a same-point upstream failure.
+
+Start with at most three in-flight worker routing requests, shared-budget headroom for user lookups and a conservative 250-call/min client guard below the published 300/min quota. This guard is a configured budget, not an experimentally established safe throughput. Short-window measurements indicate concurrency sensitivity and do not prove sustained/hourly/daily capacity. On 429/5xx/transport failures, bounded backoff and at most three attempts precede DLQ handling. Parse HTML as well as JSON and define backoff when `Retry-After` is absent. 400/403/404 are not retried; 401/expired-token signals invoke the credential-refresh path and operational alert rather than repeating the same credential. Check the three-day token's remaining validity before a fill. A 200 search response with a token warning still requires that alert.
+
+## Evidence and implementation decisions
+
+| ID  | Baseline                                                                                                                  | Evidence or decision                                                                                           |
+| --- | ------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------- |
+| C1  | Trailing-12-month R-7 quantiles and block-bootstrap quality gate; weak summaries remain visible but cannot affect ranking | Mani's profile and Ming's approved #52 review                                                                  |
+| C2  | Equal whole-flat benchmark split; 2 members → 3-ROOM, 3 → 4-ROOM, 4–5 → 5-ROOM                                            | PM prototype default adopted 14 October; this is not a legal occupancy rule or a source-proven unit definition |
+| C3  | Exact HDB town spelling, including `CENTRAL` and `TENGAH`; 27-town source inventory                                       | #52; station table reconciled to those keys                                                                    |
+| C4  | User-selected Singapore place candidates can be geocoded and station-snapped subject to the bound above                   | #3/#51; results do not establish the user's intended address                                                   |
+| C5  | Pinned principal-station town point → pinned destination station; weekday 08:30; minimum of three returned itineraries    | #51 and WK's 14 October review; station approximation declared                                                 |
+| C6  | Physical-station `stationKey` is the cache identity; line codes are aliases                                               | #3 refutes the old code-based identity; WK and Ming requested this correction                                  |
+| C7  | Published quota 300/min; configured client guard 250/min and initial worker concurrency three, all actual calls counted   | #51 documents short-window/concurrency findings and limitations; throughput still requires E4                  |
+
+### Group defaults that unblock #11/#12
+
+- Group size is fixed at creation, 2–5; names are unique after trimmed Unicode-normalised case folding. Conditional transactions enforce capacity, name reservation, token permission and logical expiry. API/tests must include the race for the last place and stale revision behavior.
+- Expiry is 30 days from creation. Check it on every request and in mutations; DynamoDB TTL deletion is asynchronous. No sliding expiry.
+- Any ready member can start a search once the whole group is ready. Members see the declared shared fields after the privacy notice.
+- No member removal, token recovery/reissue, group resizing or accounts in this prototype. Lost-device recovery requires the original invite and a free slot; a full group needs a new group. Explain this limitation instead of adding permissions silently.
+- The equal rent split and flat-type mapping above are implementation defaults. The source metadata's blank rent unit and approximation limitations remain visible in the profile/report. Ranking weights retain the wireframe baseline until #22 validates them; parity tests remain required.
+
+These decisions close the document/design handoff only. Runtime endpoints, deployment, recovery and user evaluation must satisfy their own issues. Human pair feedback can revise the baseline through a reviewed PR; no missing approval is fabricated.
 
 ### Commute enqueue recovery
 

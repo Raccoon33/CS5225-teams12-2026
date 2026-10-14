@@ -44,12 +44,16 @@ export class Api extends Construct {
       defaultIntegration: new HttpLambdaIntegration('Handler', handler),
     });
 
-    // Prototype-scale limits; requests beyond them get 429 instead of cost.
+    // The isolated capacity experiment must admit its 50 req/s workload.
+    // Shared application stages retain the prototype abuse/cost limit.
     new HttpStage(this, 'DefaultStage', {
       httpApi: this.httpApi,
       stageName: '$default',
       autoDeploy: true,
-      throttle: { rateLimit: 20, burstLimit: 40 },
+      throttle:
+        props.stage === 'eval'
+          ? { rateLimit: 100, burstLimit: 200 }
+          : { rateLimit: 20, burstLimit: 40 },
     });
 
     const stack = Stack.of(this);
