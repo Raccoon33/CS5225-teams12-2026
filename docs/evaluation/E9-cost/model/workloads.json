@@ -10,8 +10,8 @@
     },
     "how_to_refine": "Replace any field whose source is 'assumed' with a measured value from #30 (E1/E2) or #34 (E8/E9). Every field is used by model/cost_model.py; nothing is hardcoded in the report text.",
     "fixed_facts": {
-      "towns": 26,
-      "towns_source": "docs/backend-design.md: 26 HDB towns, each represented by one MRT station",
+      "towns": 27,
+      "towns_source": "docs/backend-design.md + #2 data profile (PR #52): 27 HDB towns in the September 2026 rent source, each represented by one MRT station. 26 are routable; TENGAH's only reference point is the unopened Jurong Region Line (JS3/JS4) and OneMap PT routing returns 404 from it, so its pairs are enqueued and recorded as unavailable rather than skipped.",
       "ddb_requests_first_search": 8,
       "ddb_requests_repeat_read": 7,
       "ddb_requests_source": "docs/api-contract.md access patterns A1+A6+A7 (design budget, to be measured in #30)"
@@ -97,6 +97,6 @@
     "secrets_count": 1,
     "monthly_ingest_runs": 1,
     "rent_snapshot_items": 130,
-    "rent_snapshot_source": "26 towns x 5 flat types (api-contract A6)"
+    "rent_snapshot_source": "27 towns x 5 flat types (api-contract A6)"
   }
 }
