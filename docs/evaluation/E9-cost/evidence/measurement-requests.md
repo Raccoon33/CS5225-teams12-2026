@@ -1,0 +1,38 @@
+# Measured inputs this model is waiting for
+
+One row per assumption that must become a measurement before E9 / #45 can be completed (target 8 November 2026). Each row names the field in `model/workloads.json` or `model/onprem.json`, the owner, and the experiment that produces it. Paste the measured value in, re-run `model/cost_model.py`, and commit the new `evidence/cost_model_<utc>.*` files.
+
+## From WK (@wkkuu), #30 — E1 and E2
+
+| Field                                       | Currently                  | What to measure                                                                                                                    | Why it matters                                                                                |
+| ------------------------------------------- | -------------------------- | ---------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------- |
+| `shared_assumptions.lambda_api_duration_ms` | 120 ms (assumed)           | CloudWatch Lambda `Duration` p50 for `GET /groups/{id}/searches/{id}`, warm                                                        | Drives Lambda GB-seconds; at 100× demand it becomes a real line                               |
+| `shared_assumptions.cold_start_share`       | 5% (assumed)               | Cold-start share and `InitDuration` from E1                                                                                        | Also drives Secrets Manager API calls                                                         |
+| `onprem.capacity.sustained_rps_per_node`    | **25 req/s (placeholder)** | Admitted req/s that one `t4g.small` with 2 isolated uvicorn workers sustains under W2 while meeting the 500 ms target (D-E2, D-E6) | **Decides node count for options B and C — the largest single uncertainty in the comparison** |
+| —                                           | —                          | The eval-stage admission limit actually used for W2 (stage throttle is 20 req/s burst 40 today)                                    | Without it, W2 measures throttling, not capacity (noted in the evaluation plan)               |
+| `scenarios.bursty.burst_*`                  | 4 events, 50 req/s, 5 min  | The burst profile actually run                                                                                                     | Keeps the cost scenario and the load test comparable                                          |
+
+## From Mani (@saravanamani1999), #34 — E8 and E9 usage evidence
+
+| Field                                                 | Currently         | What to measure                                                                                   | Why it matters                                                                 |
+| ----------------------------------------------------- | ----------------- | ------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------ |
+| Cost Explorer breakdown                               | none              | Monthly cost per service filtered by the `project=flatsplit` tag for a representative run         | The only real validation of option A                                           |
+| `shared_assumptions.ddb_rru_per_read_request`         | 2.0 (assumed)     | `ConsumedReadCapacityUnits` ÷ read requests                                                       | Scales with every result poll                                                  |
+| `shared_assumptions.ddb_wru_per_write`                | 1.5 (assumed)     | `ConsumedWriteCapacityUnits` ÷ writes                                                             | Transactional joins cost 2×                                                    |
+| `shared_assumptions.ddb_table_size_gb`                | 0.5 GB            | Table size and PITR size                                                                          | PITR is a per-GB-month charge that never sleeps                                |
+| `shared_assumptions.log_bytes_per_invocation`         | 2 KB (assumed)    | CloudWatch `IncomingBytes` ÷ invocations                                                          | Log ingest is US$0.70/GB in ap-southeast-1                                     |
+| `shared_assumptions.sqs_idle_poll_requests_per_month` | 650,000 (assumed) | Actual SQS request count in Cost Explorer for a month with little traffic                         | This is the "serverless is not quite zero when idle" line; verify or delete it |
+| `shared_assumptions.cloudwatch_custom_metrics`        | 12                | Number of distinct Powertools metrics actually emitted                                            | Metrics beyond 10 are the top payable serverless line today                    |
+| Account type                                          | unknown           | Whether the deployment account gets the standard free tier, the credit plan, or AWS Academy terms | Decides the whole free-tier column                                             |
+
+## From me (@lukerspace), #3 / #15 / #27
+
+| Field                                          | Currently                       | What to measure                                                         |
+| ---------------------------------------------- | ------------------------------- | ----------------------------------------------------------------------- |
+| `scenarios.*.commute_cache_hit_ratio`          | 80 / 90 / 60% (assumed)         | Cache-hit ratio from E3 (Powertools metric)                             |
+| `shared_assumptions.lambda_worker_duration_ms` | 900 ms (assumed)                | Commute-worker duration per job                                         |
+| OneMap rate limit                              | 250 calls/min (C7, provisional) | Real measured limit from #3 — feeds D-E7 and the burst feasibility note |
+
+## Blocking action, not a measurement
+
+Activate `project` as a **cost allocation tag** in the Billing console. `infra/aws/src/app.ts` already applies `project=flatsplit` and `stage=<stage>` to every resource, but Cost Explorer cannot group by an unactivated tag, and activation is **not retroactive**. Until someone with account access does this, E9 has no measured breakdown to report. Raised as open question 2 in `docs/cost-model.md`.
