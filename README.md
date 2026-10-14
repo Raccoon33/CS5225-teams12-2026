@@ -51,6 +51,42 @@ CDK synthesis warns when `apps/web/dist` is missing; run `pnpm build` first to i
 
 ## Deploying to AWS
 
+The shared dev environment is deployed in account `553455762180`: [FlatSplit dev](https://d2g88qlwvm8dec.cloudfront.net) and [API health](https://d2g88qlwvm8dec.cloudfront.net/api/health). See the [deployment evidence and remaining handoffs](docs/aws-dev-handoff.md). The frontend remains a prototype while group/data integration is implemented.
+
+For the new shared account, copy the root credential template and edit the local copy:
+
+```sh
+cp -n .env.example .env
+chmod 600 .env
+```
+
+Fill in `AWS_ACCESS_KEY_ID`, `AWS_SECRET_ACCESS_KEY`, and the shared account's 12-digit `FLATSPLIT_AWS_ACCOUNT_ID`. Temporary credentials also need `AWS_SESSION_TOKEN`; leave it empty for an IAM user's access key. Keep these values in the ignored root `.env`, separate from the public frontend configuration. The template contains no credentials. [AWS documents these credential environment variables](https://docs.aws.amazon.com/cli/latest/userguide/cli-configure-envvars.html).
+
+AWS CLI and CDK do not automatically read `.env`. From the repository root, use this subshell to load it and verify the target before deployment:
+
+```sh
+(
+  unset AWS_PROFILE AWS_DEFAULT_PROFILE AWS_ROLE_ARN AWS_WEB_IDENTITY_TOKEN_FILE
+  unset CDK_DEFAULT_ACCOUNT CDK_DEFAULT_REGION
+  set -a
+  . ./.env
+  set +a
+  : "${AWS_ACCESS_KEY_ID:?Fill in .env first}"
+  : "${AWS_SECRET_ACCESS_KEY:?Fill in .env first}"
+  : "${FLATSPLIT_AWS_ACCOUNT_ID:?Set the shared account ID in .env}"
+  flatsplit_actual_account=$(aws sts get-caller-identity --query Account --output text) || exit 1
+  if [ "$flatsplit_actual_account" != "$FLATSPLIT_AWS_ACCOUNT_ID" ]; then
+    echo "AWS account mismatch; stop and check .env." >&2
+    exit 1
+  fi
+  aws sts get-caller-identity
+  # Run the authorised bootstrap/deployment commands below here,
+  # inside this subshell, after confirming the identity.
+)
+```
+
+The subshell keeps these credentials out of subsequent commands in your normal shell. Only source your own local `.env`. Once its identity is verified, record the canonical account and shared URL in issue #4; the credentials stay local.
+
 Deployment is manual and needs credentials for the team account in `ap-southeast-1`. Once per account, run `pnpm --filter @flatsplit/aws exec cdk bootstrap`. Then `pnpm deploy:aws` builds everything and deploys `FlatSplit-dev`; the `SiteUrl` output serves the web app and `/api/health`. Use `pnpm --filter @flatsplit/aws exec cdk deploy -c stage=<name>` for another stage, and add `-c budgetEmail=<address>` on one stage to create the US$20/50/100 cost alerts. Non-`prod` stages delete their data when destroyed.
 
 ## Local configuration
