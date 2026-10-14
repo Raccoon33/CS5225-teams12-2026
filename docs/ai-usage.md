@@ -120,3 +120,10 @@ For future entries, record the requested issue, tool, contribution, checks actua
 - Infrastructure: isolated `eval` admission is 100 requests/s with burst 200 for the planned 50 requests/s workload. Other stages retain 20/40. Added synthesized-template regression assertions and offline evidence-handoff tests to the normal test command. This is local configuration, not an eval deployment or capacity result.
 - Verification: frozen pnpm install and locked uv sync passed; formatting, check, 78 tests (43 API, 29 web, three CDK and three evidence), build, local synth and diff checks passed. Direct ASGI HTTP checks verified health 200, query validation 422, missing-credential 503 and unknown-route 404. No live OneMap experiment was run; browser verification was not required for these backend/documentation changes. The existing TanStack circular-import warning remains non-fatal.
 - Remaining external dependency: the audited discussions still do not identify the team AWS profile/account or verify deployment/billing-tag status. No AWS bootstrap, deployment, billing activation, recovery drill or user study was performed. The profile clarification is pending with Hikaru; remaining runtime/evaluation tasks stay open.
+
+## 14 October 2026 — billing blocker correction
+
+- Tool: Codex, continuing Hikaru's PM blocker cleanup.
+- Finding: the discussions and cost model overstated delayed tag activation as permanent evidence loss. AWS's official Billing guide supports management-account backfill for up to twelve months when the resource tag existed historically; it cannot recover tags that were absent. Backfill affects all tag keys' current activation statuses, so account eligibility and impact must be checked before an operation.
+- Contribution: corrected the E9 model's billing dependency and operator responsibility; linked the official source and retained historical evidence/AI entries. No billing operation or cloud deployment was performed.
+- Verification: Markdown formatting and diff checks passed; the immediately preceding implementation baseline passed 78 tests, check, build and synth. This correction changes documentation only.
