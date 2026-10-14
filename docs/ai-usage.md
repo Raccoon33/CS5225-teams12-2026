@@ -68,3 +68,10 @@ For future entries, record the requested issue, tool, contribution, checks actua
 - Tool: Codex, directed by Hikaru to review and merge the open stack.
 - Corrections: aligned the measured search URL with the API contract, assigned E4 usage evidence to the owner of #34, and distinguished the 20 requests/s admission limit from the proposed 50 requests/s capacity workload. Specified isolated local worker processes for the fixed-instance comparison to avoid benchmarking the resolver’s safety lock as compute capacity.
 - Verification: documentation formatting and diff checks pass; the combined stack passes checks, 35 tests, build and synth. Evaluation owner agreement and decisions D-E1–D-E7 remain pending; no experiment results or AWS deployment are claimed.
+
+## 12–14 October 2026 — HDB rental profile and evaluation evidence
+
+- Tool: Codex, directed by Mani.
+- Human contribution: Mani drafted the rent schema from the system design and decided the aggregation statistics, confidence method and threshold, duplicate-row handling, supported flat types, and low-confidence API behavior.
+- AI assistance: profiled the official HDB datasets, validated the draft against the source data, generated the reproducible E8 audit, helped document the E6 procedure, and performed formatting and consistency checks.
+- Verification: 65 of 72 comparable published medians matched exactly; documentation, JSON, sample-data and audit assertions passed. E6 was documented but not run; no AWS deployment was performed.

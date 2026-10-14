@@ -1,0 +1,21 @@
+{
+  "auditVersion": 1,
+  "quarter": "2026-Q2",
+  "detailedSourceSha256": "767a94819f4bb96bc4cff411064bedf6bef63ed053c05de1e2b560b65d85b1c9",
+  "publishedMedianSourceSha256": "ae13566804f2c3ac088827f62c386c610055de6ef09f593a096031799a14275a",
+  "townsAudited": 27,
+  "recommendationScopeGroups": 81,
+  "publishedNumericGroups": 72,
+  "publishedNonNumericGroups": 6,
+  "publishedTownAbsentGroups": 3,
+  "comparableGroups": 72,
+  "exactMatches": 65,
+  "nonExactMatches": 7,
+  "medianAbsoluteDifferenceSgd": 0.0,
+  "meanAbsoluteDifferenceSgd": 3.402778,
+  "maximumAbsoluteDifferenceSgd": 100,
+  "maximumAbsolutePercentageDifference": 0.027027027,
+  "trailing12UsableGroups": 75,
+  "trailing12LowConfidenceGroups": 5,
+  "trailing12MissingGroups": 1
+}

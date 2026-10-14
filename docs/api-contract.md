@@ -1,7 +1,9 @@
 # FlatSplit API contract and DynamoDB access patterns
 
 **Issue:** [#6 — Agree API contracts and DynamoDB access patterns](https://github.com/horiiiiii032929/CS5225-teams12-2026/issues/6)
-**Draft:** 10 October 2026 · **Owner:** Shyam · **Reviewer:** WK · **Status:** Provisional. The rent and commute fields wait on #2 and #3 (see [Assumptions to confirm](#assumptions-to-confirm)).
+**Draft:** 10 October 2026 · **Owner:** Shyam · **Reviewer:** WK · **Status:** Provisional. The rent shape is backed by the initial [#2 data profile](hdb-rental-data-profile.md); the flat-type policy and commute fields still wait on team review and #3 (see [Assumptions to confirm](#assumptions-to-confirm)).
+
+**Rent review:** Ming can review the [source-backed sample and aggregation notes](hdb-rental-data-profile.md), including the [September 2026 sample rows](data/hdb-rental-sample-2026-09.csv).
 
 This is the interface the frontend (#7, #8, #13, #17, #23), data (#10, #14, #15) and API (#11, #12, #16, #18, #21, #22) tasks build against. Architecture and cost are covered in [backend-design.md](backend-design.md).
 
@@ -247,9 +249,14 @@ type AreaResult = {
   displayName: string; // "Queenstown"
   rank: number | null; // 1-based; null when excluded
   score: number | null; // 0–100 demonstration index (D07); null when excluded
-  wholeFlatRent: number | null; // null when rent is unavailable
-  rentPerPerson: number | null; // wholeFlatRent / size, unrounded; null when unavailable
-  rentSampleSize: number | null; // null when the rent summary is unavailable
+  wholeFlatRent: number | null; // stored median; null only when no summary exists
+  rentPerPerson: number | null; // wholeFlatRent / size, unrounded; display-only when low-confidence
+  rentP25: number | null; // null only when no summary exists
+  rentP75: number | null; // null only when no summary exists
+  rentMedianCi95Low: number | null; // null only when no summary exists
+  rentMedianCi95High: number | null; // null only when no summary exists
+  rentSampleSize: number | null; // source-row count; null only when no summary exists
+  rentQualityStatus: 'USABLE' | 'LOW_CONFIDENCE' | null; // null when no summary exists
   averageCommute: number | null;
   longestCommute: number | null;
   shortestCommute: number | null;
@@ -263,13 +270,17 @@ type MemberOutcome = {
   memberId: string;
   commuteMinutes: number | null; // null when the route is pending or unavailable
   routeStatus: 'ok' | 'pending' | 'unavailable';
-  budgetHeadroom: number | null; // null without rent; otherwise budget - rentPerPerson
+  budgetHeadroom: number | null; // null without usable rent; otherwise budget - rentPerPerson
   commuteHeadroom: number | null; // maxCommute - commuteMinutes
 };
 
 type Reason = {
   code:
-    'OVER_BUDGET' | 'OVER_COMMUTE' | 'ROUTE_UNAVAILABLE' | 'RENT_UNAVAILABLE';
+    | 'OVER_BUDGET'
+    | 'OVER_COMMUTE'
+    | 'ROUTE_UNAVAILABLE'
+    | 'RENT_UNAVAILABLE'
+    | 'RENT_LOW_CONFIDENCE';
   memberId: string | null;
   amount: number | null; // S$ over budget or minutes over the limit
   message: string; // ready to display, e.g. "Sam's commute exceeds their limit by 10 min"
@@ -283,7 +294,7 @@ Example: the wireframe's sample group with fictional rents and routes. Alex goes
   "searchId": "s_8fK2nQ0wLx4pR7tY1zVb3c",
   "groupRevision": 4,
   "status": "complete",
-  "progress": { "total": 78, "resolved": 78, "unavailable": 0 },
+  "progress": { "total": 81, "resolved": 81, "unavailable": 0 },
   "priority": "balanced",
   "weights": { "rent": 0.35, "averageCommute": 0.35, "commuteGap": 0.3 },
   "data": {
@@ -300,7 +311,12 @@ Example: the wireframe's sample group with fictional rents and routes. Alex goes
       "score": 67,
       "wholeFlatRent": 3600,
       "rentPerPerson": 1200,
+      "rentP25": 3400,
+      "rentP75": 3900,
+      "rentMedianCi95Low": 3500,
+      "rentMedianCi95High": 3700,
       "rentSampleSize": 412,
+      "rentQualityStatus": "USABLE",
       "averageCommute": 22.33,
       "longestCommute": 27,
       "shortestCommute": 18,
@@ -340,7 +356,12 @@ Example: the wireframe's sample group with fictional rents and routes. Alex goes
       "score": null,
       "wholeFlatRent": 3000,
       "rentPerPerson": 1000,
+      "rentP25": 2800,
+      "rentP75": 3300,
+      "rentMedianCi95Low": 2900,
+      "rentMedianCi95High": 3100,
       "rentSampleSize": 388,
+      "rentQualityStatus": "USABLE",
       "averageCommute": 41,
       "longestCommute": 55,
       "shortestCommute": 30,
@@ -390,12 +411,13 @@ The example shows one entry per list. With the wireframe data, the full balanced
 - `complete`: every pair is `ok` or `unavailable`. A town with an unavailable route for any member is excluded with `ROUTE_UNAVAILABLE` (D06). Unknown never counts as zero minutes.
 - `stale`: the group's `revision` has moved past `groupRevision`. Results are withheld, and the UI asks the group to search again (D08).
 - A town missing rent data for the chosen flat type is excluded with `RENT_UNAVAILABLE`.
+- A town whose stored rent summary has `qualityStatus = LOW_CONFIDENCE` is excluded with `RENT_LOW_CONFIDENCE`. The response still exposes its median, per-person estimate, P25, P75, 95% median interval, sample size, and quality status. Every member's `budgetHeadroom` is null, and the observed rent does not enter feasibility or ranking.
 
 **Feasibility and ranking** (owned by #21 and #22):
 
-- A town is feasible when, for every member, `rentPerPerson <= budget` (unrounded) and `commuteMinutes <= maxCommute`, with both limits inclusive.
+- A town is feasible only when `rentQualityStatus = USABLE` and, for every member, `rentPerPerson <= budget` (unrounded) and `commuteMinutes <= maxCommute`, with both limits inclusive.
 - `score = max(0, round(100 × (1 − cost)))`, where `cost = wRent × rentPerPerson/2000 + wAvg × averageCommute/90 + wGap × commuteGap/90`. The weights per priority match the wireframe.
-- Order is score descending, then `displayName` ascending. Excluded towns with complete inputs follow the same order using a hypothetical internal score; the response still exposes `score: null` for exclusions. Missing rent or route inputs give a null score; these towns follow scored exclusions in `displayName` order. A missing rent summary is represented by null rent and headroom fields, never a fabricated zero.
+- Order is score descending, then `displayName` ascending. Excluded towns with complete, usable inputs follow the same order using a hypothetical internal score; the response still exposes `score: null` for exclusions. Missing, low-confidence, or unavailable rent/route inputs give a null score; these towns follow scored exclusions in `displayName` order. A missing rent summary has null rent fields. A low-confidence summary retains its observed distribution and sample evidence, but has null budget-headroom fields and never contributes a fabricated or weak score.
 
 ### `GET /meta` — data freshness
 
@@ -407,15 +429,15 @@ There is one on-demand table with keys `pk` and `sk` (both strings). Items with 
 
 ### Items
 
-| Item         | pk                    | sk                              | Attributes                                                                                            | Written by                                 |
-| ------------ | --------------------- | ------------------------------- | ----------------------------------------------------------------------------------------------------- | ------------------------------------------ |
-| Group        | `GROUP#<groupId>`     | `META`                          | groupName, size, revision, memberCount, organiserMemberId, inviteTokenHash, createdAt, ttl            | groups API                                 |
-| Member       | `GROUP#<groupId>`     | `MEMBER#<joinedAt>#<memberId>`  | memberId, name, nameKey (lower case), tokenHash, ready, placeId, destination, budget, maxCommute, ttl | groups API                                 |
-| Search       | `GROUP#<groupId>`     | `SEARCH#<createdAt>#<searchId>` | searchId, groupRevision, pairs (list of stationId × town), rentSnapshotId, ttl                        | search API                                 |
-| Place        | `PLACE#<placeId>`     | `META`                          | label, address, lat, lng, station, ttl (24 hours)                                                     | places API                                 |
-| Rent pointer | `RENT`                | `CURRENT`                       | snapshotId, period, validatedAt                                                                       | rent ingestion (#10)                       |
-| Rent summary | `RENT#<snapshotId>`   | `TOWN#<town>#<flatType>`        | median, p25, p75, count, period, sourceMonthFrom, sourceMonthTo                                       | rent ingestion (#10)                       |
-| Commute      | `COMMUTE#<stationId>` | `TOWN#<town>`                   | status (`pending`/`ok`/`unavailable`), minutes, transfers, walkMinutes, attempts, computedAt, error   | search API (pending), commute worker (#15) |
+| Item         | pk                    | sk                              | Attributes                                                                                                                                                                                                                                                                           | Written by                                 |
+| ------------ | --------------------- | ------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ------------------------------------------ |
+| Group        | `GROUP#<groupId>`     | `META`                          | groupName, size, revision, memberCount, organiserMemberId, inviteTokenHash, createdAt, ttl                                                                                                                                                                                           | groups API                                 |
+| Member       | `GROUP#<groupId>`     | `MEMBER#<joinedAt>#<memberId>`  | memberId, name, nameKey (lower case), tokenHash, ready, placeId, destination, budget, maxCommute, ttl                                                                                                                                                                                | groups API                                 |
+| Search       | `GROUP#<groupId>`     | `SEARCH#<createdAt>#<searchId>` | searchId, groupRevision, pairs (list of stationId × town), rentSnapshotId, ttl                                                                                                                                                                                                       | search API                                 |
+| Place        | `PLACE#<placeId>`     | `META`                          | label, address, lat, lng, station, ttl (24 hours)                                                                                                                                                                                                                                    | places API                                 |
+| Rent pointer | `RENT`                | `CURRENT`                       | schemaVersion, snapshotId, period, sourceMonthTo, validatedAt                                                                                                                                                                                                                        | rent ingestion (#10)                       |
+| Rent summary | `RENT#<snapshotId>`   | `TOWN#<town>#<flatType>`        | schemaVersion, sourceDatasetId, sourceUpdatedAt, sourceMonthFrom, sourceMonthTo, period, town, flatType, currency, unit, statistic, median, p25, p75, count, blockCount, bootstrapMethod, bootstrapReplicates, medianCi95Low, medianCi95High, medianCi95RelativeWidth, qualityStatus | rent ingestion (#10)                       |
+| Commute      | `COMMUTE#<stationId>` | `TOWN#<town>`                   | status (`pending`/`ok`/`unavailable`), minutes, transfers, walkMinutes, attempts, computedAt, error                                                                                                                                                                                  | search API (pending), commute worker (#15) |
 
 Sort keys start with timestamps so members come back in join order and the latest search is last. Group reads and writes check `META.ttl` against the current time; DynamoDB TTL deletion is asynchronous and must not be relied on for access expiry. Name uniqueness uses a `NAME#<nameKey>` reservation item in the group partition (memberId and ttl), created in the same transaction as a join and replaced transactionally on a rename.
 
@@ -428,8 +450,8 @@ Sort keys start with timestamps so members come back in join order and the lates
 | A3  | Join                                   | `TransactWriteItems`: update `META` with condition `memberCount < size`, then `memberCount += 1, revision += 1`; put the new `MEMBER` and its `NAME#<nameKey>` reservation with `attribute_not_exists(pk)`. A capacity condition failure becomes `GROUP_FULL`; a name reservation conflict becomes 422. Two people taking the last place cannot both succeed |
 | A4  | Save preferences                       | `TransactWriteItems`: update `MEMBER` with condition `tokenHash = :hash`; update `META` with `revision += 1`; a rename also conditions on the previous `nameKey`, reserves the new name and releases the old reservation in this transaction                                                                                                                 |
 | A5  | Resolve a place for a preference save  | `GetItem PLACE#<placeId> / META`                                                                                                                                                                                                                                                                                                                             |
-| A6  | Rent for a search                      | `GetItem RENT / CURRENT`, then `Query pk = RENT#<snapshotId>, begins_with(sk, "TOWN#")` and filter to the chosen flat type in code (about 26 × 5 small items)                                                                                                                                                                                                |
-| A7  | Commutes for a search                  | One `Query pk = COMMUTE#<stationId>` per distinct member station: at most 5 queries of about 26 items                                                                                                                                                                                                                                                        |
+| A6  | Rent for a search                      | `GetItem RENT / CURRENT`, then `Query pk = RENT#<snapshotId>, begins_with(sk, "TOWN#")` and filter to the chosen flat type in code (up to 27 towns × 6 flat types = 162 small items; the profiled trailing window produces 129 non-empty items)                                                                                                              |
+| A7  | Commutes for a search                  | One `Query pk = COMMUTE#<stationId>` per distinct member station: at most 5 queries of about 27 items; the source-controlled town set may change                                                                                                                                                                                                             |
 | A8  | Queue a missing pair once              | `PutItem COMMUTE#…/TOWN#…` with `status = pending`, a new `jobId` and bounded `leaseExpiresAt`; claim only an absent item, expired pending lease or retry-eligible unavailable item. The claimant sends SQS; other requests leave an active lease alone                                                                                                      |
 | A9  | Store a commute result                 | Worker `UpdateItem` to `ok` with minutes, or to `unavailable` with `retryAfter` after the final attempt/DLQ; condition on matching `jobId` and `status = pending`; an old attempt cannot overwrite a newer claim or completed result                                                                                                                         |
 | A10 | Data freshness                         | `GetItem RENT / CURRENT`                                                                                                                                                                                                                                                                                                                                     |
@@ -438,15 +460,15 @@ There are no scans and no secondary indexes. A first search uses A1 + A6 + A7: 8
 
 ## Assumptions to confirm
 
-| ID  | Assumption                                                                                                                          | Confirm with      |
-| --- | ----------------------------------------------------------------------------------------------------------------------------------- | ----------------- |
-| C1  | Rent is the trailing 12-month median whole-flat rent per town and flat type                                                         | #2 (data profile) |
-| C2  | Flat type by group size: 2 → 3-ROOM, 3 → 4-ROOM, 4–5 → 5-ROOM                                                                       | #2 and team (D12) |
-| C3  | Town names follow HDB's dataset spelling, upper case, and are used as keys                                                          | #2                |
-| C4  | OneMap search gives coordinates for free-text Singapore places, and stations can be snapped from them                               | #3, #14           |
-| C5  | Commute = OneMap public-transport route from a town's reference point to the destination station, weekday 08:30, shortest itinerary | #3, #15           |
-| C6  | Station codes (for example `CC24`) are stable cache keys; interchanges use one code                                                 | #3, #14           |
-| C7  | OneMap rate limits allow about 250 routing calls per minute                                                                         | #3                |
+| ID  | Assumption                                                                                                                                                                                                                     | Confirm with                                                           |
+| --- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ---------------------------------------------------------------------- |
+| C1  | Rent summaries store trailing-12-month R-7 median/P25/P75 values for all six source flat types; only summaries whose block-cluster bootstrap 95% median interval is at most 10% of the median are eligible for recommendations | Approved by Mani in the [#2 data profile](hdb-rental-data-profile.md)  |
+| C2  | Flat type by group size: 2 → 3-ROOM, 3 → 4-ROOM, 4–5 → 5-ROOM                                                                                                                                                                  | #2 and team (D12)                                                      |
+| C3  | Town names follow HDB's dataset spelling, upper case, and are used as keys; the September 2026 source has 27 values, including `CENTRAL` and `TENGAH`                                                                          | Confirmed in the initial [#2 data profile](hdb-rental-data-profile.md) |
+| C4  | OneMap search gives coordinates for free-text Singapore places, and stations can be snapped from them                                                                                                                          | #3, #14                                                                |
+| C5  | Commute = OneMap public-transport route from a town's reference point to the destination station, weekday 08:30, shortest itinerary                                                                                            | #3, #15                                                                |
+| C6  | Station codes (for example `CC24`) are stable cache keys; interchanges use one code                                                                                                                                            | #3, #14                                                                |
+| C7  | OneMap rate limits allow about 250 routing calls per minute                                                                                                                                                                    | #3                                                                     |
 
 ## Open questions
 
