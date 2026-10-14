@@ -1,0 +1,102 @@
+{
+  "meta": {
+    "status": "PROVISIONAL — assumptions only, no measured data yet (issue #45, 12 October 2026)",
+    "owner": "Ming (@lukerspace)",
+    "reviewer": "Mani (@saravanamani1999)",
+    "maps_to_evaluation_plan": {
+      "quiet": "between semesters; no counterpart load test, lower bound for idle cost",
+      "typical": "W1 Steady (2 searches/s for 10 min, warm cache) extrapolated to a month",
+      "bursty": "W2 Burst (ramp 1->50 req/s in 60 s, hold 5 min) plus W3 Long tail (cold commute cache)"
+    },
+    "how_to_refine": "Replace any field whose source is 'assumed' with a measured value from #30 (E1/E2) or #34 (E8/E9). Every field is used by model/cost_model.py; nothing is hardcoded in the report text.",
+    "fixed_facts": {
+      "towns": 27,
+      "towns_source": "docs/backend-design.md + #2 data profile (PR #52): 27 HDB towns in the September 2026 rent source, each represented by one MRT station. 26 are routable; TENGAH's only reference point is the unopened Jurong Region Line (JS3/JS4) and OneMap PT routing returns 404 from it, so its pairs are enqueued and recorded as unavailable rather than skipped.",
+      "ddb_requests_first_search": 8,
+      "ddb_requests_repeat_read": 7,
+      "ddb_requests_source": "docs/api-contract.md access patterns A1+A6+A7 (design budget, to be measured in #30)"
+    }
+  },
+
+  "scenarios": {
+    "quiet": {
+      "label": "Quiet (between semesters)",
+      "groups_per_month": 50,
+      "members_per_group": 3,
+      "places_lookups_per_member": 4,
+      "preference_saves_per_member": 2,
+      "searches_per_group": 2,
+      "result_polls_per_search": 20,
+      "commute_cache_hit_ratio": 0.8,
+      "burst_events_per_month": 0,
+      "web_page_loads_per_month": 400,
+      "notes": "Cache is cold-ish because few groups share destinations."
+    },
+    "typical": {
+      "label": "Typical (normal term month)",
+      "groups_per_month": 500,
+      "members_per_group": 3,
+      "places_lookups_per_member": 4,
+      "preference_saves_per_member": 2,
+      "searches_per_group": 2,
+      "result_polls_per_search": 20,
+      "commute_cache_hit_ratio": 0.9,
+      "burst_events_per_month": 0,
+      "web_page_loads_per_month": 4000,
+      "notes": "W1 Steady is 2 searches/s for 10 minutes = 1200 searches; a month at that intensity for ~1 h/day would be ~36k searches, far above a student project. 500 groups x 2 searches = 1000 searches/month is the honest prototype figure; the W1 rate is used for latency, not for volume."
+    },
+    "bursty": {
+      "label": "Bursty (semester start, W2 peak + W3 cold cache)",
+      "groups_per_month": 3000,
+      "members_per_group": 3,
+      "places_lookups_per_member": 4,
+      "preference_saves_per_member": 2,
+      "searches_per_group": 2,
+      "result_polls_per_search": 20,
+      "commute_cache_hit_ratio": 0.6,
+      "burst_events_per_month": 4,
+      "burst_peak_rps": 50,
+      "burst_hold_seconds": 300,
+      "burst_ramp_seconds": 60,
+      "web_page_loads_per_month": 24000,
+      "notes": "W2 admitted at 50 req/s requires raising the HTTP API stage throttle (currently 20 req/s burst 40) on the eval stage only — D-E1/D-E2. Cache hit falls because destinations are long-tail at semester start (W3)."
+    }
+  },
+
+  "shared_assumptions": {
+    "distinct_member_stations_per_group": 3,
+    "distinct_member_stations_source": "assumed = members_per_group; api-contract A7 caps commute queries at 5 per search",
+    "lambda_memory_mb": 256,
+    "lambda_memory_source": "infra/aws/src/api.ts (memorySize: 256, arm64, Python 3.13)",
+    "lambda_api_duration_ms": 120,
+    "lambda_api_duration_source": "assumed — MUST be replaced by #30 (E1) CloudWatch Lambda duration",
+    "lambda_worker_duration_ms": 900,
+    "lambda_worker_duration_source": "assumed — one OneMap routing call per job; replace with #15/#27 worker metrics",
+    "cold_start_share": 0.05,
+    "cold_start_share_source": "assumed — #30 (E1) reports cold-start share and init duration",
+    "log_bytes_per_invocation": 2048,
+    "log_bytes_source": "assumed for Powertools structured JSON at INFO; replace with CloudWatch IncomingBytes from #34",
+    "ddb_rru_per_read_request": 2.0,
+    "ddb_rru_source": "assumed: eventually-consistent reads of a few small items (0.5 RRU per 4 KB). Replace with ConsumedReadCapacityUnits from #34",
+    "ddb_wru_per_write": 1.5,
+    "ddb_wru_source": "assumed: 1 WRU per 1 KB item, transactional joins cost 2x. Replace with ConsumedWriteCapacityUnits from #34",
+    "ddb_table_size_gb": 0.5,
+    "api_response_kb": 8,
+    "web_page_bytes": 600000,
+    "web_asset_requests_per_cold_load": 12,
+    "web_build_size_mb": 5,
+    "s3_raw_rent_gb": 0.05,
+    "sqs_requests_per_job": 3,
+    "sqs_requests_per_job_source": "SendMessage + ReceiveMessage + DeleteMessage",
+    "sqs_idle_poll_requests_per_month": 650000,
+    "sqs_idle_poll_source": "assumed: Lambda event-source mapping keeps ~5 long-polling consumers at 20 s waits (~130k receives each). VERIFY in #34 against the SQS request count in Cost Explorer — this is the one line item that is not zero when nobody uses the app",
+    "cloudwatch_dashboards": 1,
+    "cloudwatch_alarms": 6,
+    "cloudwatch_custom_metrics": 12,
+    "cloudwatch_source": "docs/backend-design.md evaluation hooks: Powertools metrics, SQS age and DLQ alarms",
+    "secrets_count": 1,
+    "monthly_ingest_runs": 1,
+    "rent_snapshot_items": 130,
+    "rent_snapshot_source": "27 towns x 5 flat types (api-contract A6)"
+  }
+}

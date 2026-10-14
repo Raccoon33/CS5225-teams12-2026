@@ -1,0 +1,66 @@
+{
+  "meta": {
+    "status": "PROVISIONAL estimate built on stated assumptions — NOT a quote. The evaluation plan requires this wording in the report (see docs/evaluation-plan.md, Limitations).",
+    "baseline_definition": "D-E2: the on-premise analogue of the request path is the same Powertools handler served by uvicorn with 2 isolated worker processes on one t4g.small-class machine (2 vCPU / 2 GiB). The on-premise model sizes real hardware with that capacity, and must be sized for the W2 peak (50 req/s), not the average.",
+    "currency": "SGD inputs converted to USD",
+    "sgd_per_usd": 1.28,
+    "sgd_per_usd_source": "~1.28 SGD/USD, early October 2026 (converter page; refresh before the final report)",
+    "electricity_sgd_per_kwh": 0.3191,
+    "electricity_source": "SP Group household tariff Q3 2026 (1 Jul-30 Sep 2026), 31.91 cents/kWh before GST. Non-residential low-tension rates differ; a campus machine room would be billed differently. Flagged as an assumption.",
+    "depreciation_months": 36,
+    "depreciation_note": "3-year straight line, no residual value. A 5-year life would cut the hardware line by 40%."
+  },
+
+  "capacity": {
+    "sustained_rps_per_node": 25,
+    "sustained_rps_per_node_source": "ASSUMED PLACEHOLDER. #30 (E2) must measure the admitted req/s that one t4g.small with 2 uvicorn workers sustains under W2 while meeting the 500 ms target. This single number drives node_count and is the largest uncertainty in the whole comparison.",
+    "target_peak_rps": 50,
+    "target_peak_rps_source": "D-E1 W2 peak",
+    "redundancy_nodes": 1,
+    "redundancy_note": "One spare node, because a single box has no availability story at all; AWS gives multi-AZ by default."
+  },
+
+  "capex_sgd": {
+    "server_unit": 1200,
+    "server_unit_note": "small 4-core / 16 GB mini-PC class machine, NVMe included (assumption)",
+    "ups": 350,
+    "network_switch_router": 250,
+    "backup_disks": 200,
+    "spare_parts_buffer": 150
+  },
+
+  "opex_sgd_per_month": {
+    "internet_business_fibre_static_ip": 80,
+    "internet_note": "A public endpoint needs a business line with a static IP; a campus network would not expose it. If the university hosts it for free, set this to 0 and say so.",
+    "offsite_backup": 8,
+    "offsite_backup_note": "Cloud object storage for nightly dumps — ironically still a cloud cost",
+    "domain_and_tls": 2,
+    "domain_and_tls_note": "domain amortised; TLS via Let's Encrypt = 0",
+    "aircon_room_share": 15,
+    "aircon_room_share_note": "share of room cooling beyond the PUE factor below; assumption"
+  },
+
+  "power": {
+    "watts_idle_per_node": 15,
+    "watts_load_per_node": 45,
+    "load_duty_cycle": 0.15,
+    "duty_cycle_note": "fraction of the month the node is actually busy; the rest is idle but still powered — this is the structural difference from Lambda",
+    "pue": 1.5,
+    "pue_note": "power usage effectiveness for an office room with split-unit cooling (assumption; a real DC is 1.2-1.4)"
+  },
+
+  "operational_effort": {
+    "hours_per_month": 4,
+    "hours_note": "OS patching, TLS renewal, log rotation, disk checks, restore drills, incident response. Assumption; the report should state that student time is a real cost even when unpaid.",
+    "rate_sgd_per_hour": 25,
+    "rate_note": "student/junior-engineer opportunity cost (assumption)"
+  },
+
+  "excluded_but_named": [
+    "Physical security and room rent (assumed free on campus; a company would pay)",
+    "Hardware failure replacement beyond the spare-parts buffer",
+    "DDoS protection and WAF (CloudFront gives basic Shield Standard for free)",
+    "Staff time to build the deployment pipeline (one-off, not monthly)",
+    "Downtime cost: the single-box model has no SLA"
+  ]
+}
