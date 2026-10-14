@@ -9,7 +9,7 @@ from aws_lambda_powertools.event_handler.exceptions import NotFoundError
 from aws_lambda_powertools.utilities.typing import LambdaContext
 
 from flatsplit_api.errors import ApiError, not_found, validation_failed
-from flatsplit_api.models import HealthResponse, Place, PlacesResponse
+from flatsplit_api.models import HealthResponse, PlacesResponse
 from flatsplit_api.onemap import (
     OneMapRateLimited,
     OneMapUnavailable,
@@ -55,20 +55,10 @@ def health() -> HealthResponse:
 
 @app.get("/places")
 def places() -> PlacesResponse:
-    """Destination search: OneMap text search, snapped to the nearest station.
-
-    Three outcomes the client has to tell apart (#14):
-
-    - **several candidates** — returned as a list of up to five; the server
-      never picks one, because #3 showed that taking the top hit silently
-      selects the wrong station for several towns.
-    - **unsupported or no match** — `200` with an empty list, which is what the
-      contract specifies. A machine-readable "outside Singapore" code would be
-      a contract change, so it is raised in #6 rather than invented here.
-    - **upstream failure** — `503 UPSTREAM_UNAVAILABLE`, or `429 RATE_LIMITED`
-      when OneMap throttles us. Both are retryable.
-    """
+    """Return explicit selectable/unsupported candidates; never auto-select."""
     raw = app.current_event.get_query_string_value(name="q", default_value="") or ""
+    if any(ord(char) < 32 or ord(char) == 127 for char in raw):
+        raise validation_failed("q", "Control characters are not allowed.")
     query = normalise_query(raw)
 
     if len(query) < QUERY_MIN_LENGTH:
@@ -79,19 +69,19 @@ def places() -> PlacesResponse:
     try:
         found = find_places(query)
     except OneMapRateLimited as exc:
-        logger.warning("OneMap throttled the lookup", extra={"reason": str(exc)})
+        logger.warning("OneMap throttled the lookup")
         raise ApiError(
             429, "RATE_LIMITED", "Too many destination lookups. Try again shortly."
         ) from exc
     except OneMapUnavailable as exc:
-        logger.exception("OneMap lookup failed")
+        logger.warning("OneMap lookup failed")
         raise ApiError(
             503,
             "UPSTREAM_UNAVAILABLE",
             "Destination search is unavailable. Try again shortly.",
         ) from exc
 
-    return PlacesResponse(places=[Place.model_validate(place) for place in found])
+    return PlacesResponse.model_validate(found)
 
 
 @logger.inject_lambda_context

@@ -75,7 +75,7 @@
     "exactMatch": true,
     "routable": true
   },
-  "CENTRAL AREA": {
+  "CENTRAL": {
     "stationKey": "DHOBY_GHAUT",
     "stationName": "DHOBY GHAUT MRT STATION (CC1)",
     "codes": [
