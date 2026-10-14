@@ -1,0 +1,4043 @@
+{
+  "script": "measure_route_coverage.py",
+  "version": "1.0.0",
+  "issue": 19,
+  "experiment": "E8",
+  "runAt": "2026-10-14T07:19:23.449895+00:00",
+  "towns": [
+    "ANG MO KIO",
+    "BEDOK",
+    "BISHAN",
+    "BUKIT BATOK",
+    "BUKIT MERAH",
+    "BUKIT PANJANG",
+    "BUKIT TIMAH",
+    "CENTRAL AREA",
+    "CHOA CHU KANG",
+    "CLEMENTI",
+    "GEYLANG",
+    "HOUGANG",
+    "JURONG EAST",
+    "JURONG WEST",
+    "KALLANG/WHAMPOA",
+    "MARINE PARADE",
+    "PASIR RIS",
+    "PUNGGOL",
+    "QUEENSTOWN",
+    "SEMBAWANG"
+  ],
+  "destinations": [
+    {
+      "name": "National University of Singapore",
+      "label": "NATIONAL UNIVERSITY OF SINGAPORE",
+      "exact": "1.294201230793541,103.7710715818037",
+      "stationKey": "KENT_RIDGE",
+      "codes": [
+        "CC24"
+      ],
+      "station": "1.29330347372,103.784516185",
+      "walkMetres": 1498
+    },
+    {
+      "name": "Nanyang Technological University",
+      "label": "NANYANG TECHNOLOGICAL UNIVERSITY",
+      "exact": "1.352949370203277,103.6892235086704",
+      "stationKey": "PIONEER",
+      "codes": [
+        "EW28"
+      ],
+      "station": "1.33759355155,103.697418456",
+      "walkMetres": 1935
+    },
+    {
+      "name": "Raffles Place MRT Station",
+      "label": "RAFFLES PLACE MRT STATION",
+      "exact": "1.283933262345381,103.8514630662122",
+      "stationKey": "RAFFLES_PLACE",
+      "codes": [
+        "EW14",
+        "NS26"
+      ],
+      "station": "1.28393326207,103.851463066",
+      "walkMetres": 0
+    },
+    {
+      "name": "Changi Business Park",
+      "label": "CHANGI BUSINESS PARK",
+      "exact": "1.33825748396958,103.9670496789726",
+      "stationKey": "EXPO",
+      "codes": [
+        "CG1",
+        "DT35"
+      ],
+      "station": "1.3351569861,103.962608421",
+      "walkMetres": 602
+    },
+    {
+      "name": "one-north MRT Station",
+      "label": "ONE-NORTH MRT STATION (CC23)",
+      "exact": "1.299759874935558,103.7874575052496",
+      "stationKey": "ONE_NORTH",
+      "codes": [
+        "CC23"
+      ],
+      "station": "1.29973599261,103.787445375",
+      "walkMetres": 3
+    },
+    {
+      "name": "Singapore Management University",
+      "label": "SINGAPORE MANAGEMENT UNIVERSITY (ADMIN BLDG)",
+      "exact": "1.296846713984232,103.8522079431716",
+      "stationKey": "BRAS_BASAH",
+      "codes": [
+        "CC2"
+      ],
+      "station": "1.296812442,103.850894978",
+      "walkMetres": 146
+    },
+    {
+      "name": "Mapletree Business City",
+      "label": "MAPLETREE BUSINESS CITY",
+      "exact": "1.27489854965909,103.7990450922452",
+      "stationKey": "LABRADOR_PARK",
+      "codes": [
+        "CC27"
+      ],
+      "station": "1.27236050984,103.802970592",
+      "walkMetres": 520
+    },
+    {
+      "name": "Singapore General Hospital",
+      "label": "SGH BLK 4 (TAXI STAND)",
+      "exact": "1.279334573070614,103.8352493454929",
+      "stationKey": "OUTRAM_PARK",
+      "codes": [
+        "EW16",
+        "NE3",
+        "TE17"
+      ],
+      "station": "1.27973970679,103.839513521",
+      "walkMetres": 476
+    },
+    {
+      "name": "Singapore University of Technology and Design",
+      "label": "SINGAPORE UNIVERSITY OF TECHNOLOGY AND DESIGN",
+      "exact": "1.340171636990102,103.962860116421",
+      "stationKey": "UPPER_CHANGI",
+      "codes": [
+        "DT34"
+      ],
+      "station": "1.34132963069,103.961454166",
+      "walkMetres": 203
+    },
+    {
+      "name": "Singapore Institute of Technology",
+      "label": "DIGIPEN INSTITUTE OF TECHNOLOGY SINGAPORE",
+      "exact": "1.413307372328189,103.9129643979305",
+      "stationKey": "PUNGGOL_COAST",
+      "codes": [
+        "NE18"
+      ],
+      "station": "1.41493271453,103.910153547",
+      "walkMetres": 361
+    },
+    {
+      "name": "Singapore University of Social Sciences",
+      "label": "SINGAPORE UNIVERSITY OF SOCIAL SCIENCES",
+      "exact": "1.328325919148261,103.7758052413505",
+      "stationKey": "KING_ALBERT_PARK",
+      "codes": [
+        "DT6"
+      ],
+      "station": "1.33562313816,103.783899718",
+      "walkMetres": 1212
+    },
+    {
+      "name": "Marina Bay Financial Centre",
+      "label": "MARINA BAY FINANCIAL CENTRE",
+      "exact": "1.279514836431062,103.8542518085573",
+      "stationKey": "DOWNTOWN",
+      "codes": [
+        "DT17"
+      ],
+      "station": "1.27932716166,103.852995368",
+      "walkMetres": 141
+    },
+    {
+      "name": "Tanjong Pagar MRT Station",
+      "label": "TANJONG PAGAR MRT STATION (EW15)",
+      "exact": "1.276561317372466,103.8457251867589",
+      "stationKey": "TANJONG_PAGAR",
+      "codes": [
+        "EW15"
+      ],
+      "station": "1.27660353926,103.845961653",
+      "walkMetres": 27
+    },
+    {
+      "name": "Shenton Way",
+      "label": "SHENTON WAY",
+      "exact": "1.276124023885427,103.8481593713826",
+      "stationKey": "TANJONG_PAGAR",
+      "codes": [
+        "EW15"
+      ],
+      "station": "1.27660353926,103.845961653",
+      "walkMetres": 250
+    },
+    {
+      "name": "International Business Park",
+      "label": "INTERNATIONAL BUSINESS PARK",
+      "exact": "1.325230493083032,103.7489569240719",
+      "stationKey": "JURONG_EAST",
+      "codes": [
+        "EW24",
+        "JE5",
+        "NS1"
+      ],
+      "station": "1.33307484838,103.742265441",
+      "walkMetres": 1146
+    },
+    {
+      "name": "Singapore Science Park",
+      "label": "SINGAPORE SCIENCE PARK II",
+      "exact": "1.287959147142504,103.7815138976931",
+      "stationKey": "HAW_PAR_VILLA",
+      "codes": [
+        "CC25"
+      ],
+      "station": "1.28260724942,103.781731328",
+      "walkMetres": 596
+    },
+    {
+      "name": "Paya Lebar Quarter",
+      "label": "PAYA LEBAR QUARTER",
+      "exact": "1.317708868989965,103.8934146635971",
+      "stationKey": "PAYA_LEBAR",
+      "codes": [
+        "CC9",
+        "EW8"
+      ],
+      "station": "1.31811623588,103.893033228",
+      "walkMetres": 62
+    },
+    {
+      "name": "Jurong East MRT Station",
+      "label": "JURONG EAST MRT STATION (EW24 / NS1)",
+      "exact": "1.333027515439408,103.7423704876066",
+      "stationKey": "JURONG_EAST",
+      "codes": [
+        "EW24",
+        "JE5",
+        "NS1"
+      ],
+      "station": "1.33307484838,103.742265441",
+      "walkMetres": 13
+    },
+    {
+      "name": "Tampines Hub",
+      "label": "ENABLING SERVICES HUB (ESH) @ TAMPINES",
+      "exact": "1.348722647705288,103.9358509470165",
+      "stationKey": "TAMPINES_WEST",
+      "codes": [
+        "DT31"
+      ],
+      "station": "1.34553895814,103.938477862",
+      "walkMetres": 459
+    },
+    {
+      "name": "Woodlands MRT Station",
+      "label": "WOODLANDS MRT STATION (NS9)",
+      "exact": "1.436819629615197,103.7860667992523",
+      "stationKey": "WOODLANDS",
+      "codes": [
+        "NS9",
+        "TE2"
+      ],
+      "station": "1.43688742182,103.78632388",
+      "walkMetres": 30
+    }
+  ],
+  "coverage": {
+    "totalPairs": 400,
+    "ok": 400,
+    "unavailable": 0,
+    "errors": 0,
+    "coveragePct": 100.0,
+    "unavailablePairs": []
+  },
+  "snapError": {
+    "rows": [
+      {
+        "destination": "National University of Singapore",
+        "stationKey": "KENT_RIDGE",
+        "exactMinutes": 50.0,
+        "snappedMinutes": 44.7,
+        "deltaMinutes": -5.3,
+        "walkMetres": 1498
+      },
+      {
+        "destination": "Nanyang Technological University",
+        "stationKey": "PIONEER",
+        "exactMinutes": 83.0,
+        "snappedMinutes": 59.1,
+        "deltaMinutes": -23.9,
+        "walkMetres": 1935
+      },
+      {
+        "destination": "Raffles Place MRT Station",
+        "stationKey": "RAFFLES_PLACE",
+        "exactMinutes": 20.6,
+        "snappedMinutes": 20.6,
+        "deltaMinutes": 0.0,
+        "walkMetres": 0
+      },
+      {
+        "destination": "Changi Business Park",
+        "stationKey": "EXPO",
+        "exactMinutes": 57.6,
+        "snappedMinutes": 55.6,
+        "deltaMinutes": -2.0,
+        "walkMetres": 602
+      },
+      {
+        "destination": "one-north MRT Station",
+        "stationKey": "ONE_NORTH",
+        "exactMinutes": 46.3,
+        "snappedMinutes": 46.2,
+        "deltaMinutes": -0.1,
+        "walkMetres": 3
+      },
+      {
+        "destination": "Singapore Management University",
+        "stationKey": "BRAS_BASAH",
+        "exactMinutes": 26.4,
+        "snappedMinutes": 24.8,
+        "deltaMinutes": -1.6,
+        "walkMetres": 146
+      },
+      {
+        "destination": "Mapletree Business City",
+        "stationKey": "LABRADOR_PARK",
+        "exactMinutes": 46.1,
+        "snappedMinutes": 39.7,
+        "deltaMinutes": -6.4,
+        "walkMetres": 520
+      },
+      {
+        "destination": "Singapore General Hospital",
+        "stationKey": "OUTRAM_PARK",
+        "exactMinutes": 42.3,
+        "snappedMinutes": 27.9,
+        "deltaMinutes": -14.4,
+        "walkMetres": 476
+      },
+      {
+        "destination": "Singapore University of Technology and Design",
+        "stationKey": "UPPER_CHANGI",
+        "exactMinutes": 58.7,
+        "snappedMinutes": 56.5,
+        "deltaMinutes": -2.2,
+        "walkMetres": 203
+      },
+      {
+        "destination": "Singapore Institute of Technology",
+        "stationKey": "PUNGGOL_COAST",
+        "exactMinutes": 41.3,
+        "snappedMinutes": 32.5,
+        "deltaMinutes": -8.8,
+        "walkMetres": 361
+      },
+      {
+        "destination": "Singapore University of Social Sciences",
+        "stationKey": "KING_ALBERT_PARK",
+        "exactMinutes": 44.2,
+        "snappedMinutes": 25.8,
+        "deltaMinutes": -18.4,
+        "walkMetres": 1212
+      },
+      {
+        "destination": "Marina Bay Financial Centre",
+        "stationKey": "DOWNTOWN",
+        "exactMinutes": 30.8,
+        "snappedMinutes": 27.8,
+        "deltaMinutes": -3.0,
+        "walkMetres": 141
+      },
+      {
+        "destination": "Tanjong Pagar MRT Station",
+        "stationKey": "TANJONG_PAGAR",
+        "exactMinutes": 26.8,
+        "snappedMinutes": 26.5,
+        "deltaMinutes": -0.3,
+        "walkMetres": 27
+      },
+      {
+        "destination": "Shenton Way",
+        "stationKey": "TANJONG_PAGAR",
+        "exactMinutes": 31.6,
+        "snappedMinutes": 26.5,
+        "deltaMinutes": -5.1,
+        "walkMetres": 250
+      },
+      {
+        "destination": "International Business Park",
+        "stationKey": "JURONG_EAST",
+        "exactMinutes": 66.1,
+        "snappedMinutes": 47.2,
+        "deltaMinutes": -18.9,
+        "walkMetres": 1146
+      },
+      {
+        "destination": "Singapore Science Park",
+        "stationKey": "HAW_PAR_VILLA",
+        "exactMinutes": 55.0,
+        "snappedMinutes": 42.4,
+        "deltaMinutes": -12.6,
+        "walkMetres": 596
+      },
+      {
+        "destination": "Paya Lebar Quarter",
+        "stationKey": "PAYA_LEBAR",
+        "exactMinutes": 33.9,
+        "snappedMinutes": 32.5,
+        "deltaMinutes": -1.4,
+        "walkMetres": 62
+      },
+      {
+        "destination": "Jurong East MRT Station",
+        "stationKey": "JURONG_EAST",
+        "exactMinutes": 47.5,
+        "snappedMinutes": 47.2,
+        "deltaMinutes": -0.3,
+        "walkMetres": 13
+      },
+      {
+        "destination": "Tampines Hub",
+        "stationKey": "TAMPINES_WEST",
+        "exactMinutes": 55.9,
+        "snappedMinutes": 48.6,
+        "deltaMinutes": -7.3,
+        "walkMetres": 459
+      },
+      {
+        "destination": "Woodlands MRT Station",
+        "stationKey": "WOODLANDS",
+        "exactMinutes": 24.6,
+        "snappedMinutes": 23.3,
+        "deltaMinutes": -1.3,
+        "walkMetres": 30
+      }
+    ],
+    "medianAbsMinutes": 4.0,
+    "maxAbsMinutes": 23.9
+  },
+  "pairs": [
+    {
+      "town": "ANG MO KIO",
+      "destination": "National University of Singapore",
+      "stationKey": "KENT_RIDGE",
+      "status": "ok",
+      "minutes": 44.7,
+      "transfers": 1,
+      "walkMetres": 81.3
+    },
+    {
+      "town": "ANG MO KIO",
+      "destination": "Nanyang Technological University",
+      "stationKey": "PIONEER",
+      "status": "ok",
+      "minutes": 59.1,
+      "transfers": 1,
+      "walkMetres": 0.3
+    },
+    {
+      "town": "ANG MO KIO",
+      "destination": "Raffles Place MRT Station",
+      "stationKey": "RAFFLES_PLACE",
+      "status": "ok",
+      "minutes": 20.6,
+      "transfers": 0,
+      "walkMetres": 0.3
+    },
+    {
+      "town": "ANG MO KIO",
+      "destination": "Changi Business Park",
+      "stationKey": "EXPO",
+      "status": "ok",
+      "minutes": 55.6,
+      "transfers": 2,
+      "walkMetres": 274.7
+    },
+    {
+      "town": "ANG MO KIO",
+      "destination": "one-north MRT Station",
+      "stationKey": "ONE_NORTH",
+      "status": "ok",
+      "minutes": 46.2,
+      "transfers": 1,
+      "walkMetres": 81.3
+    },
+    {
+      "town": "ANG MO KIO",
+      "destination": "Singapore Management University",
+      "stationKey": "BRAS_BASAH",
+      "status": "ok",
+      "minutes": 24.8,
+      "transfers": 1,
+      "walkMetres": 229.0
+    },
+    {
+      "town": "ANG MO KIO",
+      "destination": "Mapletree Business City",
+      "stationKey": "LABRADOR_PARK",
+      "status": "ok",
+      "minutes": 39.7,
+      "transfers": 1,
+      "walkMetres": 192.3
+    },
+    {
+      "town": "ANG MO KIO",
+      "destination": "Singapore General Hospital",
+      "stationKey": "OUTRAM_PARK",
+      "status": "ok",
+      "minutes": 27.9,
+      "transfers": 1,
+      "walkMetres": 204.9
+    },
+    {
+      "town": "ANG MO KIO",
+      "destination": "Singapore University of Technology and Design",
+      "stationKey": "UPPER_CHANGI",
+      "status": "ok",
+      "minutes": 56.5,
+      "transfers": 2,
+      "walkMetres": 220.1
+    },
+    {
+      "town": "ANG MO KIO",
+      "destination": "Singapore Institute of Technology",
+      "stationKey": "PUNGGOL_COAST",
+      "status": "ok",
+      "minutes": 32.5,
+      "transfers": 2,
+      "walkMetres": 397.3
+    },
+    {
+      "town": "ANG MO KIO",
+      "destination": "Singapore University of Social Sciences",
+      "stationKey": "KING_ALBERT_PARK",
+      "status": "ok",
+      "minutes": 25.8,
+      "transfers": 1,
+      "walkMetres": 144.7
+    },
+    {
+      "town": "ANG MO KIO",
+      "destination": "Marina Bay Financial Centre",
+      "stationKey": "DOWNTOWN",
+      "status": "ok",
+      "minutes": 27.8,
+      "transfers": 1,
+      "walkMetres": 144.7
+    },
+    {
+      "town": "ANG MO KIO",
+      "destination": "Tanjong Pagar MRT Station",
+      "stationKey": "TANJONG_PAGAR",
+      "status": "ok",
+      "minutes": 26.5,
+      "transfers": 1,
+      "walkMetres": 0.3
+    },
+    {
+      "town": "ANG MO KIO",
+      "destination": "Shenton Way",
+      "stationKey": "TANJONG_PAGAR",
+      "status": "ok",
+      "minutes": 26.5,
+      "transfers": 1,
+      "walkMetres": 0.3
+    },
+    {
+      "town": "ANG MO KIO",
+      "destination": "International Business Park",
+      "stationKey": "JURONG_EAST",
+      "status": "ok",
+      "minutes": 47.2,
+      "transfers": 0,
+      "walkMetres": 0.3
+    },
+    {
+      "town": "ANG MO KIO",
+      "destination": "Singapore Science Park",
+      "stationKey": "HAW_PAR_VILLA",
+      "status": "ok",
+      "minutes": 42.4,
+      "transfers": 1,
+      "walkMetres": 81.6
+    },
+    {
+      "town": "ANG MO KIO",
+      "destination": "Paya Lebar Quarter",
+      "stationKey": "PAYA_LEBAR",
+      "status": "ok",
+      "minutes": 32.5,
+      "transfers": 1,
+      "walkMetres": 0.3
+    },
+    {
+      "town": "ANG MO KIO",
+      "destination": "Jurong East MRT Station",
+      "stationKey": "JURONG_EAST",
+      "status": "ok",
+      "minutes": 47.2,
+      "transfers": 0,
+      "walkMetres": 0.3
+    },
+    {
+      "town": "ANG MO KIO",
+      "destination": "Tampines Hub",
+      "stationKey": "TAMPINES_WEST",
+      "status": "ok",
+      "minutes": 48.6,
+      "transfers": 2,
+      "walkMetres": 262.9
+    },
+    {
+      "town": "ANG MO KIO",
+      "destination": "Woodlands MRT Station",
+      "stationKey": "WOODLANDS",
+      "status": "ok",
+      "minutes": 23.3,
+      "transfers": 0,
+      "walkMetres": 0.3
+    },
+    {
+      "town": "BEDOK",
+      "destination": "National University of Singapore",
+      "stationKey": "KENT_RIDGE",
+      "status": "ok",
+      "minutes": 42.3,
+      "transfers": 1,
+      "walkMetres": 133.8
+    },
+    {
+      "town": "BEDOK",
+      "destination": "Nanyang Technological University",
+      "stationKey": "PIONEER",
+      "status": "ok",
+      "minutes": 53.7,
+      "transfers": 0,
+      "walkMetres": 21.3
+    },
+    {
+      "town": "BEDOK",
+      "destination": "Raffles Place MRT Station",
+      "stationKey": "RAFFLES_PLACE",
+      "status": "ok",
+      "minutes": 18.9,
+      "transfers": 0,
+      "walkMetres": 21.3
+    },
+    {
+      "town": "BEDOK",
+      "destination": "Changi Business Park",
+      "stationKey": "EXPO",
+      "status": "ok",
+      "minutes": 18.4,
+      "transfers": 1,
+      "walkMetres": 523.1
+    },
+    {
+      "town": "BEDOK",
+      "destination": "one-north MRT Station",
+      "stationKey": "ONE_NORTH",
+      "status": "ok",
+      "minutes": 40.8,
+      "transfers": 1,
+      "walkMetres": 152.8
+    },
+    {
+      "town": "BEDOK",
+      "destination": "Singapore Management University",
+      "stationKey": "BRAS_BASAH",
+      "status": "ok",
+      "minutes": 22.1,
+      "transfers": 1,
+      "walkMetres": 133.8
+    },
+    {
+      "town": "BEDOK",
+      "destination": "Mapletree Business City",
+      "stationKey": "LABRADOR_PARK",
+      "status": "ok",
+      "minutes": 37.3,
+      "transfers": 1,
+      "walkMetres": 244.8
+    },
+    {
+      "town": "BEDOK",
+      "destination": "Singapore General Hospital",
+      "stationKey": "OUTRAM_PARK",
+      "status": "ok",
+      "minutes": 28.5,
+      "transfers": 0,
+      "walkMetres": 375.7
+    },
+    {
+      "town": "BEDOK",
+      "destination": "Singapore University of Technology and Design",
+      "stationKey": "UPPER_CHANGI",
+      "status": "ok",
+      "minutes": 19.1,
+      "transfers": 1,
+      "walkMetres": 202.7
+    },
+    {
+      "town": "BEDOK",
+      "destination": "Singapore Institute of Technology",
+      "stationKey": "PUNGGOL_COAST",
+      "status": "ok",
+      "minutes": 50.9,
+      "transfers": 2,
+      "walkMetres": 98.0
+    },
+    {
+      "town": "BEDOK",
+      "destination": "Singapore University of Social Sciences",
+      "stationKey": "KING_ALBERT_PARK",
+      "status": "ok",
+      "minutes": 38.6,
+      "transfers": 1,
+      "walkMetres": 237.2
+    },
+    {
+      "town": "BEDOK",
+      "destination": "Marina Bay Financial Centre",
+      "stationKey": "DOWNTOWN",
+      "status": "ok",
+      "minutes": 25.4,
+      "transfers": 2,
+      "walkMetres": 170.7
+    },
+    {
+      "town": "BEDOK",
+      "destination": "Tanjong Pagar MRT Station",
+      "stationKey": "TANJONG_PAGAR",
+      "status": "ok",
+      "minutes": 21.0,
+      "transfers": 0,
+      "walkMetres": 21.3
+    },
+    {
+      "town": "BEDOK",
+      "destination": "Shenton Way",
+      "stationKey": "TANJONG_PAGAR",
+      "status": "ok",
+      "minutes": 21.0,
+      "transfers": 0,
+      "walkMetres": 21.3
+    },
+    {
+      "town": "BEDOK",
+      "destination": "International Business Park",
+      "stationKey": "JURONG_EAST",
+      "status": "ok",
+      "minutes": 44.2,
+      "transfers": 0,
+      "walkMetres": 21.3
+    },
+    {
+      "town": "BEDOK",
+      "destination": "Singapore Science Park",
+      "stationKey": "HAW_PAR_VILLA",
+      "status": "ok",
+      "minutes": 40.0,
+      "transfers": 1,
+      "walkMetres": 134.1
+    },
+    {
+      "town": "BEDOK",
+      "destination": "Paya Lebar Quarter",
+      "stationKey": "PAYA_LEBAR",
+      "status": "ok",
+      "minutes": 6.9,
+      "transfers": 0,
+      "walkMetres": 21.3
+    },
+    {
+      "town": "BEDOK",
+      "destination": "Jurong East MRT Station",
+      "stationKey": "JURONG_EAST",
+      "status": "ok",
+      "minutes": 44.2,
+      "transfers": 0,
+      "walkMetres": 21.3
+    },
+    {
+      "town": "BEDOK",
+      "destination": "Tampines Hub",
+      "stationKey": "TAMPINES_WEST",
+      "status": "ok",
+      "minutes": 18.7,
+      "transfers": 0,
+      "walkMetres": 409.9
+    },
+    {
+      "town": "BEDOK",
+      "destination": "Woodlands MRT Station",
+      "stationKey": "WOODLANDS",
+      "status": "ok",
+      "minutes": 63.8,
+      "transfers": 1,
+      "walkMetres": 21.3
+    },
+    {
+      "town": "BISHAN",
+      "destination": "National University of Singapore",
+      "stationKey": "KENT_RIDGE",
+      "status": "ok",
+      "minutes": 21.4,
+      "transfers": 0,
+      "walkMetres": 117.5
+    },
+    {
+      "town": "BISHAN",
+      "destination": "Nanyang Technological University",
+      "stationKey": "PIONEER",
+      "status": "ok",
+      "minutes": 42.1,
+      "transfers": 1,
+      "walkMetres": 249.1
+    },
+    {
+      "town": "BISHAN",
+      "destination": "Raffles Place MRT Station",
+      "stationKey": "RAFFLES_PLACE",
+      "status": "ok",
+      "minutes": 22.1,
+      "transfers": 0,
+      "walkMetres": 309.6
+    },
+    {
+      "town": "BISHAN",
+      "destination": "Changi Business Park",
+      "stationKey": "EXPO",
+      "status": "ok",
+      "minutes": 40.1,
+      "transfers": 1,
+      "walkMetres": 257.0
+    },
+    {
+      "town": "BISHAN",
+      "destination": "one-north MRT Station",
+      "stationKey": "ONE_NORTH",
+      "status": "ok",
+      "minutes": 19.9,
+      "transfers": 0,
+      "walkMetres": 117.5
+    },
+    {
+      "town": "BISHAN",
+      "destination": "Singapore Management University",
+      "stationKey": "BRAS_BASAH",
+      "status": "ok",
+      "minutes": 25.5,
+      "transfers": 0,
+      "walkMetres": 117.5
+    },
+    {
+      "town": "BISHAN",
+      "destination": "Mapletree Business City",
+      "stationKey": "LABRADOR_PARK",
+      "status": "ok",
+      "minutes": 30.3,
+      "transfers": 0,
+      "walkMetres": 228.5
+    },
+    {
+      "town": "BISHAN",
+      "destination": "Singapore General Hospital",
+      "stationKey": "OUTRAM_PARK",
+      "status": "ok",
+      "minutes": 29.2,
+      "transfers": 1,
+      "walkMetres": 259.8
+    },
+    {
+      "town": "BISHAN",
+      "destination": "Singapore University of Technology and Design",
+      "stationKey": "UPPER_CHANGI",
+      "status": "ok",
+      "minutes": 40.1,
+      "transfers": 1,
+      "walkMetres": 358.6
+    },
+    {
+      "town": "BISHAN",
+      "destination": "Singapore Institute of Technology",
+      "stationKey": "PUNGGOL_COAST",
+      "status": "ok",
+      "minutes": 24.8,
+      "transfers": 1,
+      "walkMetres": 259.8
+    },
+    {
+      "town": "BISHAN",
+      "destination": "Singapore University of Social Sciences",
+      "stationKey": "KING_ALBERT_PARK",
+      "status": "ok",
+      "minutes": 23.5,
+      "transfers": 1,
+      "walkMetres": 305.4
+    },
+    {
+      "town": "BISHAN",
+      "destination": "Marina Bay Financial Centre",
+      "stationKey": "DOWNTOWN",
+      "status": "ok",
+      "minutes": 27.9,
+      "transfers": 1,
+      "walkMetres": 454.0
+    },
+    {
+      "town": "BISHAN",
+      "destination": "Tanjong Pagar MRT Station",
+      "stationKey": "TANJONG_PAGAR",
+      "status": "ok",
+      "minutes": 28.0,
+      "transfers": 1,
+      "walkMetres": 309.6
+    },
+    {
+      "town": "BISHAN",
+      "destination": "Shenton Way",
+      "stationKey": "TANJONG_PAGAR",
+      "status": "ok",
+      "minutes": 28.0,
+      "transfers": 1,
+      "walkMetres": 309.6
+    },
+    {
+      "town": "BISHAN",
+      "destination": "International Business Park",
+      "stationKey": "JURONG_EAST",
+      "status": "ok",
+      "minutes": 32.6,
+      "transfers": 1,
+      "walkMetres": 249.1
+    },
+    {
+      "town": "BISHAN",
+      "destination": "Singapore Science Park",
+      "stationKey": "HAW_PAR_VILLA",
+      "status": "ok",
+      "minutes": 23.8,
+      "transfers": 0,
+      "walkMetres": 117.8
+    },
+    {
+      "town": "BISHAN",
+      "destination": "Paya Lebar Quarter",
+      "stationKey": "PAYA_LEBAR",
+      "status": "ok",
+      "minutes": 15.9,
+      "transfers": 0,
+      "walkMetres": 230.0
+    },
+    {
+      "town": "BISHAN",
+      "destination": "Jurong East MRT Station",
+      "stationKey": "JURONG_EAST",
+      "status": "ok",
+      "minutes": 32.6,
+      "transfers": 1,
+      "walkMetres": 249.1
+    },
+    {
+      "town": "BISHAN",
+      "destination": "Tampines Hub",
+      "stationKey": "TAMPINES_WEST",
+      "status": "ok",
+      "minutes": 30.0,
+      "transfers": 1,
+      "walkMetres": 257.0
+    },
+    {
+      "town": "BISHAN",
+      "destination": "Woodlands MRT Station",
+      "stationKey": "WOODLANDS",
+      "status": "ok",
+      "minutes": 32.1,
+      "transfers": 0,
+      "walkMetres": 309.6
+    },
+    {
+      "town": "BUKIT BATOK",
+      "destination": "National University of Singapore",
+      "stationKey": "KENT_RIDGE",
+      "status": "ok",
+      "minutes": 25.0,
+      "transfers": 2,
+      "walkMetres": 136.0
+    },
+    {
+      "town": "BUKIT BATOK",
+      "destination": "Nanyang Technological University",
+      "stationKey": "PIONEER",
+      "status": "ok",
+      "minutes": 14.6,
+      "transfers": 1,
+      "walkMetres": 4.4
+    },
+    {
+      "town": "BUKIT BATOK",
+      "destination": "Raffles Place MRT Station",
+      "stationKey": "RAFFLES_PLACE",
+      "status": "ok",
+      "minutes": 32.0,
+      "transfers": 1,
+      "walkMetres": 4.4
+    },
+    {
+      "town": "BUKIT BATOK",
+      "destination": "Changi Business Park",
+      "stationKey": "EXPO",
+      "status": "ok",
+      "minutes": 66.0,
+      "transfers": 2,
+      "walkMetres": 278.8
+    },
+    {
+      "town": "BUKIT BATOK",
+      "destination": "one-north MRT Station",
+      "stationKey": "ONE_NORTH",
+      "status": "ok",
+      "minutes": 23.5,
+      "transfers": 2,
+      "walkMetres": 136.0
+    },
+    {
+      "town": "BUKIT BATOK",
+      "destination": "Singapore Management University",
+      "stationKey": "BRAS_BASAH",
+      "status": "ok",
+      "minutes": 49.9,
+      "transfers": 2,
+      "walkMetres": 321.1
+    },
+    {
+      "town": "BUKIT BATOK",
+      "destination": "Mapletree Business City",
+      "stationKey": "LABRADOR_PARK",
+      "status": "ok",
+      "minutes": 33.9,
+      "transfers": 2,
+      "walkMetres": 247.0
+    },
+    {
+      "town": "BUKIT BATOK",
+      "destination": "Singapore General Hospital",
+      "stationKey": "OUTRAM_PARK",
+      "status": "ok",
+      "minutes": 33.9,
+      "transfers": 1,
+      "walkMetres": 358.9
+    },
+    {
+      "town": "BUKIT BATOK",
+      "destination": "Singapore University of Technology and Design",
+      "stationKey": "UPPER_CHANGI",
+      "status": "ok",
+      "minutes": 67.4,
+      "transfers": 2,
+      "walkMetres": 185.8
+    },
+    {
+      "town": "BUKIT BATOK",
+      "destination": "Singapore Institute of Technology",
+      "stationKey": "PUNGGOL_COAST",
+      "status": "ok",
+      "minutes": 67.5,
+      "transfers": 2,
+      "walkMetres": 358.9
+    },
+    {
+      "town": "BUKIT BATOK",
+      "destination": "Singapore University of Social Sciences",
+      "stationKey": "KING_ALBERT_PARK",
+      "status": "ok",
+      "minutes": 23.4,
+      "transfers": 0,
+      "walkMetres": 390.7
+    },
+    {
+      "town": "BUKIT BATOK",
+      "destination": "Marina Bay Financial Centre",
+      "stationKey": "DOWNTOWN",
+      "status": "ok",
+      "minutes": 43.5,
+      "transfers": 2,
+      "walkMetres": 389.8
+    },
+    {
+      "town": "BUKIT BATOK",
+      "destination": "Tanjong Pagar MRT Station",
+      "stationKey": "TANJONG_PAGAR",
+      "status": "ok",
+      "minutes": 30.0,
+      "transfers": 1,
+      "walkMetres": 4.4
+    },
+    {
+      "town": "BUKIT BATOK",
+      "destination": "Shenton Way",
+      "stationKey": "TANJONG_PAGAR",
+      "status": "ok",
+      "minutes": 30.0,
+      "transfers": 1,
+      "walkMetres": 4.4
+    },
+    {
+      "town": "BUKIT BATOK",
+      "destination": "International Business Park",
+      "stationKey": "JURONG_EAST",
+      "status": "ok",
+      "minutes": 2.9,
+      "transfers": 0,
+      "walkMetres": 4.4
+    },
+    {
+      "town": "BUKIT BATOK",
+      "destination": "Singapore Science Park",
+      "stationKey": "HAW_PAR_VILLA",
+      "status": "ok",
+      "minutes": 27.4,
+      "transfers": 2,
+      "walkMetres": 136.2
+    },
+    {
+      "town": "BUKIT BATOK",
+      "destination": "Paya Lebar Quarter",
+      "stationKey": "PAYA_LEBAR",
+      "status": "ok",
+      "minutes": 44.1,
+      "transfers": 1,
+      "walkMetres": 4.4
+    },
+    {
+      "town": "BUKIT BATOK",
+      "destination": "Jurong East MRT Station",
+      "stationKey": "JURONG_EAST",
+      "status": "ok",
+      "minutes": 2.9,
+      "transfers": 0,
+      "walkMetres": 4.4
+    },
+    {
+      "town": "BUKIT BATOK",
+      "destination": "Tampines Hub",
+      "stationKey": "TAMPINES_WEST",
+      "status": "ok",
+      "minutes": 71.1,
+      "transfers": 2,
+      "walkMetres": 435.6
+    },
+    {
+      "town": "BUKIT BATOK",
+      "destination": "Woodlands MRT Station",
+      "stationKey": "WOODLANDS",
+      "status": "ok",
+      "minutes": 20.7,
+      "transfers": 0,
+      "walkMetres": 4.4
+    },
+    {
+      "town": "BUKIT MERAH",
+      "destination": "National University of Singapore",
+      "stationKey": "KENT_RIDGE",
+      "status": "ok",
+      "minutes": 14.6,
+      "transfers": 1,
+      "walkMetres": 143.5
+    },
+    {
+      "town": "BUKIT MERAH",
+      "destination": "Nanyang Technological University",
+      "stationKey": "PIONEER",
+      "status": "ok",
+      "minutes": 25.9,
+      "transfers": 0,
+      "walkMetres": 11.9
+    },
+    {
+      "town": "BUKIT MERAH",
+      "destination": "Raffles Place MRT Station",
+      "stationKey": "RAFFLES_PLACE",
+      "status": "ok",
+      "minutes": 8.3,
+      "transfers": 0,
+      "walkMetres": 11.9
+    },
+    {
+      "town": "BUKIT MERAH",
+      "destination": "Changi Business Park",
+      "stationKey": "EXPO",
+      "status": "ok",
+      "minutes": 43.2,
+      "transfers": 1,
+      "walkMetres": 286.3
+    },
+    {
+      "town": "BUKIT MERAH",
+      "destination": "one-north MRT Station",
+      "stationKey": "ONE_NORTH",
+      "status": "ok",
+      "minutes": 13.1,
+      "transfers": 1,
+      "walkMetres": 143.5
+    },
+    {
+      "town": "BUKIT MERAH",
+      "destination": "Singapore Management University",
+      "stationKey": "BRAS_BASAH",
+      "status": "ok",
+      "minutes": 23.4,
+      "transfers": 1,
+      "walkMetres": 22.1
+    },
+    {
+      "town": "BUKIT MERAH",
+      "destination": "Mapletree Business City",
+      "stationKey": "LABRADOR_PARK",
+      "status": "ok",
+      "minutes": 18.6,
+      "transfers": 0,
+      "walkMetres": 368.8
+    },
+    {
+      "town": "BUKIT MERAH",
+      "destination": "Singapore General Hospital",
+      "stationKey": "OUTRAM_PARK",
+      "status": "ok",
+      "minutes": 10.1,
+      "transfers": 0,
+      "walkMetres": 366.4
+    },
+    {
+      "town": "BUKIT MERAH",
+      "destination": "Singapore University of Technology and Design",
+      "stationKey": "UPPER_CHANGI",
+      "status": "ok",
+      "minutes": 45.2,
+      "transfers": 1,
+      "walkMetres": 193.3
+    },
+    {
+      "town": "BUKIT MERAH",
+      "destination": "Singapore Institute of Technology",
+      "stationKey": "PUNGGOL_COAST",
+      "status": "ok",
+      "minutes": 47.2,
+      "transfers": 1,
+      "walkMetres": 46.9
+    },
+    {
+      "town": "BUKIT MERAH",
+      "destination": "Singapore University of Social Sciences",
+      "stationKey": "KING_ALBERT_PARK",
+      "status": "ok",
+      "minutes": 27.8,
+      "transfers": 2,
+      "walkMetres": 331.4
+    },
+    {
+      "town": "BUKIT MERAH",
+      "destination": "Marina Bay Financial Centre",
+      "stationKey": "DOWNTOWN",
+      "status": "ok",
+      "minutes": 20.2,
+      "transfers": 1,
+      "walkMetres": 478.1
+    },
+    {
+      "town": "BUKIT MERAH",
+      "destination": "Tanjong Pagar MRT Station",
+      "stationKey": "TANJONG_PAGAR",
+      "status": "ok",
+      "minutes": 6.2,
+      "transfers": 0,
+      "walkMetres": 11.9
+    },
+    {
+      "town": "BUKIT MERAH",
+      "destination": "Shenton Way",
+      "stationKey": "TANJONG_PAGAR",
+      "status": "ok",
+      "minutes": 6.2,
+      "transfers": 0,
+      "walkMetres": 11.9
+    },
+    {
+      "town": "BUKIT MERAH",
+      "destination": "International Business Park",
+      "stationKey": "JURONG_EAST",
+      "status": "ok",
+      "minutes": 16.4,
+      "transfers": 0,
+      "walkMetres": 11.9
+    },
+    {
+      "town": "BUKIT MERAH",
+      "destination": "Singapore Science Park",
+      "stationKey": "HAW_PAR_VILLA",
+      "status": "ok",
+      "minutes": 16.9,
+      "transfers": 1,
+      "walkMetres": 143.8
+    },
+    {
+      "town": "BUKIT MERAH",
+      "destination": "Paya Lebar Quarter",
+      "stationKey": "PAYA_LEBAR",
+      "status": "ok",
+      "minutes": 20.3,
+      "transfers": 0,
+      "walkMetres": 11.9
+    },
+    {
+      "town": "BUKIT MERAH",
+      "destination": "Jurong East MRT Station",
+      "stationKey": "JURONG_EAST",
+      "status": "ok",
+      "minutes": 16.4,
+      "transfers": 0,
+      "walkMetres": 11.9
+    },
+    {
+      "town": "BUKIT MERAH",
+      "destination": "Tampines Hub",
+      "stationKey": "TAMPINES_WEST",
+      "status": "ok",
+      "minutes": 40.9,
+      "transfers": 2,
+      "walkMetres": 111.8
+    },
+    {
+      "town": "BUKIT MERAH",
+      "destination": "Woodlands MRT Station",
+      "stationKey": "WOODLANDS",
+      "status": "ok",
+      "minutes": 42.8,
+      "transfers": 1,
+      "walkMetres": 11.9
+    },
+    {
+      "town": "BUKIT PANJANG",
+      "destination": "National University of Singapore",
+      "stationKey": "KENT_RIDGE",
+      "status": "ok",
+      "minutes": 34.2,
+      "transfers": 1,
+      "walkMetres": 343.9
+    },
+    {
+      "town": "BUKIT PANJANG",
+      "destination": "Nanyang Technological University",
+      "stationKey": "PIONEER",
+      "status": "ok",
+      "minutes": 34.1,
+      "transfers": 1,
+      "walkMetres": 280.7
+    },
+    {
+      "town": "BUKIT PANJANG",
+      "destination": "Raffles Place MRT Station",
+      "stationKey": "RAFFLES_PLACE",
+      "status": "ok",
+      "minutes": 38.2,
+      "transfers": 1,
+      "walkMetres": 300.4
+    },
+    {
+      "town": "BUKIT PANJANG",
+      "destination": "Changi Business Park",
+      "stationKey": "EXPO",
+      "status": "ok",
+      "minutes": 72.7,
+      "transfers": 0,
+      "walkMetres": 156.1
+    },
+    {
+      "town": "BUKIT PANJANG",
+      "destination": "one-north MRT Station",
+      "stationKey": "ONE_NORTH",
+      "status": "ok",
+      "minutes": 32.6,
+      "transfers": 1,
+      "walkMetres": 343.9
+    },
+    {
+      "town": "BUKIT PANJANG",
+      "destination": "Singapore Management University",
+      "stationKey": "BRAS_BASAH",
+      "status": "ok",
+      "minutes": 35.7,
+      "transfers": 1,
+      "walkMetres": 193.0
+    },
+    {
+      "town": "BUKIT PANJANG",
+      "destination": "Mapletree Business City",
+      "stationKey": "LABRADOR_PARK",
+      "status": "ok",
+      "minutes": 51.0,
+      "transfers": 1,
+      "walkMetres": 267.1
+    },
+    {
+      "town": "BUKIT PANJANG",
+      "destination": "Singapore General Hospital",
+      "stationKey": "OUTRAM_PARK",
+      "status": "ok",
+      "minutes": 38.8,
+      "transfers": 1,
+      "walkMetres": 333.1
+    },
+    {
+      "town": "BUKIT PANJANG",
+      "destination": "Singapore University of Technology and Design",
+      "stationKey": "UPPER_CHANGI",
+      "status": "ok",
+      "minutes": 72.7,
+      "transfers": 0,
+      "walkMetres": 257.7
+    },
+    {
+      "town": "BUKIT PANJANG",
+      "destination": "Singapore Institute of Technology",
+      "stationKey": "PUNGGOL_COAST",
+      "status": "ok",
+      "minutes": 58.3,
+      "transfers": 1,
+      "walkMetres": 333.1
+    },
+    {
+      "town": "BUKIT PANJANG",
+      "destination": "Singapore University of Social Sciences",
+      "stationKey": "KING_ALBERT_PARK",
+      "status": "ok",
+      "minutes": 12.5,
+      "transfers": 0,
+      "walkMetres": 156.1
+    },
+    {
+      "town": "BUKIT PANJANG",
+      "destination": "Marina Bay Financial Centre",
+      "stationKey": "DOWNTOWN",
+      "status": "ok",
+      "minutes": 34.6,
+      "transfers": 0,
+      "walkMetres": 156.1
+    },
+    {
+      "town": "BUKIT PANJANG",
+      "destination": "Tanjong Pagar MRT Station",
+      "stationKey": "TANJONG_PAGAR",
+      "status": "ok",
+      "minutes": 40.9,
+      "transfers": 1,
+      "walkMetres": 372.5
+    },
+    {
+      "town": "BUKIT PANJANG",
+      "destination": "Shenton Way",
+      "stationKey": "TANJONG_PAGAR",
+      "status": "ok",
+      "minutes": 40.9,
+      "transfers": 1,
+      "walkMetres": 372.5
+    },
+    {
+      "town": "BUKIT PANJANG",
+      "destination": "International Business Park",
+      "stationKey": "JURONG_EAST",
+      "status": "ok",
+      "minutes": 26.6,
+      "transfers": 1,
+      "walkMetres": 438.3
+    },
+    {
+      "town": "BUKIT PANJANG",
+      "destination": "Singapore Science Park",
+      "stationKey": "HAW_PAR_VILLA",
+      "status": "ok",
+      "minutes": 53.6,
+      "transfers": 1,
+      "walkMetres": 156.3
+    },
+    {
+      "town": "BUKIT PANJANG",
+      "destination": "Paya Lebar Quarter",
+      "stationKey": "PAYA_LEBAR",
+      "status": "ok",
+      "minutes": 43.7,
+      "transfers": 1,
+      "walkMetres": 305.5
+    },
+    {
+      "town": "BUKIT PANJANG",
+      "destination": "Jurong East MRT Station",
+      "stationKey": "JURONG_EAST",
+      "status": "ok",
+      "minutes": 26.6,
+      "transfers": 1,
+      "walkMetres": 438.3
+    },
+    {
+      "town": "BUKIT PANJANG",
+      "destination": "Tampines Hub",
+      "stationKey": "TAMPINES_WEST",
+      "status": "ok",
+      "minutes": 62.6,
+      "transfers": 0,
+      "walkMetres": 156.1
+    },
+    {
+      "town": "BUKIT PANJANG",
+      "destination": "Woodlands MRT Station",
+      "stationKey": "WOODLANDS",
+      "status": "ok",
+      "minutes": 28.1,
+      "transfers": 1,
+      "walkMetres": 438.3
+    },
+    {
+      "town": "BUKIT TIMAH",
+      "destination": "National University of Singapore",
+      "stationKey": "KENT_RIDGE",
+      "status": "ok",
+      "minutes": 23.3,
+      "transfers": 1,
+      "walkMetres": 217.6
+    },
+    {
+      "town": "BUKIT TIMAH",
+      "destination": "Nanyang Technological University",
+      "stationKey": "PIONEER",
+      "status": "ok",
+      "minutes": 40.1,
+      "transfers": 1,
+      "walkMetres": 267.6
+    },
+    {
+      "town": "BUKIT TIMAH",
+      "destination": "Raffles Place MRT Station",
+      "stationKey": "RAFFLES_PLACE",
+      "status": "ok",
+      "minutes": 27.3,
+      "transfers": 1,
+      "walkMetres": 174.1
+    },
+    {
+      "town": "BUKIT TIMAH",
+      "destination": "Changi Business Park",
+      "stationKey": "EXPO",
+      "status": "ok",
+      "minutes": 62.3,
+      "transfers": 0,
+      "walkMetres": 29.7
+    },
+    {
+      "town": "BUKIT TIMAH",
+      "destination": "one-north MRT Station",
+      "stationKey": "ONE_NORTH",
+      "status": "ok",
+      "minutes": 21.7,
+      "transfers": 1,
+      "walkMetres": 217.6
+    },
+    {
+      "town": "BUKIT TIMAH",
+      "destination": "Singapore Management University",
+      "stationKey": "BRAS_BASAH",
+      "status": "ok",
+      "minutes": 24.8,
+      "transfers": 1,
+      "walkMetres": 66.6
+    },
+    {
+      "town": "BUKIT TIMAH",
+      "destination": "Mapletree Business City",
+      "stationKey": "LABRADOR_PARK",
+      "status": "ok",
+      "minutes": 40.1,
+      "transfers": 1,
+      "walkMetres": 140.7
+    },
+    {
+      "town": "BUKIT TIMAH",
+      "destination": "Singapore General Hospital",
+      "stationKey": "OUTRAM_PARK",
+      "status": "ok",
+      "minutes": 28.3,
+      "transfers": 1,
+      "walkMetres": 206.8
+    },
+    {
+      "town": "BUKIT TIMAH",
+      "destination": "Singapore University of Technology and Design",
+      "stationKey": "UPPER_CHANGI",
+      "status": "ok",
+      "minutes": 62.3,
+      "transfers": 0,
+      "walkMetres": 131.3
+    },
+    {
+      "town": "BUKIT TIMAH",
+      "destination": "Singapore Institute of Technology",
+      "stationKey": "PUNGGOL_COAST",
+      "status": "ok",
+      "minutes": 47.9,
+      "transfers": 1,
+      "walkMetres": 206.8
+    },
+    {
+      "town": "BUKIT TIMAH",
+      "destination": "Singapore University of Social Sciences",
+      "stationKey": "KING_ALBERT_PARK",
+      "status": "ok",
+      "minutes": 2.0,
+      "transfers": 0,
+      "walkMetres": 29.7
+    },
+    {
+      "town": "BUKIT TIMAH",
+      "destination": "Marina Bay Financial Centre",
+      "stationKey": "DOWNTOWN",
+      "status": "ok",
+      "minutes": 24.2,
+      "transfers": 0,
+      "walkMetres": 29.7
+    },
+    {
+      "town": "BUKIT TIMAH",
+      "destination": "Tanjong Pagar MRT Station",
+      "stationKey": "TANJONG_PAGAR",
+      "status": "ok",
+      "minutes": 30.0,
+      "transfers": 1,
+      "walkMetres": 246.1
+    },
+    {
+      "town": "BUKIT TIMAH",
+      "destination": "Shenton Way",
+      "stationKey": "TANJONG_PAGAR",
+      "status": "ok",
+      "minutes": 30.0,
+      "transfers": 1,
+      "walkMetres": 246.1
+    },
+    {
+      "town": "BUKIT TIMAH",
+      "destination": "International Business Park",
+      "stationKey": "JURONG_EAST",
+      "status": "ok",
+      "minutes": 24.6,
+      "transfers": 1,
+      "walkMetres": 477.5
+    },
+    {
+      "town": "BUKIT TIMAH",
+      "destination": "Singapore Science Park",
+      "stationKey": "HAW_PAR_VILLA",
+      "status": "ok",
+      "minutes": 42.8,
+      "transfers": 1,
+      "walkMetres": 30
+    },
+    {
+      "town": "BUKIT TIMAH",
+      "destination": "Paya Lebar Quarter",
+      "stationKey": "PAYA_LEBAR",
+      "status": "ok",
+      "minutes": 35.0,
+      "transfers": 1,
+      "walkMetres": 179.1
+    },
+    {
+      "town": "BUKIT TIMAH",
+      "destination": "Jurong East MRT Station",
+      "stationKey": "JURONG_EAST",
+      "status": "ok",
+      "minutes": 24.6,
+      "transfers": 1,
+      "walkMetres": 477.5
+    },
+    {
+      "town": "BUKIT TIMAH",
+      "destination": "Tampines Hub",
+      "stationKey": "TAMPINES_WEST",
+      "status": "ok",
+      "minutes": 52.1,
+      "transfers": 0,
+      "walkMetres": 29.7
+    },
+    {
+      "town": "BUKIT TIMAH",
+      "destination": "Woodlands MRT Station",
+      "stationKey": "WOODLANDS",
+      "status": "ok",
+      "minutes": 45.0,
+      "transfers": 1,
+      "walkMetres": 443.0
+    },
+    {
+      "town": "CENTRAL AREA",
+      "destination": "National University of Singapore",
+      "stationKey": "KENT_RIDGE",
+      "status": "ok",
+      "minutes": 24.8,
+      "transfers": 1,
+      "walkMetres": 188.7
+    },
+    {
+      "town": "CENTRAL AREA",
+      "destination": "Nanyang Technological University",
+      "stationKey": "PIONEER",
+      "status": "ok",
+      "minutes": 42.5,
+      "transfers": 1,
+      "walkMetres": 47.3
+    },
+    {
+      "town": "CENTRAL AREA",
+      "destination": "Raffles Place MRT Station",
+      "stationKey": "RAFFLES_PLACE",
+      "status": "ok",
+      "minutes": 4.0,
+      "transfers": 0,
+      "walkMetres": 47.3
+    },
+    {
+      "town": "CENTRAL AREA",
+      "destination": "Changi Business Park",
+      "stationKey": "EXPO",
+      "status": "ok",
+      "minutes": 39.3,
+      "transfers": 1,
+      "walkMetres": 246.7
+    },
+    {
+      "town": "CENTRAL AREA",
+      "destination": "one-north MRT Station",
+      "stationKey": "ONE_NORTH",
+      "status": "ok",
+      "minutes": 25.1,
+      "transfers": 2,
+      "walkMetres": 379.5
+    },
+    {
+      "town": "CENTRAL AREA",
+      "destination": "Singapore Management University",
+      "stationKey": "BRAS_BASAH",
+      "status": "ok",
+      "minutes": 3.8,
+      "transfers": 0,
+      "walkMetres": 212.8
+    },
+    {
+      "town": "CENTRAL AREA",
+      "destination": "Mapletree Business City",
+      "stationKey": "LABRADOR_PARK",
+      "status": "ok",
+      "minutes": 19.7,
+      "transfers": 1,
+      "walkMetres": 299.7
+    },
+    {
+      "town": "CENTRAL AREA",
+      "destination": "Singapore General Hospital",
+      "stationKey": "OUTRAM_PARK",
+      "status": "ok",
+      "minutes": 7.5,
+      "transfers": 0,
+      "walkMetres": 188.7
+    },
+    {
+      "town": "CENTRAL AREA",
+      "destination": "Singapore University of Technology and Design",
+      "stationKey": "UPPER_CHANGI",
+      "status": "ok",
+      "minutes": 39.3,
+      "transfers": 1,
+      "walkMetres": 348.3
+    },
+    {
+      "town": "CENTRAL AREA",
+      "destination": "Singapore Institute of Technology",
+      "stationKey": "PUNGGOL_COAST",
+      "status": "ok",
+      "minutes": 29.0,
+      "transfers": 0,
+      "walkMetres": 188.7
+    },
+    {
+      "town": "CENTRAL AREA",
+      "destination": "Singapore University of Social Sciences",
+      "stationKey": "KING_ALBERT_PARK",
+      "status": "ok",
+      "minutes": 21.2,
+      "transfers": 1,
+      "walkMetres": 191.6
+    },
+    {
+      "town": "CENTRAL AREA",
+      "destination": "Marina Bay Financial Centre",
+      "stationKey": "DOWNTOWN",
+      "status": "ok",
+      "minutes": 12.7,
+      "transfers": 0,
+      "walkMetres": 513.4
+    },
+    {
+      "town": "CENTRAL AREA",
+      "destination": "Tanjong Pagar MRT Station",
+      "stationKey": "TANJONG_PAGAR",
+      "status": "ok",
+      "minutes": 9.8,
+      "transfers": 1,
+      "walkMetres": 47.3
+    },
+    {
+      "town": "CENTRAL AREA",
+      "destination": "Shenton Way",
+      "stationKey": "TANJONG_PAGAR",
+      "status": "ok",
+      "minutes": 9.8,
+      "transfers": 1,
+      "walkMetres": 47.3
+    },
+    {
+      "town": "CENTRAL AREA",
+      "destination": "International Business Park",
+      "stationKey": "JURONG_EAST",
+      "status": "ok",
+      "minutes": 33.0,
+      "transfers": 1,
+      "walkMetres": 47.3
+    },
+    {
+      "town": "CENTRAL AREA",
+      "destination": "Singapore Science Park",
+      "stationKey": "HAW_PAR_VILLA",
+      "status": "ok",
+      "minutes": 22.4,
+      "transfers": 1,
+      "walkMetres": 189.0
+    },
+    {
+      "town": "CENTRAL AREA",
+      "destination": "Paya Lebar Quarter",
+      "stationKey": "PAYA_LEBAR",
+      "status": "ok",
+      "minutes": 15.9,
+      "transfers": 1,
+      "walkMetres": 47.3
+    },
+    {
+      "town": "CENTRAL AREA",
+      "destination": "Jurong East MRT Station",
+      "stationKey": "JURONG_EAST",
+      "status": "ok",
+      "minutes": 33.0,
+      "transfers": 1,
+      "walkMetres": 47.3
+    },
+    {
+      "town": "CENTRAL AREA",
+      "destination": "Tampines Hub",
+      "stationKey": "TAMPINES_WEST",
+      "status": "ok",
+      "minutes": 29.2,
+      "transfers": 1,
+      "walkMetres": 246.7
+    },
+    {
+      "town": "CENTRAL AREA",
+      "destination": "Woodlands MRT Station",
+      "stationKey": "WOODLANDS",
+      "status": "ok",
+      "minutes": 41.5,
+      "transfers": 0,
+      "walkMetres": 47.3
+    },
+    {
+      "town": "CHOA CHU KANG",
+      "destination": "National University of Singapore",
+      "stationKey": "KENT_RIDGE",
+      "status": "ok",
+      "minutes": 30.8,
+      "transfers": 2,
+      "walkMetres": 193.4
+    },
+    {
+      "town": "CHOA CHU KANG",
+      "destination": "Nanyang Technological University",
+      "stationKey": "PIONEER",
+      "status": "ok",
+      "minutes": 23.4,
+      "transfers": 1,
+      "walkMetres": 61.8
+    },
+    {
+      "town": "CHOA CHU KANG",
+      "destination": "Raffles Place MRT Station",
+      "stationKey": "RAFFLES_PLACE",
+      "status": "ok",
+      "minutes": 37.8,
+      "transfers": 1,
+      "walkMetres": 61.8
+    },
+    {
+      "town": "CHOA CHU KANG",
+      "destination": "Changi Business Park",
+      "stationKey": "EXPO",
+      "status": "ok",
+      "minutes": 73.8,
+      "transfers": 2,
+      "walkMetres": 336.2
+    },
+    {
+      "town": "CHOA CHU KANG",
+      "destination": "one-north MRT Station",
+      "stationKey": "ONE_NORTH",
+      "status": "ok",
+      "minutes": 29.2,
+      "transfers": 2,
+      "walkMetres": 193.4
+    },
+    {
+      "town": "CHOA CHU KANG",
+      "destination": "Singapore Management University",
+      "stationKey": "BRAS_BASAH",
+      "status": "ok",
+      "minutes": 49.0,
+      "transfers": 2,
+      "walkMetres": 418.7
+    },
+    {
+      "town": "CHOA CHU KANG",
+      "destination": "Mapletree Business City",
+      "stationKey": "LABRADOR_PARK",
+      "status": "ok",
+      "minutes": 39.6,
+      "transfers": 2,
+      "walkMetres": 304.4
+    },
+    {
+      "town": "CHOA CHU KANG",
+      "destination": "Singapore General Hospital",
+      "stationKey": "OUTRAM_PARK",
+      "status": "ok",
+      "minutes": 39.6,
+      "transfers": 1,
+      "walkMetres": 416.3
+    },
+    {
+      "town": "CHOA CHU KANG",
+      "destination": "Singapore University of Technology and Design",
+      "stationKey": "UPPER_CHANGI",
+      "status": "ok",
+      "minutes": 75.2,
+      "transfers": 2,
+      "walkMetres": 243.2
+    },
+    {
+      "town": "CHOA CHU KANG",
+      "destination": "Singapore Institute of Technology",
+      "stationKey": "PUNGGOL_COAST",
+      "status": "ok",
+      "minutes": 71.2,
+      "transfers": 2,
+      "walkMetres": 558.9
+    },
+    {
+      "town": "CHOA CHU KANG",
+      "destination": "Singapore University of Social Sciences",
+      "stationKey": "KING_ALBERT_PARK",
+      "status": "ok",
+      "minutes": 25.3,
+      "transfers": 1,
+      "walkMetres": 381.8
+    },
+    {
+      "town": "CHOA CHU KANG",
+      "destination": "Marina Bay Financial Centre",
+      "stationKey": "DOWNTOWN",
+      "status": "ok",
+      "minutes": 46.2,
+      "transfers": 2,
+      "walkMetres": 547.9
+    },
+    {
+      "town": "CHOA CHU KANG",
+      "destination": "Tanjong Pagar MRT Station",
+      "stationKey": "TANJONG_PAGAR",
+      "status": "ok",
+      "minutes": 35.7,
+      "transfers": 1,
+      "walkMetres": 61.8
+    },
+    {
+      "town": "CHOA CHU KANG",
+      "destination": "Shenton Way",
+      "stationKey": "TANJONG_PAGAR",
+      "status": "ok",
+      "minutes": 35.7,
+      "transfers": 1,
+      "walkMetres": 61.8
+    },
+    {
+      "town": "CHOA CHU KANG",
+      "destination": "International Business Park",
+      "stationKey": "JURONG_EAST",
+      "status": "ok",
+      "minutes": 10.7,
+      "transfers": 0,
+      "walkMetres": 61.8
+    },
+    {
+      "town": "CHOA CHU KANG",
+      "destination": "Singapore Science Park",
+      "stationKey": "HAW_PAR_VILLA",
+      "status": "ok",
+      "minutes": 33.1,
+      "transfers": 2,
+      "walkMetres": 193.7
+    },
+    {
+      "town": "CHOA CHU KANG",
+      "destination": "Paya Lebar Quarter",
+      "stationKey": "PAYA_LEBAR",
+      "status": "ok",
+      "minutes": 49.8,
+      "transfers": 1,
+      "walkMetres": 61.8
+    },
+    {
+      "town": "CHOA CHU KANG",
+      "destination": "Jurong East MRT Station",
+      "stationKey": "JURONG_EAST",
+      "status": "ok",
+      "minutes": 10.7,
+      "transfers": 0,
+      "walkMetres": 61.8
+    },
+    {
+      "town": "CHOA CHU KANG",
+      "destination": "Tampines Hub",
+      "stationKey": "TAMPINES_WEST",
+      "status": "ok",
+      "minutes": 75.4,
+      "transfers": 1,
+      "walkMetres": 381.8
+    },
+    {
+      "town": "CHOA CHU KANG",
+      "destination": "Woodlands MRT Station",
+      "stationKey": "WOODLANDS",
+      "status": "ok",
+      "minutes": 14.6,
+      "transfers": 0,
+      "walkMetres": 61.8
+    },
+    {
+      "town": "CLEMENTI",
+      "destination": "National University of Singapore",
+      "stationKey": "KENT_RIDGE",
+      "status": "ok",
+      "minutes": 14.0,
+      "transfers": 1,
+      "walkMetres": 214.7
+    },
+    {
+      "town": "CLEMENTI",
+      "destination": "Nanyang Technological University",
+      "stationKey": "PIONEER",
+      "status": "ok",
+      "minutes": 15.6,
+      "transfers": 0,
+      "walkMetres": 83.1
+    },
+    {
+      "town": "CLEMENTI",
+      "destination": "Raffles Place MRT Station",
+      "stationKey": "RAFFLES_PLACE",
+      "status": "ok",
+      "minutes": 21.0,
+      "transfers": 0,
+      "walkMetres": 83.1
+    },
+    {
+      "town": "CLEMENTI",
+      "destination": "Changi Business Park",
+      "stationKey": "EXPO",
+      "status": "ok",
+      "minutes": 56.1,
+      "transfers": 1,
+      "walkMetres": 357.5
+    },
+    {
+      "town": "CLEMENTI",
+      "destination": "one-north MRT Station",
+      "stationKey": "ONE_NORTH",
+      "status": "ok",
+      "minutes": 12.5,
+      "transfers": 1,
+      "walkMetres": 214.7
+    },
+    {
+      "town": "CLEMENTI",
+      "destination": "Singapore Management University",
+      "stationKey": "BRAS_BASAH",
+      "status": "ok",
+      "minutes": 43.8,
+      "transfers": 0,
+      "walkMetres": 330.0
+    },
+    {
+      "town": "CLEMENTI",
+      "destination": "Mapletree Business City",
+      "stationKey": "LABRADOR_PARK",
+      "status": "ok",
+      "minutes": 22.9,
+      "transfers": 1,
+      "walkMetres": 325.7
+    },
+    {
+      "town": "CLEMENTI",
+      "destination": "Singapore General Hospital",
+      "stationKey": "OUTRAM_PARK",
+      "status": "ok",
+      "minutes": 22.9,
+      "transfers": 0,
+      "walkMetres": 437.6
+    },
+    {
+      "town": "CLEMENTI",
+      "destination": "Singapore University of Technology and Design",
+      "stationKey": "UPPER_CHANGI",
+      "status": "ok",
+      "minutes": 57.1,
+      "transfers": 1,
+      "walkMetres": 264.5
+    },
+    {
+      "town": "CLEMENTI",
+      "destination": "Singapore Institute of Technology",
+      "stationKey": "PUNGGOL_COAST",
+      "status": "ok",
+      "minutes": 56.7,
+      "transfers": 2,
+      "walkMetres": 208.6
+    },
+    {
+      "town": "CLEMENTI",
+      "destination": "Singapore University of Social Sciences",
+      "stationKey": "KING_ALBERT_PARK",
+      "status": "ok",
+      "minutes": 22.1,
+      "transfers": 0,
+      "walkMetres": 286.6
+    },
+    {
+      "town": "CLEMENTI",
+      "destination": "Marina Bay Financial Centre",
+      "stationKey": "DOWNTOWN",
+      "status": "ok",
+      "minutes": 33.4,
+      "transfers": 2,
+      "walkMetres": 319.0
+    },
+    {
+      "town": "CLEMENTI",
+      "destination": "Tanjong Pagar MRT Station",
+      "stationKey": "TANJONG_PAGAR",
+      "status": "ok",
+      "minutes": 19.0,
+      "transfers": 0,
+      "walkMetres": 83.1
+    },
+    {
+      "town": "CLEMENTI",
+      "destination": "Shenton Way",
+      "stationKey": "TANJONG_PAGAR",
+      "status": "ok",
+      "minutes": 19.0,
+      "transfers": 0,
+      "walkMetres": 83.1
+    },
+    {
+      "town": "CLEMENTI",
+      "destination": "International Business Park",
+      "stationKey": "JURONG_EAST",
+      "status": "ok",
+      "minutes": 6.1,
+      "transfers": 0,
+      "walkMetres": 83.1
+    },
+    {
+      "town": "CLEMENTI",
+      "destination": "Singapore Science Park",
+      "stationKey": "HAW_PAR_VILLA",
+      "status": "ok",
+      "minutes": 16.4,
+      "transfers": 1,
+      "walkMetres": 215.0
+    },
+    {
+      "town": "CLEMENTI",
+      "destination": "Paya Lebar Quarter",
+      "stationKey": "PAYA_LEBAR",
+      "status": "ok",
+      "minutes": 33.1,
+      "transfers": 0,
+      "walkMetres": 83.1
+    },
+    {
+      "town": "CLEMENTI",
+      "destination": "Jurong East MRT Station",
+      "stationKey": "JURONG_EAST",
+      "status": "ok",
+      "minutes": 6.1,
+      "transfers": 0,
+      "walkMetres": 83.1
+    },
+    {
+      "town": "CLEMENTI",
+      "destination": "Tampines Hub",
+      "stationKey": "TAMPINES_WEST",
+      "status": "ok",
+      "minutes": 53.1,
+      "transfers": 2,
+      "walkMetres": 183.0
+    },
+    {
+      "town": "CLEMENTI",
+      "destination": "Woodlands MRT Station",
+      "stationKey": "WOODLANDS",
+      "status": "ok",
+      "minutes": 32.5,
+      "transfers": 1,
+      "walkMetres": 83.1
+    },
+    {
+      "town": "GEYLANG",
+      "destination": "National University of Singapore",
+      "stationKey": "KENT_RIDGE",
+      "status": "ok",
+      "minutes": 33.1,
+      "transfers": 1,
+      "walkMetres": 147.4
+    },
+    {
+      "town": "GEYLANG",
+      "destination": "Nanyang Technological University",
+      "stationKey": "PIONEER",
+      "status": "ok",
+      "minutes": 44.5,
+      "transfers": 0,
+      "walkMetres": 15.8
+    },
+    {
+      "town": "GEYLANG",
+      "destination": "Raffles Place MRT Station",
+      "stationKey": "RAFFLES_PLACE",
+      "status": "ok",
+      "minutes": 9.8,
+      "transfers": 0,
+      "walkMetres": 15.8
+    },
+    {
+      "town": "GEYLANG",
+      "destination": "Changi Business Park",
+      "stationKey": "EXPO",
+      "status": "ok",
+      "minutes": 27.4,
+      "transfers": 1,
+      "walkMetres": 290.2
+    },
+    {
+      "town": "GEYLANG",
+      "destination": "one-north MRT Station",
+      "stationKey": "ONE_NORTH",
+      "status": "ok",
+      "minutes": 31.6,
+      "transfers": 1,
+      "walkMetres": 147.4
+    },
+    {
+      "town": "GEYLANG",
+      "destination": "Singapore Management University",
+      "stationKey": "BRAS_BASAH",
+      "status": "ok",
+      "minutes": 18.6,
+      "transfers": 1,
+      "walkMetres": 128.3
+    },
+    {
+      "town": "GEYLANG",
+      "destination": "Mapletree Business City",
+      "stationKey": "LABRADOR_PARK",
+      "status": "ok",
+      "minutes": 33.8,
+      "transfers": 1,
+      "walkMetres": 239.4
+    },
+    {
+      "town": "GEYLANG",
+      "destination": "Singapore General Hospital",
+      "stationKey": "OUTRAM_PARK",
+      "status": "ok",
+      "minutes": 19.3,
+      "transfers": 0,
+      "walkMetres": 370.3
+    },
+    {
+      "town": "GEYLANG",
+      "destination": "Singapore University of Technology and Design",
+      "stationKey": "UPPER_CHANGI",
+      "status": "ok",
+      "minutes": 28.4,
+      "transfers": 1,
+      "walkMetres": 197.2
+    },
+    {
+      "town": "GEYLANG",
+      "destination": "Singapore Institute of Technology",
+      "stationKey": "PUNGGOL_COAST",
+      "status": "ok",
+      "minutes": 32.9,
+      "transfers": 2,
+      "walkMetres": 270.6
+    },
+    {
+      "town": "GEYLANG",
+      "destination": "Singapore University of Social Sciences",
+      "stationKey": "KING_ALBERT_PARK",
+      "status": "ok",
+      "minutes": 30.7,
+      "transfers": 1,
+      "walkMetres": 231.8
+    },
+    {
+      "town": "GEYLANG",
+      "destination": "Marina Bay Financial Centre",
+      "stationKey": "DOWNTOWN",
+      "status": "ok",
+      "minutes": 17.6,
+      "transfers": 1,
+      "walkMetres": 231.8
+    },
+    {
+      "town": "GEYLANG",
+      "destination": "Tanjong Pagar MRT Station",
+      "stationKey": "TANJONG_PAGAR",
+      "status": "ok",
+      "minutes": 11.8,
+      "transfers": 0,
+      "walkMetres": 15.8
+    },
+    {
+      "town": "GEYLANG",
+      "destination": "Shenton Way",
+      "stationKey": "TANJONG_PAGAR",
+      "status": "ok",
+      "minutes": 11.8,
+      "transfers": 0,
+      "walkMetres": 15.8
+    },
+    {
+      "town": "GEYLANG",
+      "destination": "International Business Park",
+      "stationKey": "JURONG_EAST",
+      "status": "ok",
+      "minutes": 35.0,
+      "transfers": 0,
+      "walkMetres": 15.8
+    },
+    {
+      "town": "GEYLANG",
+      "destination": "Singapore Science Park",
+      "stationKey": "HAW_PAR_VILLA",
+      "status": "ok",
+      "minutes": 36.5,
+      "transfers": 1,
+      "walkMetres": 128.6
+    },
+    {
+      "town": "GEYLANG",
+      "destination": "Paya Lebar Quarter",
+      "stationKey": "PAYA_LEBAR",
+      "status": "ok",
+      "minutes": 1.8,
+      "transfers": 0,
+      "walkMetres": 15.8
+    },
+    {
+      "town": "GEYLANG",
+      "destination": "Jurong East MRT Station",
+      "stationKey": "JURONG_EAST",
+      "status": "ok",
+      "minutes": 35.0,
+      "transfers": 0,
+      "walkMetres": 15.8
+    },
+    {
+      "town": "GEYLANG",
+      "destination": "Tampines Hub",
+      "stationKey": "TAMPINES_WEST",
+      "status": "ok",
+      "minutes": 24.1,
+      "transfers": 2,
+      "walkMetres": 267.8
+    },
+    {
+      "town": "GEYLANG",
+      "destination": "Woodlands MRT Station",
+      "stationKey": "WOODLANDS",
+      "status": "ok",
+      "minutes": 54.0,
+      "transfers": 2,
+      "walkMetres": 383.1
+    },
+    {
+      "town": "HOUGANG",
+      "destination": "National University of Singapore",
+      "stationKey": "KENT_RIDGE",
+      "status": "ok",
+      "minutes": 41.5,
+      "transfers": 1,
+      "walkMetres": 132.3
+    },
+    {
+      "town": "HOUGANG",
+      "destination": "Nanyang Technological University",
+      "stationKey": "PIONEER",
+      "status": "ok",
+      "minutes": 65.1,
+      "transfers": 2,
+      "walkMetres": 337.4
+    },
+    {
+      "town": "HOUGANG",
+      "destination": "Raffles Place MRT Station",
+      "stationKey": "RAFFLES_PLACE",
+      "status": "ok",
+      "minutes": 28.7,
+      "transfers": 1,
+      "walkMetres": 337.4
+    },
+    {
+      "town": "HOUGANG",
+      "destination": "Changi Business Park",
+      "stationKey": "EXPO",
+      "status": "ok",
+      "minutes": 44.6,
+      "transfers": 2,
+      "walkMetres": 414.1
+    },
+    {
+      "town": "HOUGANG",
+      "destination": "one-north MRT Station",
+      "stationKey": "ONE_NORTH",
+      "status": "ok",
+      "minutes": 43.1,
+      "transfers": 1,
+      "walkMetres": 132.3
+    },
+    {
+      "town": "HOUGANG",
+      "destination": "Singapore Management University",
+      "stationKey": "BRAS_BASAH",
+      "status": "ok",
+      "minutes": 26.7,
+      "transfers": 1,
+      "walkMetres": 349.1
+    },
+    {
+      "town": "HOUGANG",
+      "destination": "Mapletree Business City",
+      "stationKey": "LABRADOR_PARK",
+      "status": "ok",
+      "minutes": 36.5,
+      "transfers": 1,
+      "walkMetres": 243.3
+    },
+    {
+      "town": "HOUGANG",
+      "destination": "Singapore General Hospital",
+      "stationKey": "OUTRAM_PARK",
+      "status": "ok",
+      "minutes": 23.6,
+      "transfers": 0,
+      "walkMetres": 132.3
+    },
+    {
+      "town": "HOUGANG",
+      "destination": "Singapore University of Technology and Design",
+      "stationKey": "UPPER_CHANGI",
+      "status": "ok",
+      "minutes": 44.6,
+      "transfers": 2,
+      "walkMetres": 515.7
+    },
+    {
+      "town": "HOUGANG",
+      "destination": "Singapore Institute of Technology",
+      "stationKey": "PUNGGOL_COAST",
+      "status": "ok",
+      "minutes": 10.8,
+      "transfers": 0,
+      "walkMetres": 132.3
+    },
+    {
+      "town": "HOUGANG",
+      "destination": "Singapore University of Social Sciences",
+      "stationKey": "KING_ALBERT_PARK",
+      "status": "ok",
+      "minutes": 35.6,
+      "transfers": 1,
+      "walkMetres": 309.4
+    },
+    {
+      "town": "HOUGANG",
+      "destination": "Marina Bay Financial Centre",
+      "stationKey": "DOWNTOWN",
+      "status": "ok",
+      "minutes": 30.5,
+      "transfers": 1,
+      "walkMetres": 309.4
+    },
+    {
+      "town": "HOUGANG",
+      "destination": "Tanjong Pagar MRT Station",
+      "stationKey": "TANJONG_PAGAR",
+      "status": "ok",
+      "minutes": 34.5,
+      "transfers": 2,
+      "walkMetres": 337.4
+    },
+    {
+      "town": "HOUGANG",
+      "destination": "Shenton Way",
+      "stationKey": "TANJONG_PAGAR",
+      "status": "ok",
+      "minutes": 34.5,
+      "transfers": 2,
+      "walkMetres": 337.4
+    },
+    {
+      "town": "HOUGANG",
+      "destination": "International Business Park",
+      "stationKey": "JURONG_EAST",
+      "status": "ok",
+      "minutes": 60.8,
+      "transfers": 2,
+      "walkMetres": 263.9
+    },
+    {
+      "town": "HOUGANG",
+      "destination": "Singapore Science Park",
+      "stationKey": "HAW_PAR_VILLA",
+      "status": "ok",
+      "minutes": 39.2,
+      "transfers": 1,
+      "walkMetres": 132.6
+    },
+    {
+      "town": "HOUGANG",
+      "destination": "Paya Lebar Quarter",
+      "stationKey": "PAYA_LEBAR",
+      "status": "ok",
+      "minutes": 22.6,
+      "transfers": 1,
+      "walkMetres": 387.1
+    },
+    {
+      "town": "HOUGANG",
+      "destination": "Jurong East MRT Station",
+      "stationKey": "JURONG_EAST",
+      "status": "ok",
+      "minutes": 60.8,
+      "transfers": 2,
+      "walkMetres": 263.9
+    },
+    {
+      "town": "HOUGANG",
+      "destination": "Tampines Hub",
+      "stationKey": "TAMPINES_WEST",
+      "status": "ok",
+      "minutes": 34.5,
+      "transfers": 2,
+      "walkMetres": 414.1
+    },
+    {
+      "town": "HOUGANG",
+      "destination": "Woodlands MRT Station",
+      "stationKey": "WOODLANDS",
+      "status": "ok",
+      "minutes": 52.2,
+      "transfers": 1,
+      "walkMetres": 274.1
+    },
+    {
+      "town": "JURONG EAST",
+      "destination": "National University of Singapore",
+      "stationKey": "KENT_RIDGE",
+      "status": "ok",
+      "minutes": 18.0,
+      "transfers": 1,
+      "walkMetres": 145.4
+    },
+    {
+      "town": "JURONG EAST",
+      "destination": "Nanyang Technological University",
+      "stationKey": "PIONEER",
+      "status": "ok",
+      "minutes": 9.2,
+      "transfers": 0,
+      "walkMetres": 13.8
+    },
+    {
+      "town": "JURONG EAST",
+      "destination": "Raffles Place MRT Station",
+      "stationKey": "RAFFLES_PLACE",
+      "status": "ok",
+      "minutes": 25.0,
+      "transfers": 0,
+      "walkMetres": 13.8
+    },
+    {
+      "town": "JURONG EAST",
+      "destination": "Changi Business Park",
+      "stationKey": "EXPO",
+      "status": "ok",
+      "minutes": 60.1,
+      "transfers": 1,
+      "walkMetres": 288.2
+    },
+    {
+      "town": "JURONG EAST",
+      "destination": "one-north MRT Station",
+      "stationKey": "ONE_NORTH",
+      "status": "ok",
+      "minutes": 16.5,
+      "transfers": 1,
+      "walkMetres": 145.4
+    },
+    {
+      "town": "JURONG EAST",
+      "destination": "Singapore Management University",
+      "stationKey": "BRAS_BASAH",
+      "status": "ok",
+      "minutes": 41.7,
+      "transfers": 2,
+      "walkMetres": 47.8
+    },
+    {
+      "town": "JURONG EAST",
+      "destination": "Mapletree Business City",
+      "stationKey": "LABRADOR_PARK",
+      "status": "ok",
+      "minutes": 26.8,
+      "transfers": 1,
+      "walkMetres": 256.4
+    },
+    {
+      "town": "JURONG EAST",
+      "destination": "Singapore General Hospital",
+      "stationKey": "OUTRAM_PARK",
+      "status": "ok",
+      "minutes": 26.8,
+      "transfers": 0,
+      "walkMetres": 368.3
+    },
+    {
+      "town": "JURONG EAST",
+      "destination": "Singapore University of Technology and Design",
+      "stationKey": "UPPER_CHANGI",
+      "status": "ok",
+      "minutes": 62.2,
+      "transfers": 1,
+      "walkMetres": 195.2
+    },
+    {
+      "town": "JURONG EAST",
+      "destination": "Singapore Institute of Technology",
+      "stationKey": "PUNGGOL_COAST",
+      "status": "ok",
+      "minutes": 60.6,
+      "transfers": 2,
+      "walkMetres": 139.2
+    },
+    {
+      "town": "JURONG EAST",
+      "destination": "Singapore University of Social Sciences",
+      "stationKey": "KING_ALBERT_PARK",
+      "status": "ok",
+      "minutes": 29.5,
+      "transfers": 1,
+      "walkMetres": 240.5
+    },
+    {
+      "town": "JURONG EAST",
+      "destination": "Marina Bay Financial Centre",
+      "stationKey": "DOWNTOWN",
+      "status": "ok",
+      "minutes": 37.4,
+      "transfers": 2,
+      "walkMetres": 249.7
+    },
+    {
+      "town": "JURONG EAST",
+      "destination": "Tanjong Pagar MRT Station",
+      "stationKey": "TANJONG_PAGAR",
+      "status": "ok",
+      "minutes": 22.9,
+      "transfers": 0,
+      "walkMetres": 13.8
+    },
+    {
+      "town": "JURONG EAST",
+      "destination": "Shenton Way",
+      "stationKey": "TANJONG_PAGAR",
+      "status": "ok",
+      "minutes": 22.9,
+      "transfers": 0,
+      "walkMetres": 13.8
+    },
+    {
+      "town": "JURONG EAST",
+      "destination": "International Business Park",
+      "stationKey": "JURONG_EAST",
+      "status": "ok",
+      "minutes": 0.2,
+      "transfers": 0,
+      "walkMetres": 14
+    },
+    {
+      "town": "JURONG EAST",
+      "destination": "Singapore Science Park",
+      "stationKey": "HAW_PAR_VILLA",
+      "status": "ok",
+      "minutes": 20.4,
+      "transfers": 1,
+      "walkMetres": 145.7
+    },
+    {
+      "town": "JURONG EAST",
+      "destination": "Paya Lebar Quarter",
+      "stationKey": "PAYA_LEBAR",
+      "status": "ok",
+      "minutes": 37.0,
+      "transfers": 0,
+      "walkMetres": 13.8
+    },
+    {
+      "town": "JURONG EAST",
+      "destination": "Jurong East MRT Station",
+      "stationKey": "JURONG_EAST",
+      "status": "ok",
+      "minutes": 0.2,
+      "transfers": 0,
+      "walkMetres": 14
+    },
+    {
+      "town": "JURONG EAST",
+      "destination": "Tampines Hub",
+      "stationKey": "TAMPINES_WEST",
+      "status": "ok",
+      "minutes": 60.6,
+      "transfers": 2,
+      "walkMetres": 47.4
+    },
+    {
+      "town": "JURONG EAST",
+      "destination": "Woodlands MRT Station",
+      "stationKey": "WOODLANDS",
+      "status": "ok",
+      "minutes": 24.2,
+      "transfers": 0,
+      "walkMetres": 13.8
+    },
+    {
+      "town": "JURONG WEST",
+      "destination": "National University of Singapore",
+      "stationKey": "KENT_RIDGE",
+      "status": "ok",
+      "minutes": 25.6,
+      "transfers": 1,
+      "walkMetres": 143.3
+    },
+    {
+      "town": "JURONG WEST",
+      "destination": "Nanyang Technological University",
+      "stationKey": "PIONEER",
+      "status": "ok",
+      "minutes": 1.5,
+      "transfers": 0,
+      "walkMetres": 11.8
+    },
+    {
+      "town": "JURONG WEST",
+      "destination": "Raffles Place MRT Station",
+      "stationKey": "RAFFLES_PLACE",
+      "status": "ok",
+      "minutes": 32.5,
+      "transfers": 0,
+      "walkMetres": 11.8
+    },
+    {
+      "town": "JURONG WEST",
+      "destination": "Changi Business Park",
+      "stationKey": "EXPO",
+      "status": "ok",
+      "minutes": 68.6,
+      "transfers": 1,
+      "walkMetres": 286.2
+    },
+    {
+      "town": "JURONG WEST",
+      "destination": "one-north MRT Station",
+      "stationKey": "ONE_NORTH",
+      "status": "ok",
+      "minutes": 24.1,
+      "transfers": 1,
+      "walkMetres": 143.3
+    },
+    {
+      "town": "JURONG WEST",
+      "destination": "Singapore Management University",
+      "stationKey": "BRAS_BASAH",
+      "status": "ok",
+      "minutes": 49.3,
+      "transfers": 2,
+      "walkMetres": 45.8
+    },
+    {
+      "town": "JURONG WEST",
+      "destination": "Mapletree Business City",
+      "stationKey": "LABRADOR_PARK",
+      "status": "ok",
+      "minutes": 34.4,
+      "transfers": 1,
+      "walkMetres": 254.4
+    },
+    {
+      "town": "JURONG WEST",
+      "destination": "Singapore General Hospital",
+      "stationKey": "OUTRAM_PARK",
+      "status": "ok",
+      "minutes": 34.4,
+      "transfers": 0,
+      "walkMetres": 366.2
+    },
+    {
+      "town": "JURONG WEST",
+      "destination": "Singapore University of Technology and Design",
+      "stationKey": "UPPER_CHANGI",
+      "status": "ok",
+      "minutes": 70.0,
+      "transfers": 1,
+      "walkMetres": 193.2
+    },
+    {
+      "town": "JURONG WEST",
+      "destination": "Singapore Institute of Technology",
+      "stationKey": "PUNGGOL_COAST",
+      "status": "ok",
+      "minutes": 68.1,
+      "transfers": 1,
+      "walkMetres": 366.2
+    },
+    {
+      "town": "JURONG WEST",
+      "destination": "Singapore University of Social Sciences",
+      "stationKey": "KING_ALBERT_PARK",
+      "status": "ok",
+      "minutes": 38.6,
+      "transfers": 1,
+      "walkMetres": 189.1
+    },
+    {
+      "town": "JURONG WEST",
+      "destination": "Marina Bay Financial Centre",
+      "stationKey": "DOWNTOWN",
+      "status": "ok",
+      "minutes": 44.5,
+      "transfers": 1,
+      "walkMetres": 477.9
+    },
+    {
+      "town": "JURONG WEST",
+      "destination": "Tanjong Pagar MRT Station",
+      "stationKey": "TANJONG_PAGAR",
+      "status": "ok",
+      "minutes": 30.5,
+      "transfers": 0,
+      "walkMetres": 11.8
+    },
+    {
+      "town": "JURONG WEST",
+      "destination": "Shenton Way",
+      "stationKey": "TANJONG_PAGAR",
+      "status": "ok",
+      "minutes": 30.5,
+      "transfers": 0,
+      "walkMetres": 11.8
+    },
+    {
+      "town": "JURONG WEST",
+      "destination": "International Business Park",
+      "stationKey": "JURONG_EAST",
+      "status": "ok",
+      "minutes": 7.3,
+      "transfers": 0,
+      "walkMetres": 11.8
+    },
+    {
+      "town": "JURONG WEST",
+      "destination": "Singapore Science Park",
+      "stationKey": "HAW_PAR_VILLA",
+      "status": "ok",
+      "minutes": 27.9,
+      "transfers": 1,
+      "walkMetres": 143.6
+    },
+    {
+      "town": "JURONG WEST",
+      "destination": "Paya Lebar Quarter",
+      "stationKey": "PAYA_LEBAR",
+      "status": "ok",
+      "minutes": 44.6,
+      "transfers": 0,
+      "walkMetres": 11.8
+    },
+    {
+      "town": "JURONG WEST",
+      "destination": "Jurong East MRT Station",
+      "stationKey": "JURONG_EAST",
+      "status": "ok",
+      "minutes": 7.3,
+      "transfers": 0,
+      "walkMetres": 11.8
+    },
+    {
+      "town": "JURONG WEST",
+      "destination": "Tampines Hub",
+      "stationKey": "TAMPINES_WEST",
+      "status": "ok",
+      "minutes": 66.9,
+      "transfers": 2,
+      "walkMetres": 111.7
+    },
+    {
+      "town": "JURONG WEST",
+      "destination": "Woodlands MRT Station",
+      "stationKey": "WOODLANDS",
+      "status": "ok",
+      "minutes": 35.1,
+      "transfers": 1,
+      "walkMetres": 11.8
+    },
+    {
+      "town": "KALLANG/WHAMPOA",
+      "destination": "National University of Singapore",
+      "stationKey": "KENT_RIDGE",
+      "status": "ok",
+      "minutes": 28.8,
+      "transfers": 1,
+      "walkMetres": 89.7
+    },
+    {
+      "town": "KALLANG/WHAMPOA",
+      "destination": "Nanyang Technological University",
+      "stationKey": "PIONEER",
+      "status": "ok",
+      "minutes": 57.5,
+      "transfers": 2,
+      "walkMetres": 221.2
+    },
+    {
+      "town": "KALLANG/WHAMPOA",
+      "destination": "Raffles Place MRT Station",
+      "stationKey": "RAFFLES_PLACE",
+      "status": "ok",
+      "minutes": 15.9,
+      "transfers": 1,
+      "walkMetres": 294.7
+    },
+    {
+      "town": "KALLANG/WHAMPOA",
+      "destination": "Changi Business Park",
+      "stationKey": "EXPO",
+      "status": "ok",
+      "minutes": 44.0,
+      "transfers": 1,
+      "walkMetres": 276.4
+    },
+    {
+      "town": "KALLANG/WHAMPOA",
+      "destination": "one-north MRT Station",
+      "stationKey": "ONE_NORTH",
+      "status": "ok",
+      "minutes": 30.3,
+      "transfers": 1,
+      "walkMetres": 89.7
+    },
+    {
+      "town": "KALLANG/WHAMPOA",
+      "destination": "Singapore Management University",
+      "stationKey": "BRAS_BASAH",
+      "status": "ok",
+      "minutes": 13.8,
+      "transfers": 1,
+      "walkMetres": 306.4
+    },
+    {
+      "town": "KALLANG/WHAMPOA",
+      "destination": "Mapletree Business City",
+      "stationKey": "LABRADOR_PARK",
+      "status": "ok",
+      "minutes": 23.7,
+      "transfers": 1,
+      "walkMetres": 200.7
+    },
+    {
+      "town": "KALLANG/WHAMPOA",
+      "destination": "Singapore General Hospital",
+      "stationKey": "OUTRAM_PARK",
+      "status": "ok",
+      "minutes": 11.3,
+      "transfers": 0,
+      "walkMetres": 89.7
+    },
+    {
+      "town": "KALLANG/WHAMPOA",
+      "destination": "Singapore University of Technology and Design",
+      "stationKey": "UPPER_CHANGI",
+      "status": "ok",
+      "minutes": 44.0,
+      "transfers": 1,
+      "walkMetres": 378
+    },
+    {
+      "town": "KALLANG/WHAMPOA",
+      "destination": "Singapore Institute of Technology",
+      "stationKey": "PUNGGOL_COAST",
+      "status": "ok",
+      "minutes": 22.1,
+      "transfers": 0,
+      "walkMetres": 89.7
+    },
+    {
+      "town": "KALLANG/WHAMPOA",
+      "destination": "Singapore University of Social Sciences",
+      "stationKey": "KING_ALBERT_PARK",
+      "status": "ok",
+      "minutes": 23.3,
+      "transfers": 1,
+      "walkMetres": 266.7
+    },
+    {
+      "town": "KALLANG/WHAMPOA",
+      "destination": "Marina Bay Financial Centre",
+      "stationKey": "DOWNTOWN",
+      "status": "ok",
+      "minutes": 18.2,
+      "transfers": 1,
+      "walkMetres": 266.7
+    },
+    {
+      "town": "KALLANG/WHAMPOA",
+      "destination": "Tanjong Pagar MRT Station",
+      "stationKey": "TANJONG_PAGAR",
+      "status": "ok",
+      "minutes": 21.7,
+      "transfers": 2,
+      "walkMetres": 294.7
+    },
+    {
+      "town": "KALLANG/WHAMPOA",
+      "destination": "Shenton Way",
+      "stationKey": "TANJONG_PAGAR",
+      "status": "ok",
+      "minutes": 21.7,
+      "transfers": 2,
+      "walkMetres": 294.7
+    },
+    {
+      "town": "KALLANG/WHAMPOA",
+      "destination": "International Business Park",
+      "stationKey": "JURONG_EAST",
+      "status": "ok",
+      "minutes": 48.0,
+      "transfers": 2,
+      "walkMetres": 221.2
+    },
+    {
+      "town": "KALLANG/WHAMPOA",
+      "destination": "Singapore Science Park",
+      "stationKey": "HAW_PAR_VILLA",
+      "status": "ok",
+      "minutes": 26.4,
+      "transfers": 1,
+      "walkMetres": 90.0
+    },
+    {
+      "town": "KALLANG/WHAMPOA",
+      "destination": "Paya Lebar Quarter",
+      "stationKey": "PAYA_LEBAR",
+      "status": "ok",
+      "minutes": 22.5,
+      "transfers": 1,
+      "walkMetres": 344.5
+    },
+    {
+      "town": "KALLANG/WHAMPOA",
+      "destination": "Jurong East MRT Station",
+      "stationKey": "JURONG_EAST",
+      "status": "ok",
+      "minutes": 48.0,
+      "transfers": 2,
+      "walkMetres": 221.2
+    },
+    {
+      "town": "KALLANG/WHAMPOA",
+      "destination": "Tampines Hub",
+      "stationKey": "TAMPINES_WEST",
+      "status": "ok",
+      "minutes": 33.9,
+      "transfers": 1,
+      "walkMetres": 276.4
+    },
+    {
+      "town": "KALLANG/WHAMPOA",
+      "destination": "Woodlands MRT Station",
+      "stationKey": "WOODLANDS",
+      "status": "ok",
+      "minutes": 50.1,
+      "transfers": 1,
+      "walkMetres": 206.2
+    },
+    {
+      "town": "MARINE PARADE",
+      "destination": "National University of Singapore",
+      "stationKey": "KENT_RIDGE",
+      "status": "ok",
+      "minutes": 42.3,
+      "transfers": 2,
+      "walkMetres": 281.2
+    },
+    {
+      "town": "MARINE PARADE",
+      "destination": "Nanyang Technological University",
+      "stationKey": "PIONEER",
+      "status": "ok",
+      "minutes": 53.7,
+      "transfers": 1,
+      "walkMetres": 149.6
+    },
+    {
+      "town": "MARINE PARADE",
+      "destination": "Raffles Place MRT Station",
+      "stationKey": "RAFFLES_PLACE",
+      "status": "ok",
+      "minutes": 27.5,
+      "transfers": 1,
+      "walkMetres": 149.6
+    },
+    {
+      "town": "MARINE PARADE",
+      "destination": "Changi Business Park",
+      "stationKey": "EXPO",
+      "status": "ok",
+      "minutes": 37.0,
+      "transfers": 1,
+      "walkMetres": 325
+    },
+    {
+      "town": "MARINE PARADE",
+      "destination": "one-north MRT Station",
+      "stationKey": "ONE_NORTH",
+      "status": "ok",
+      "minutes": 40.8,
+      "transfers": 2,
+      "walkMetres": 281.2
+    },
+    {
+      "town": "MARINE PARADE",
+      "destination": "Singapore Management University",
+      "stationKey": "BRAS_BASAH",
+      "status": "ok",
+      "minutes": 22.8,
+      "transfers": 1,
+      "walkMetres": 155.4
+    },
+    {
+      "town": "MARINE PARADE",
+      "destination": "Mapletree Business City",
+      "stationKey": "LABRADOR_PARK",
+      "status": "ok",
+      "minutes": 38.0,
+      "transfers": 1,
+      "walkMetres": 266.4
+    },
+    {
+      "town": "MARINE PARADE",
+      "destination": "Singapore General Hospital",
+      "stationKey": "OUTRAM_PARK",
+      "status": "ok",
+      "minutes": 25.4,
+      "transfers": 0,
+      "walkMetres": 483.3
+    },
+    {
+      "town": "MARINE PARADE",
+      "destination": "Singapore University of Technology and Design",
+      "stationKey": "UPPER_CHANGI",
+      "status": "ok",
+      "minutes": 43.3,
+      "transfers": 2,
+      "walkMetres": 260.6
+    },
+    {
+      "town": "MARINE PARADE",
+      "destination": "Singapore Institute of Technology",
+      "stationKey": "PUNGGOL_COAST",
+      "status": "ok",
+      "minutes": 44.6,
+      "transfers": 2,
+      "walkMetres": 567.5
+    },
+    {
+      "town": "MARINE PARADE",
+      "destination": "Singapore University of Social Sciences",
+      "stationKey": "KING_ALBERT_PARK",
+      "status": "ok",
+      "minutes": 43.5,
+      "transfers": 1,
+      "walkMetres": 213.5
+    },
+    {
+      "town": "MARINE PARADE",
+      "destination": "Marina Bay Financial Centre",
+      "stationKey": "DOWNTOWN",
+      "status": "ok",
+      "minutes": 23.1,
+      "transfers": 0,
+      "walkMetres": 559.1
+    },
+    {
+      "town": "MARINE PARADE",
+      "destination": "Tanjong Pagar MRT Station",
+      "stationKey": "TANJONG_PAGAR",
+      "status": "ok",
+      "minutes": 25.4,
+      "transfers": 1,
+      "walkMetres": 149.6
+    },
+    {
+      "town": "MARINE PARADE",
+      "destination": "Shenton Way",
+      "stationKey": "TANJONG_PAGAR",
+      "status": "ok",
+      "minutes": 25.4,
+      "transfers": 1,
+      "walkMetres": 149.6
+    },
+    {
+      "town": "MARINE PARADE",
+      "destination": "International Business Park",
+      "stationKey": "JURONG_EAST",
+      "status": "ok",
+      "minutes": 44.2,
+      "transfers": 1,
+      "walkMetres": 149.6
+    },
+    {
+      "town": "MARINE PARADE",
+      "destination": "Singapore Science Park",
+      "stationKey": "HAW_PAR_VILLA",
+      "status": "ok",
+      "minutes": 40.7,
+      "transfers": 1,
+      "walkMetres": 155.7
+    },
+    {
+      "town": "MARINE PARADE",
+      "destination": "Paya Lebar Quarter",
+      "stationKey": "PAYA_LEBAR",
+      "status": "ok",
+      "minutes": 17.4,
+      "transfers": 1,
+      "walkMetres": 267.9
+    },
+    {
+      "town": "MARINE PARADE",
+      "destination": "Jurong East MRT Station",
+      "stationKey": "JURONG_EAST",
+      "status": "ok",
+      "minutes": 44.2,
+      "transfers": 1,
+      "walkMetres": 149.6
+    },
+    {
+      "town": "MARINE PARADE",
+      "destination": "Tampines Hub",
+      "stationKey": "TAMPINES_WEST",
+      "status": "ok",
+      "minutes": 33.2,
+      "transfers": 2,
+      "walkMetres": 159.0
+    },
+    {
+      "town": "MARINE PARADE",
+      "destination": "Woodlands MRT Station",
+      "stationKey": "WOODLANDS",
+      "status": "ok",
+      "minutes": 63.7,
+      "transfers": 0,
+      "walkMetres": 434.7
+    },
+    {
+      "town": "PASIR RIS",
+      "destination": "National University of Singapore",
+      "stationKey": "KENT_RIDGE",
+      "status": "ok",
+      "minutes": 54.9,
+      "transfers": 1,
+      "walkMetres": 112.5
+    },
+    {
+      "town": "PASIR RIS",
+      "destination": "Nanyang Technological University",
+      "stationKey": "PIONEER",
+      "status": "ok",
+      "minutes": 66.3,
+      "transfers": 0,
+      "walkMetres": 0
+    },
+    {
+      "town": "PASIR RIS",
+      "destination": "Raffles Place MRT Station",
+      "stationKey": "RAFFLES_PLACE",
+      "status": "ok",
+      "minutes": 31.6,
+      "transfers": 0,
+      "walkMetres": 0
+    },
+    {
+      "town": "PASIR RIS",
+      "destination": "Changi Business Park",
+      "stationKey": "EXPO",
+      "status": "ok",
+      "minutes": 24.6,
+      "transfers": 2,
+      "walkMetres": 254.7
+    },
+    {
+      "town": "PASIR RIS",
+      "destination": "one-north MRT Station",
+      "stationKey": "ONE_NORTH",
+      "status": "ok",
+      "minutes": 53.4,
+      "transfers": 1,
+      "walkMetres": 131.6
+    },
+    {
+      "town": "PASIR RIS",
+      "destination": "Singapore Management University",
+      "stationKey": "BRAS_BASAH",
+      "status": "ok",
+      "minutes": 34.7,
+      "transfers": 1,
+      "walkMetres": 112.5
+    },
+    {
+      "town": "PASIR RIS",
+      "destination": "Mapletree Business City",
+      "stationKey": "LABRADOR_PARK",
+      "status": "ok",
+      "minutes": 49.9,
+      "transfers": 1,
+      "walkMetres": 223.5
+    },
+    {
+      "town": "PASIR RIS",
+      "destination": "Singapore General Hospital",
+      "stationKey": "OUTRAM_PARK",
+      "status": "ok",
+      "minutes": 41.1,
+      "transfers": 0,
+      "walkMetres": 354.5
+    },
+    {
+      "town": "PASIR RIS",
+      "destination": "Singapore University of Technology and Design",
+      "stationKey": "UPPER_CHANGI",
+      "status": "ok",
+      "minutes": 19.0,
+      "transfers": 1,
+      "walkMetres": 484.8
+    },
+    {
+      "town": "PASIR RIS",
+      "destination": "Singapore Institute of Technology",
+      "stationKey": "PUNGGOL_COAST",
+      "status": "ok",
+      "minutes": 30.8,
+      "transfers": 1,
+      "walkMetres": 406.1
+    },
+    {
+      "town": "PASIR RIS",
+      "destination": "Singapore University of Social Sciences",
+      "stationKey": "KING_ALBERT_PARK",
+      "status": "ok",
+      "minutes": 50.7,
+      "transfers": 1,
+      "walkMetres": 216.0
+    },
+    {
+      "town": "PASIR RIS",
+      "destination": "Marina Bay Financial Centre",
+      "stationKey": "DOWNTOWN",
+      "status": "ok",
+      "minutes": 38.5,
+      "transfers": 2,
+      "walkMetres": 112.5
+    },
+    {
+      "town": "PASIR RIS",
+      "destination": "Tanjong Pagar MRT Station",
+      "stationKey": "TANJONG_PAGAR",
+      "status": "ok",
+      "minutes": 33.6,
+      "transfers": 0,
+      "walkMetres": 0
+    },
+    {
+      "town": "PASIR RIS",
+      "destination": "Shenton Way",
+      "stationKey": "TANJONG_PAGAR",
+      "status": "ok",
+      "minutes": 33.6,
+      "transfers": 0,
+      "walkMetres": 0
+    },
+    {
+      "town": "PASIR RIS",
+      "destination": "International Business Park",
+      "stationKey": "JURONG_EAST",
+      "status": "ok",
+      "minutes": 56.8,
+      "transfers": 0,
+      "walkMetres": 0
+    },
+    {
+      "town": "PASIR RIS",
+      "destination": "Singapore Science Park",
+      "stationKey": "HAW_PAR_VILLA",
+      "status": "ok",
+      "minutes": 52.6,
+      "transfers": 1,
+      "walkMetres": 112.8
+    },
+    {
+      "town": "PASIR RIS",
+      "destination": "Paya Lebar Quarter",
+      "stationKey": "PAYA_LEBAR",
+      "status": "ok",
+      "minutes": 19.5,
+      "transfers": 0,
+      "walkMetres": 0
+    },
+    {
+      "town": "PASIR RIS",
+      "destination": "Jurong East MRT Station",
+      "stationKey": "JURONG_EAST",
+      "status": "ok",
+      "minutes": 56.8,
+      "transfers": 0,
+      "walkMetres": 0
+    },
+    {
+      "town": "PASIR RIS",
+      "destination": "Tampines Hub",
+      "stationKey": "TAMPINES_WEST",
+      "status": "ok",
+      "minutes": 17.4,
+      "transfers": 1,
+      "walkMetres": 495.6
+    },
+    {
+      "town": "PASIR RIS",
+      "destination": "Woodlands MRT Station",
+      "stationKey": "WOODLANDS",
+      "status": "ok",
+      "minutes": 70.6,
+      "transfers": 1,
+      "walkMetres": 353.6
+    },
+    {
+      "town": "PUNGGOL",
+      "destination": "National University of Singapore",
+      "stationKey": "KENT_RIDGE",
+      "status": "ok",
+      "minutes": 47.1,
+      "transfers": 1,
+      "walkMetres": 98.3
+    },
+    {
+      "town": "PUNGGOL",
+      "destination": "Nanyang Technological University",
+      "stationKey": "PIONEER",
+      "status": "ok",
+      "minutes": 74.0,
+      "transfers": 2,
+      "walkMetres": 229.8
+    },
+    {
+      "town": "PUNGGOL",
+      "destination": "Raffles Place MRT Station",
+      "stationKey": "RAFFLES_PLACE",
+      "status": "ok",
+      "minutes": 35.5,
+      "transfers": 1,
+      "walkMetres": 303.3
+    },
+    {
+      "town": "PUNGGOL",
+      "destination": "Changi Business Park",
+      "stationKey": "EXPO",
+      "status": "ok",
+      "minutes": 49.1,
+      "transfers": 2,
+      "walkMetres": 380.0
+    },
+    {
+      "town": "PUNGGOL",
+      "destination": "one-north MRT Station",
+      "stationKey": "ONE_NORTH",
+      "status": "ok",
+      "minutes": 48.6,
+      "transfers": 1,
+      "walkMetres": 98.3
+    },
+    {
+      "town": "PUNGGOL",
+      "destination": "Singapore Management University",
+      "stationKey": "BRAS_BASAH",
+      "status": "ok",
+      "minutes": 36.1,
+      "transfers": 1,
+      "walkMetres": 240.6
+    },
+    {
+      "town": "PUNGGOL",
+      "destination": "Mapletree Business City",
+      "stationKey": "LABRADOR_PARK",
+      "status": "ok",
+      "minutes": 42.0,
+      "transfers": 1,
+      "walkMetres": 209.3
+    },
+    {
+      "town": "PUNGGOL",
+      "destination": "Singapore General Hospital",
+      "stationKey": "OUTRAM_PARK",
+      "status": "ok",
+      "minutes": 30.2,
+      "transfers": 0,
+      "walkMetres": 98.3
+    },
+    {
+      "town": "PUNGGOL",
+      "destination": "Singapore University of Technology and Design",
+      "stationKey": "UPPER_CHANGI",
+      "status": "ok",
+      "minutes": 49.1,
+      "transfers": 2,
+      "walkMetres": 481.6
+    },
+    {
+      "town": "PUNGGOL",
+      "destination": "Singapore Institute of Technology",
+      "stationKey": "PUNGGOL_COAST",
+      "status": "ok",
+      "minutes": 3.8,
+      "transfers": 0,
+      "walkMetres": 98.3
+    },
+    {
+      "town": "PUNGGOL",
+      "destination": "Singapore University of Social Sciences",
+      "stationKey": "KING_ALBERT_PARK",
+      "status": "ok",
+      "minutes": 41.2,
+      "transfers": 1,
+      "walkMetres": 275.3
+    },
+    {
+      "town": "PUNGGOL",
+      "destination": "Marina Bay Financial Centre",
+      "stationKey": "DOWNTOWN",
+      "status": "ok",
+      "minutes": 39.0,
+      "transfers": 1,
+      "walkMetres": 275.3
+    },
+    {
+      "town": "PUNGGOL",
+      "destination": "Tanjong Pagar MRT Station",
+      "stationKey": "TANJONG_PAGAR",
+      "status": "ok",
+      "minutes": 41.3,
+      "transfers": 2,
+      "walkMetres": 303.3
+    },
+    {
+      "town": "PUNGGOL",
+      "destination": "Shenton Way",
+      "stationKey": "TANJONG_PAGAR",
+      "status": "ok",
+      "minutes": 41.3,
+      "transfers": 2,
+      "walkMetres": 303.3
+    },
+    {
+      "town": "PUNGGOL",
+      "destination": "International Business Park",
+      "stationKey": "JURONG_EAST",
+      "status": "ok",
+      "minutes": 64.5,
+      "transfers": 2,
+      "walkMetres": 229.8
+    },
+    {
+      "town": "PUNGGOL",
+      "destination": "Singapore Science Park",
+      "stationKey": "HAW_PAR_VILLA",
+      "status": "ok",
+      "minutes": 44.7,
+      "transfers": 1,
+      "walkMetres": 98.6
+    },
+    {
+      "town": "PUNGGOL",
+      "destination": "Paya Lebar Quarter",
+      "stationKey": "PAYA_LEBAR",
+      "status": "ok",
+      "minutes": 26.6,
+      "transfers": 1,
+      "walkMetres": 353.1
+    },
+    {
+      "town": "PUNGGOL",
+      "destination": "Jurong East MRT Station",
+      "stationKey": "JURONG_EAST",
+      "status": "ok",
+      "minutes": 64.5,
+      "transfers": 2,
+      "walkMetres": 229.8
+    },
+    {
+      "town": "PUNGGOL",
+      "destination": "Tampines Hub",
+      "stationKey": "TAMPINES_WEST",
+      "status": "ok",
+      "minutes": 39.0,
+      "transfers": 2,
+      "walkMetres": 380.0
+    },
+    {
+      "town": "PUNGGOL",
+      "destination": "Woodlands MRT Station",
+      "stationKey": "WOODLANDS",
+      "status": "ok",
+      "minutes": 57.8,
+      "transfers": 1,
+      "walkMetres": 433.3
+    },
+    {
+      "town": "QUEENSTOWN",
+      "destination": "National University of Singapore",
+      "stationKey": "KENT_RIDGE",
+      "status": "ok",
+      "minutes": 12.5,
+      "transfers": 1,
+      "walkMetres": 165.5
+    },
+    {
+      "town": "QUEENSTOWN",
+      "destination": "Nanyang Technological University",
+      "stationKey": "PIONEER",
+      "status": "ok",
+      "minutes": 23.8,
+      "transfers": 0,
+      "walkMetres": 34.0
+    },
+    {
+      "town": "QUEENSTOWN",
+      "destination": "Raffles Place MRT Station",
+      "stationKey": "RAFFLES_PLACE",
+      "status": "ok",
+      "minutes": 10.8,
+      "transfers": 0,
+      "walkMetres": 34.0
+    },
+    {
+      "town": "QUEENSTOWN",
+      "destination": "Changi Business Park",
+      "stationKey": "EXPO",
+      "status": "ok",
+      "minutes": 45.8,
+      "transfers": 1,
+      "walkMetres": 308.4
+    },
+    {
+      "town": "QUEENSTOWN",
+      "destination": "one-north MRT Station",
+      "stationKey": "ONE_NORTH",
+      "status": "ok",
+      "minutes": 10.9,
+      "transfers": 1,
+      "walkMetres": 165.5
+    },
+    {
+      "town": "QUEENSTOWN",
+      "destination": "Singapore Management University",
+      "stationKey": "BRAS_BASAH",
+      "status": "ok",
+      "minutes": 27.5,
+      "transfers": 2,
+      "walkMetres": 68.0
+    },
+    {
+      "town": "QUEENSTOWN",
+      "destination": "Mapletree Business City",
+      "stationKey": "LABRADOR_PARK",
+      "status": "ok",
+      "minutes": 21.3,
+      "transfers": 1,
+      "walkMetres": 276.6
+    },
+    {
+      "town": "QUEENSTOWN",
+      "destination": "Singapore General Hospital",
+      "stationKey": "OUTRAM_PARK",
+      "status": "ok",
+      "minutes": 12.7,
+      "transfers": 0,
+      "walkMetres": 388.4
+    },
+    {
+      "town": "QUEENSTOWN",
+      "destination": "Singapore University of Technology and Design",
+      "stationKey": "UPPER_CHANGI",
+      "status": "ok",
+      "minutes": 47.8,
+      "transfers": 1,
+      "walkMetres": 215.4
+    },
+    {
+      "town": "QUEENSTOWN",
+      "destination": "Singapore Institute of Technology",
+      "stationKey": "PUNGGOL_COAST",
+      "status": "ok",
+      "minutes": 50.0,
+      "transfers": 2,
+      "walkMetres": 159.4
+    },
+    {
+      "town": "QUEENSTOWN",
+      "destination": "Singapore University of Social Sciences",
+      "stationKey": "KING_ALBERT_PARK",
+      "status": "ok",
+      "minutes": 27.9,
+      "transfers": 2,
+      "walkMetres": 353.4
+    },
+    {
+      "town": "QUEENSTOWN",
+      "destination": "Marina Bay Financial Centre",
+      "stationKey": "DOWNTOWN",
+      "status": "ok",
+      "minutes": 22.8,
+      "transfers": 1,
+      "walkMetres": 500.1
+    },
+    {
+      "town": "QUEENSTOWN",
+      "destination": "Tanjong Pagar MRT Station",
+      "stationKey": "TANJONG_PAGAR",
+      "status": "ok",
+      "minutes": 8.8,
+      "transfers": 0,
+      "walkMetres": 34.0
+    },
+    {
+      "town": "QUEENSTOWN",
+      "destination": "Shenton Way",
+      "stationKey": "TANJONG_PAGAR",
+      "status": "ok",
+      "minutes": 8.8,
+      "transfers": 0,
+      "walkMetres": 34.0
+    },
+    {
+      "town": "QUEENSTOWN",
+      "destination": "International Business Park",
+      "stationKey": "JURONG_EAST",
+      "status": "ok",
+      "minutes": 14.3,
+      "transfers": 0,
+      "walkMetres": 34.0
+    },
+    {
+      "town": "QUEENSTOWN",
+      "destination": "Singapore Science Park",
+      "stationKey": "HAW_PAR_VILLA",
+      "status": "ok",
+      "minutes": 14.8,
+      "transfers": 1,
+      "walkMetres": 165.8
+    },
+    {
+      "town": "QUEENSTOWN",
+      "destination": "Paya Lebar Quarter",
+      "stationKey": "PAYA_LEBAR",
+      "status": "ok",
+      "minutes": 22.9,
+      "transfers": 0,
+      "walkMetres": 34.0
+    },
+    {
+      "town": "QUEENSTOWN",
+      "destination": "Jurong East MRT Station",
+      "stationKey": "JURONG_EAST",
+      "status": "ok",
+      "minutes": 14.3,
+      "transfers": 0,
+      "walkMetres": 34.0
+    },
+    {
+      "town": "QUEENSTOWN",
+      "destination": "Tampines Hub",
+      "stationKey": "TAMPINES_WEST",
+      "status": "ok",
+      "minutes": 43.4,
+      "transfers": 2,
+      "walkMetres": 133.9
+    },
+    {
+      "town": "QUEENSTOWN",
+      "destination": "Woodlands MRT Station",
+      "stationKey": "WOODLANDS",
+      "status": "ok",
+      "minutes": 40.7,
+      "transfers": 1,
+      "walkMetres": 34.0
+    },
+    {
+      "town": "SEMBAWANG",
+      "destination": "National University of Singapore",
+      "stationKey": "KENT_RIDGE",
+      "status": "ok",
+      "minutes": 61.6,
+      "transfers": 1,
+      "walkMetres": 82.4
+    },
+    {
+      "town": "SEMBAWANG",
+      "destination": "Nanyang Technological University",
+      "stationKey": "PIONEER",
+      "status": "ok",
+      "minutes": 42.5,
+      "transfers": 1,
+      "walkMetres": 1.4
+    },
+    {
+      "town": "SEMBAWANG",
+      "destination": "Raffles Place MRT Station",
+      "stationKey": "RAFFLES_PLACE",
+      "status": "ok",
+      "minutes": 37.5,
+      "transfers": 0,
+      "walkMetres": 1.4
+    },
+    {
+      "town": "SEMBAWANG",
+      "destination": "Changi Business Park",
+      "stationKey": "EXPO",
+      "status": "ok",
+      "minutes": 75.6,
+      "transfers": 2,
+      "walkMetres": 264.0
+    },
+    {
+      "town": "SEMBAWANG",
+      "destination": "one-north MRT Station",
+      "stationKey": "ONE_NORTH",
+      "status": "ok",
+      "minutes": 63.1,
+      "transfers": 1,
+      "walkMetres": 82.4
+    },
+    {
+      "town": "SEMBAWANG",
+      "destination": "Singapore Management University",
+      "stationKey": "BRAS_BASAH",
+      "status": "ok",
+      "minutes": 41.6,
+      "transfers": 1,
+      "walkMetres": 230.2
+    },
+    {
+      "town": "SEMBAWANG",
+      "destination": "Mapletree Business City",
+      "stationKey": "LABRADOR_PARK",
+      "status": "ok",
+      "minutes": 56.5,
+      "transfers": 1,
+      "walkMetres": 193.4
+    },
+    {
+      "town": "SEMBAWANG",
+      "destination": "Singapore General Hospital",
+      "stationKey": "OUTRAM_PARK",
+      "status": "ok",
+      "minutes": 44.1,
+      "transfers": 1,
+      "walkMetres": 206.1
+    },
+    {
+      "town": "SEMBAWANG",
+      "destination": "Singapore University of Technology and Design",
+      "stationKey": "UPPER_CHANGI",
+      "status": "ok",
+      "minutes": 74.8,
+      "transfers": 2,
+      "walkMetres": 182.8
+    },
+    {
+      "town": "SEMBAWANG",
+      "destination": "Singapore Institute of Technology",
+      "stationKey": "PUNGGOL_COAST",
+      "status": "ok",
+      "minutes": 60.6,
+      "transfers": 2,
+      "walkMetres": 102.5
+    },
+    {
+      "town": "SEMBAWANG",
+      "destination": "Singapore University of Social Sciences",
+      "stationKey": "KING_ALBERT_PARK",
+      "status": "ok",
+      "minutes": 43.1,
+      "transfers": 1,
+      "walkMetres": 145.8
+    },
+    {
+      "town": "SEMBAWANG",
+      "destination": "Marina Bay Financial Centre",
+      "stationKey": "DOWNTOWN",
+      "status": "ok",
+      "minutes": 42.9,
+      "transfers": 1,
+      "walkMetres": 145.8
+    },
+    {
+      "town": "SEMBAWANG",
+      "destination": "Tanjong Pagar MRT Station",
+      "stationKey": "TANJONG_PAGAR",
+      "status": "ok",
+      "minutes": 43.4,
+      "transfers": 1,
+      "walkMetres": 1.4
+    },
+    {
+      "town": "SEMBAWANG",
+      "destination": "Shenton Way",
+      "stationKey": "TANJONG_PAGAR",
+      "status": "ok",
+      "minutes": 43.4,
+      "transfers": 1,
+      "walkMetres": 1.4
+    },
+    {
+      "town": "SEMBAWANG",
+      "destination": "International Business Park",
+      "stationKey": "JURONG_EAST",
+      "status": "ok",
+      "minutes": 29.8,
+      "transfers": 0,
+      "walkMetres": 1.4
+    },
+    {
+      "town": "SEMBAWANG",
+      "destination": "Singapore Science Park",
+      "stationKey": "HAW_PAR_VILLA",
+      "status": "ok",
+      "minutes": 59.2,
+      "transfers": 1,
+      "walkMetres": 82.7
+    },
+    {
+      "town": "SEMBAWANG",
+      "destination": "Paya Lebar Quarter",
+      "stationKey": "PAYA_LEBAR",
+      "status": "ok",
+      "minutes": 41.1,
+      "transfers": 1,
+      "walkMetres": 368.6
+    },
+    {
+      "town": "SEMBAWANG",
+      "destination": "Jurong East MRT Station",
+      "stationKey": "JURONG_EAST",
+      "status": "ok",
+      "minutes": 29.8,
+      "transfers": 0,
+      "walkMetres": 1.4
+    },
+    {
+      "town": "SEMBAWANG",
+      "destination": "Tampines Hub",
+      "stationKey": "TAMPINES_WEST",
+      "status": "ok",
+      "minutes": 65.9,
+      "transfers": 2,
+      "walkMetres": 119.6
+    },
+    {
+      "town": "SEMBAWANG",
+      "destination": "Woodlands MRT Station",
+      "stationKey": "WOODLANDS",
+      "status": "ok",
+      "minutes": 5.9,
+      "transfers": 0,
+      "walkMetres": 1.4
+    }
+  ],
+  "clientStats": {
+    "calls": 480,
+    "retries": 0,
+    "rate_limited": 0,
+    "errors": 0
+  }
+}

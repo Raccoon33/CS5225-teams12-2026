@@ -1,0 +1,20 @@
+{
+  "error": "Authentication token missing. Please create an account and generate or renew your API Token.",
+  "found": 5,
+  "totalNumPages": 1,
+  "pageNum": 1,
+  "results": [
+    {
+      "SEARCHVAL": "KENT RIDGE MRT STATION (CC24)",
+      "BLK_NO": "301",
+      "ROAD_NAME": "SOUTH BUONA VISTA ROAD",
+      "BUILDING": "KENT RIDGE MRT STATION (CC24)",
+      "ADDRESS": "301 SOUTH BUONA VISTA ROAD KENT RIDGE MRT STATION (CC24) SINGAPORE 118177",
+      "POSTAL": "118177",
+      "X": "22575.0107144611",
+      "Y": "30657.93329476379",
+      "LATITUDE": "1.293533498871235",
+      "LONGITUDE": "103.7845727381728"
+    }
+  ]
+}

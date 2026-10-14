@@ -1,0 +1,37 @@
+============================================================================
+A. PT 路線延遲分佈（10 鎮 → Kent Ridge，序列）
+============================================================================
+  ANG MO KIO   HTTP 200    131ms  →   37.9 min  transfers=1 walk=486m
+  TAMPINES     HTTP 200    861ms  →   61.9 min  transfers=2 walk=594m
+  WOODLANDS    HTTP 200    938ms  →   46.6 min  transfers=2 walk=340m
+  JURONG WEST  HTTP 200    835ms  →   32.3 min  transfers=1 walk=569m
+  PUNGGOL      HTTP 200   1110ms  →   46.5 min  transfers=1 walk=70m
+  BEDOK        HTTP 200   1226ms  →   42.8 min  transfers=1 walk=162m
+  CLEMENTI     HTTP 200    610ms  →   15.2 min  transfers=1 walk=273m
+  YISHUN       HTTP 200    861ms  →   60.0 min  transfers=1 walk=305m
+  HOUGANG      HTTP 200   1585ms  →   40.3 min  transfers=1 walk=52m
+  BUKIT BATOK  HTTP 200    813ms  →   39.4 min  transfers=1 walk=993m
+
+  延遲：min=131 p50=861 p95=1226 max=1585 ms
+  → 單次路線平均 0.90s；序列跑完 26 鎮需約 23s
+
+============================================================================
+B. 帶 token 的限流（併發 10，共 30 次路線請求）
+============================================================================
+  30 次 / 併發10 / 耗時 0.5s → 實際 3959 calls/min
+  200=29  429=1  其他=[]
+  個別延遲 p50=118ms max=205ms
+
+============================================================================
+C. 查無路線 / 異常輸入的回應形狀（#19 要處理）
+============================================================================
+  海上座標         HTTP 400     94ms  -> {
+  "error": "Coordinates are outside Singapore's valid range."
+}
+  境外(吉隆坡)      HTTP 400    107ms  -> {
+  "error": "Coordinates are outside Singapore's valid range."
+}
+  起訖相同         HTTP 429    117ms  -> {"message":"Too Many Requests"}
+  過去日期         HTTP 400     97ms  -> {
+  "error": "Date cannot be more than 1 year in the past."
+}

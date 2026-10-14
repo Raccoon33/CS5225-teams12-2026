@@ -1,0 +1,9 @@
+無 token 的 /common/elastic/search 速率門檻（每組 10 次請求）
+      間隔   200   429         實際速率  序列
+   0.25s     4     6     213.2/min  ..XX.XX.XX
+   0.50s     7     3     116.4/min  ...X.X.X..
+   1.00s    10     0      61.5/min  ..........
+   2.00s    10     0      32.0/min  ..........
+   3.00s    10     0      21.6/min  ..........
+
+. = 200 OK   X = 429 Too Many Requests
