@@ -41,6 +41,22 @@ DESTINATIONS = [
     "Singapore Management University",
     "Mapletree Business City",
     "Singapore General Hospital",
+    # 擴充到 20 個（E8 要求 "Sample of 20 towns and 20 destinations"）。
+    # 類別依 W1 定義：大學、CBD、商業園區，另補區域中心。
+    # 暫定清單 —— 評估計畫說正式的 30 個目的地要由 tools/load/ 的種子腳本產生，
+    # 那份清單落地後應取代這裡。
+    "Singapore University of Technology and Design",
+    "Singapore Institute of Technology",
+    "Singapore University of Social Sciences",
+    "Marina Bay Financial Centre",
+    "Tanjong Pagar MRT Station",
+    "Shenton Way",
+    "International Business Park",
+    "Singapore Science Park",
+    "Paya Lebar Quarter",
+    "Jurong East MRT Station",
+    "Tampines Hub",
+    "Woodlands MRT Station",
 ]
 
 

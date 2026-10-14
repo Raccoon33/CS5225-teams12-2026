@@ -1,4 +1,4 @@
-"""26 個 HDB 鎮的通勤參考點 — 補上合約假設 C5 缺的那一塊。
+"""27 個 HDB 鎮的通勤參考點（其中 26 個可路由） — 補上合約假設 C5 缺的那一塊。
 
 ## 為什麼需要這個
 
@@ -210,6 +210,14 @@ TOWN_REFERENCE_POINTS = {
         "lat": 1.43682,
         "lon": 103.786067,
     },
+    'TENGAH': {
+        "stationKey": 'TENGAH',
+        "stationName": 'MRT STATION (JS3)',
+        "codes": ['JS3'],
+        "lat": 1.366346890987177,
+        "lon": 103.7300631359935,
+        "routable": False,
+    },
     'YISHUN': {
         "stationKey": 'YISHUN',
         "stationName": 'YISHUN MRT STATION (NS13)',
@@ -225,8 +233,23 @@ TOWN_COORDS = {
     town: f"{v['lat']},{v['lon']}" for town, v in TOWN_REFERENCE_POINTS.items()
 }
 
-#: HDB 鎮名（大寫，照 HDB 資料集拼法 — 合約假設 C3）
+#: HDB 鎮名（大寫，照 HDB 資料集拼法 — 合約假設 C3）。
+#: 2026-10-14 更新為 27 個 —— Mani 在 #2 的資料剖析發現 9 月的租金來源有 27 個鎮，
+#: 包含 TENGAH（PR #52）。
 TOWNS = sorted(TOWN_REFERENCE_POINTS)
+
+#: 可以實際算出通勤路線的鎮（26 個）。
+#:
+#: TENGAH 不在內：它的參考點只有 Jurong Region Line 的 JS3/JS4，2026-10-14 實測
+#: OneMap PT routing 從該座標回 404 NoRouteFound（同時以 BUKIT BATOK 對照，39.8 分
+#: 正常回傳），因為 JRL 尚未通車。OneMap 搜尋對它回的 SEARCHVAL 也是
+#: 'MRT STATION (JS3)'，沒有鎮名，過不了其他 26 鎮用的精確比對規則。
+#:
+#: 這個區分有產品意義：TENGAH 存在於租金資料裡，所以搜尋結果必須把它列為
+#: ROUTE_UNAVAILABLE，而不是悄悄消失（團隊決議 D06）。
+ROUTABLE_TOWNS = sorted(
+    t for t, v in TOWN_REFERENCE_POINTS.items() if v.get("routable", True)
+)
 
 
 def coords(town):

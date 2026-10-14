@@ -8,12 +8,13 @@ from .client import OneMapClient, OFFICIAL_LIMIT_PER_MIN, DEFAULT_LIMIT_PER_MIN
 from .errors import (AuthError, Blocked, InvalidRequest, NoRouteFound,
                      OneMapError, RateLimited, TokenExpiring, UpstreamError)
 from .stations import canonical_key, dedupe_stations, is_station_entry, parse_codes
-from .towns import TOWNS, TOWN_COORDS, TOWN_REFERENCE_POINTS, coords
+from .towns import (ROUTABLE_TOWNS, TOWNS, TOWN_COORDS,
+                    TOWN_REFERENCE_POINTS, coords)
 
 __all__ = [
     "OneMapClient", "OFFICIAL_LIMIT_PER_MIN", "DEFAULT_LIMIT_PER_MIN",
     "OneMapError", "AuthError", "Blocked", "InvalidRequest", "NoRouteFound",
     "RateLimited", "TokenExpiring", "UpstreamError",
     "canonical_key", "dedupe_stations", "is_station_entry", "parse_codes",
-    "TOWNS", "TOWN_COORDS", "TOWN_REFERENCE_POINTS", "coords",
+    "ROUTABLE_TOWNS", "TOWNS", "TOWN_COORDS", "TOWN_REFERENCE_POINTS", "coords",
 ]
