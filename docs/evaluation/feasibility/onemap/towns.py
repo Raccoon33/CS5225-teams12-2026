@@ -84,7 +84,7 @@ TOWN_REFERENCE_POINTS = {
         "lat": 1.340901,
         "lon": 103.775747,
     },
-    'CENTRAL AREA': {
+    'CENTRAL': {
         "stationKey": 'DHOBY_GHAUT',
         "stationName": 'DHOBY GHAUT MRT STATION (CC1)',
         "codes": ['CC1'],

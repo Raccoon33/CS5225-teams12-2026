@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""重新產生 onemap/towns.py 的 26 鎮參考點。
+"""重新產生 onemap/towns.py 的 27 鎮參考點。
 
 只有在 OneMap 的站點資料變動時才需要跑（例如新線通車）。
 會把結果印成可以直接貼回 towns.py 的格式。
@@ -16,6 +16,7 @@ import sys
 sys.path.insert(0, str(pathlib.Path(__file__).resolve().parent.parent))
 
 from onemap import OneMapClient  # noqa: E402
+from onemap.towns import TOWN_REFERENCE_POINTS  # noqa: E402
 from onemap.config import load_token  # noqa: E402
 from onemap.stations import canonical_key, is_station_entry, parse_codes  # noqa: E402
 
@@ -24,7 +25,7 @@ TOWN_QUERY = {
     "ANG MO KIO": "ANG MO KIO MRT STATION", "BEDOK": "BEDOK MRT STATION",
     "BISHAN": "BISHAN MRT STATION", "BUKIT BATOK": "BUKIT BATOK MRT STATION",
     "BUKIT MERAH": "REDHILL MRT STATION", "BUKIT PANJANG": "BUKIT PANJANG MRT STATION",
-    "BUKIT TIMAH": "BEAUTY WORLD MRT STATION", "CENTRAL AREA": "DHOBY GHAUT MRT STATION",
+    "BUKIT TIMAH": "BEAUTY WORLD MRT STATION", "CENTRAL": "DHOBY GHAUT MRT STATION",
     "CHOA CHU KANG": "CHOA CHU KANG MRT STATION", "CLEMENTI": "CLEMENTI MRT STATION",
     "GEYLANG": "ALJUNIED MRT STATION", "HOUGANG": "HOUGANG MRT STATION",
     "JURONG EAST": "JURONG EAST MRT STATION", "JURONG WEST": "BOON LAY MRT STATION",
@@ -39,18 +40,18 @@ TOWN_QUERY = {
 
 def main():
     client = OneMapClient(load_token())
-    out, fuzzy = {}, []
+    out = {"TENGAH": dict(TOWN_REFERENCE_POINTS["TENGAH"])}
+    missing = []
     for town, query in TOWN_QUERY.items():
         want = canonical_key(query)
         res = client.search(query)
         cands = [r for r in res["results"] if is_station_entry(r.get("SEARCHVAL", ""))]
         exact = [r for r in cands if canonical_key(r["SEARCHVAL"]) == want]
-        hit = (exact or cands or res["results"] or [None])[0]
+        hit = exact[0] if exact else None
         if hit is None:
-            print(f"  ✗ {town}: 查無", file=sys.stderr)
+            print(f"  ✗ {town}: no exact canonical-station match", file=sys.stderr)
+            missing.append(town)
             continue
-        if not exact:
-            fuzzy.append(town)
         out[town] = {
             "stationKey": canonical_key(hit["SEARCHVAL"]),
             "stationName": hit["SEARCHVAL"],
@@ -60,8 +61,9 @@ def main():
         }
         print(f"  {'✓' if exact else '⚠'} {town:16s} → {out[town]['stationKey']}",
               file=sys.stderr)
-    if fuzzy:
-        print(f"\n⚠️ 這些鎮只有模糊比對，請人工確認：{fuzzy}", file=sys.stderr)
+    if missing:
+        print(f"Incomplete table; missing exact matches: {missing}", file=sys.stderr)
+        return 1
     print(json.dumps(out, indent=2, ensure_ascii=False))
     return 0
 
