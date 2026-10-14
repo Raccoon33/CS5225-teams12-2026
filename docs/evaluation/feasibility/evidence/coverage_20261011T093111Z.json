@@ -1,0 +1,333 @@
+{
+  "script": "measure_route_coverage.py",
+  "version": "1.0.0",
+  "issue": 19,
+  "experiment": "E8",
+  "runAt": "2026-10-11T09:31:11.547609+00:00",
+  "towns": [
+    "ANG MO KIO",
+    "BEDOK",
+    "BISHAN",
+    "BUKIT BATOK",
+    "BUKIT MERAH",
+    "BUKIT PANJANG"
+  ],
+  "destinations": [
+    {
+      "name": "National University of Singapore",
+      "label": "NATIONAL UNIVERSITY OF SINGAPORE",
+      "exact": "1.294201230793541,103.7710715818037",
+      "stationKey": "KENT_RIDGE",
+      "codes": [
+        "CC24"
+      ],
+      "station": "1.29330347372,103.784516185",
+      "walkMetres": 1498
+    },
+    {
+      "name": "Nanyang Technological University",
+      "label": "NANYANG TECHNOLOGICAL UNIVERSITY",
+      "exact": "1.352949370203277,103.6892235086704",
+      "stationKey": "PIONEER",
+      "codes": [
+        "EW28"
+      ],
+      "station": "1.33759355155,103.697418456",
+      "walkMetres": 1935
+    },
+    {
+      "name": "Raffles Place MRT Station",
+      "label": "RAFFLES PLACE MRT STATION",
+      "exact": "1.283933262345381,103.8514630662122",
+      "stationKey": "RAFFLES_PLACE",
+      "codes": [
+        "EW14",
+        "NS26"
+      ],
+      "station": "1.28393326207,103.851463066",
+      "walkMetres": 0
+    },
+    {
+      "name": "Changi Business Park",
+      "label": "CHANGI BUSINESS PARK",
+      "exact": "1.33825748396958,103.9670496789726",
+      "stationKey": "EXPO",
+      "codes": [
+        "CG1",
+        "DT35"
+      ],
+      "station": "1.3351569861,103.962608421",
+      "walkMetres": 602
+    }
+  ],
+  "coverage": {
+    "totalPairs": 24,
+    "ok": 24,
+    "unavailable": 0,
+    "errors": 0,
+    "coveragePct": 100.0,
+    "unavailablePairs": []
+  },
+  "snapError": {
+    "rows": [
+      {
+        "destination": "National University of Singapore",
+        "stationKey": "KENT_RIDGE",
+        "exactMinutes": 50.0,
+        "snappedMinutes": 44.7,
+        "deltaMinutes": -5.3,
+        "walkMetres": 1498
+      },
+      {
+        "destination": "Nanyang Technological University",
+        "stationKey": "PIONEER",
+        "exactMinutes": 87.3,
+        "snappedMinutes": 59.1,
+        "deltaMinutes": -28.2,
+        "walkMetres": 1935
+      },
+      {
+        "destination": "Raffles Place MRT Station",
+        "stationKey": "RAFFLES_PLACE",
+        "exactMinutes": 20.6,
+        "snappedMinutes": 20.6,
+        "deltaMinutes": 0.0,
+        "walkMetres": 0
+      },
+      {
+        "destination": "Changi Business Park",
+        "stationKey": "EXPO",
+        "exactMinutes": 57.6,
+        "snappedMinutes": 55.6,
+        "deltaMinutes": -2.0,
+        "walkMetres": 602
+      }
+    ],
+    "medianAbsMinutes": 3.6,
+    "maxAbsMinutes": 28.2
+  },
+  "pairs": [
+    {
+      "town": "ANG MO KIO",
+      "destination": "National University of Singapore",
+      "stationKey": "KENT_RIDGE",
+      "status": "ok",
+      "minutes": 44.7,
+      "transfers": 1,
+      "walkMetres": 81.3
+    },
+    {
+      "town": "ANG MO KIO",
+      "destination": "Nanyang Technological University",
+      "stationKey": "PIONEER",
+      "status": "ok",
+      "minutes": 59.1,
+      "transfers": 1,
+      "walkMetres": 0.3
+    },
+    {
+      "town": "ANG MO KIO",
+      "destination": "Raffles Place MRT Station",
+      "stationKey": "RAFFLES_PLACE",
+      "status": "ok",
+      "minutes": 20.6,
+      "transfers": 0,
+      "walkMetres": 0.3
+    },
+    {
+      "town": "ANG MO KIO",
+      "destination": "Changi Business Park",
+      "stationKey": "EXPO",
+      "status": "ok",
+      "minutes": 55.6,
+      "transfers": 2,
+      "walkMetres": 274.7
+    },
+    {
+      "town": "BEDOK",
+      "destination": "National University of Singapore",
+      "stationKey": "KENT_RIDGE",
+      "status": "ok",
+      "minutes": 42.3,
+      "transfers": 1,
+      "walkMetres": 133.8
+    },
+    {
+      "town": "BEDOK",
+      "destination": "Nanyang Technological University",
+      "stationKey": "PIONEER",
+      "status": "ok",
+      "minutes": 53.7,
+      "transfers": 0,
+      "walkMetres": 21.3
+    },
+    {
+      "town": "BEDOK",
+      "destination": "Raffles Place MRT Station",
+      "stationKey": "RAFFLES_PLACE",
+      "status": "ok",
+      "minutes": 18.9,
+      "transfers": 0,
+      "walkMetres": 21.3
+    },
+    {
+      "town": "BEDOK",
+      "destination": "Changi Business Park",
+      "stationKey": "EXPO",
+      "status": "ok",
+      "minutes": 18.4,
+      "transfers": 1,
+      "walkMetres": 523.1
+    },
+    {
+      "town": "BISHAN",
+      "destination": "National University of Singapore",
+      "stationKey": "KENT_RIDGE",
+      "status": "ok",
+      "minutes": 21.4,
+      "transfers": 0,
+      "walkMetres": 117.5
+    },
+    {
+      "town": "BISHAN",
+      "destination": "Nanyang Technological University",
+      "stationKey": "PIONEER",
+      "status": "ok",
+      "minutes": 42.1,
+      "transfers": 1,
+      "walkMetres": 249.1
+    },
+    {
+      "town": "BISHAN",
+      "destination": "Raffles Place MRT Station",
+      "stationKey": "RAFFLES_PLACE",
+      "status": "ok",
+      "minutes": 22.1,
+      "transfers": 0,
+      "walkMetres": 309.6
+    },
+    {
+      "town": "BISHAN",
+      "destination": "Changi Business Park",
+      "stationKey": "EXPO",
+      "status": "ok",
+      "minutes": 40.1,
+      "transfers": 1,
+      "walkMetres": 257.0
+    },
+    {
+      "town": "BUKIT BATOK",
+      "destination": "National University of Singapore",
+      "stationKey": "KENT_RIDGE",
+      "status": "ok",
+      "minutes": 25.0,
+      "transfers": 2,
+      "walkMetres": 136.0
+    },
+    {
+      "town": "BUKIT BATOK",
+      "destination": "Nanyang Technological University",
+      "stationKey": "PIONEER",
+      "status": "ok",
+      "minutes": 14.6,
+      "transfers": 1,
+      "walkMetres": 4.4
+    },
+    {
+      "town": "BUKIT BATOK",
+      "destination": "Raffles Place MRT Station",
+      "stationKey": "RAFFLES_PLACE",
+      "status": "ok",
+      "minutes": 32.0,
+      "transfers": 1,
+      "walkMetres": 4.4
+    },
+    {
+      "town": "BUKIT BATOK",
+      "destination": "Changi Business Park",
+      "stationKey": "EXPO",
+      "status": "ok",
+      "minutes": 70.3,
+      "transfers": 2,
+      "walkMetres": 506.2
+    },
+    {
+      "town": "BUKIT MERAH",
+      "destination": "National University of Singapore",
+      "stationKey": "KENT_RIDGE",
+      "status": "ok",
+      "minutes": 14.6,
+      "transfers": 1,
+      "walkMetres": 143.5
+    },
+    {
+      "town": "BUKIT MERAH",
+      "destination": "Nanyang Technological University",
+      "stationKey": "PIONEER",
+      "status": "ok",
+      "minutes": 25.9,
+      "transfers": 0,
+      "walkMetres": 11.9
+    },
+    {
+      "town": "BUKIT MERAH",
+      "destination": "Raffles Place MRT Station",
+      "stationKey": "RAFFLES_PLACE",
+      "status": "ok",
+      "minutes": 8.3,
+      "transfers": 0,
+      "walkMetres": 11.9
+    },
+    {
+      "town": "BUKIT MERAH",
+      "destination": "Changi Business Park",
+      "stationKey": "EXPO",
+      "status": "ok",
+      "minutes": 47.1,
+      "transfers": 1,
+      "walkMetres": 513.8
+    },
+    {
+      "town": "BUKIT PANJANG",
+      "destination": "National University of Singapore",
+      "stationKey": "KENT_RIDGE",
+      "status": "ok",
+      "minutes": 34.2,
+      "transfers": 1,
+      "walkMetres": 343.9
+    },
+    {
+      "town": "BUKIT PANJANG",
+      "destination": "Nanyang Technological University",
+      "stationKey": "PIONEER",
+      "status": "ok",
+      "minutes": 34.1,
+      "transfers": 1,
+      "walkMetres": 280.7
+    },
+    {
+      "town": "BUKIT PANJANG",
+      "destination": "Raffles Place MRT Station",
+      "stationKey": "RAFFLES_PLACE",
+      "status": "ok",
+      "minutes": 38.2,
+      "transfers": 1,
+      "walkMetres": 300.4
+    },
+    {
+      "town": "BUKIT PANJANG",
+      "destination": "Changi Business Park",
+      "stationKey": "EXPO",
+      "status": "ok",
+      "minutes": 72.7,
+      "transfers": 0,
+      "walkMetres": 156.1
+    }
+  ],
+  "clientStats": {
+    "calls": 40,
+    "retries": 0,
+    "rate_limited": 0,
+    "errors": 0
+  }
+}

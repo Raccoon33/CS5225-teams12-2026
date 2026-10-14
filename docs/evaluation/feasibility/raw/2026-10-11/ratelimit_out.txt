@@ -1,0 +1,20 @@
+### 階段 1：429 後的恢復時間（每 10 秒探測 1 次）
+  +    0s  HTTP 200    135ms  Retry-After=None
+  → 恢復耗時 ≈ 0s（自第一次探測起）
+
+### 階段 2：突發容量 — 盡快連發，數到第一個 429 為止
+  req# 1 HTTP 200    74ms
+  req# 2 HTTP 429    42ms
+  → 連發可成功 1 次後被擋（bucket 容量 ≈ 1）
+
+### 階段 3：恢復後測穩定速率 1 req / 5s
+  t=  5s HTTP 200   101ms
+  t= 10s HTTP 200    73ms
+  t= 15s HTTP 200    93ms
+  t= 20s HTTP 200    81ms
+  t= 25s HTTP 200   120ms
+  t= 30s HTTP 200    68ms
+  t= 35s HTTP 200    65ms
+  t= 40s HTTP 200    69ms
+  → 1 req/5s 共 8 次：200=8  429=0
+  → 推估無 token 可持續速率 ≈ 8/40s = 12.0 req/min

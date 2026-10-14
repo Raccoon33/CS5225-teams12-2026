@@ -1,0 +1,53 @@
+==============================================================================
+A. SEARCH 無 token — 樣本目的地（C4 驗證）
+==============================================================================
+  NUS                            HTTP 200    110ms found=20    n=10 top=NUS (RIDGE VIEW RESIDENTIAL  err=YES
+  Raffles Place                  HTTP 200     90ms found=21    n=10 top=ASCOTT SINGAPORE RAFFLES PLA err=YES
+  Changi Business Park           HTTP 429 -> <html><head><title>429 Too Many Requests</title></head><body><div style='text-align: center;font-family: Roboto, sans-serif;'><div style=' text-align: left; width: 600px; margin: 0 auto;'><h1 style='font-weight: 800;font-family: Open Sans, sans-serif;font-size: 36px;'>Error: 429 </h1><h2>Too Many Re
+  one-north                      HTTP 429 -> <html><head><title>429 Too Many Requests</title></head><body><div style='text-align: center;font-family: Roboto, sans-serif;'><div style=' text-align: left; width: 600px; margin: 0 auto;'><h1 style='font-weight: 800;font-family: Open Sans, sans-serif;font-size: 36px;'>Error: 429 </h1><h2>Too Many Re
+  Jurong East MRT                HTTP 200     89ms found=6     n= 6 top=JURONG EAST MRT STATION (EW2 err=YES
+  Tokyo Tower                    HTTP 429 -> <html><head><title>429 Too Many Requests</title></head><body><div style='text-align: center;font-family: Roboto, sans-serif;'><div style=' text-align: left; width: 600px; margin: 0 auto;'><h1 style='font-weight: 800;font-family: Open Sans, sans-serif;font-size: 36px;'>Error: 429 </h1><h2>Too Many Re
+  Marina Bay Financial Centre    HTTP 429 -> <html><head><title>429 Too Many Requests</title></head><body><div style='text-align: center;font-family: Roboto, sans-serif;'><div style=' text-align: left; width: 600px; margin: 0 auto;'><h1 style='font-weight: 800;font-family: Open Sans, sans-serif;font-size: 36px;'>Error: 429 </h1><h2>Too Many Re
+  NTU                            HTTP 200     86ms found=36    n=10 top=NANYANG TECHNOLOGICAL UNIVER err=YES
+  Tampines Hub                   HTTP 429 -> <html><head><title>429 Too Many Requests</title></head><body><div style='text-align: center;font-family: Roboto, sans-serif;'><div style=' text-align: left; width: 600px; margin: 0 auto;'><h1 style='font-weight: 800;font-family: Open Sans, sans-serif;font-size: 36px;'>Error: 429 </h1><h2>Too Many Re
+  117510                         HTTP 429 -> <html><head><title>429 Too Many Requests</title></head><body><div style='text-align: center;font-family: Roboto, sans-serif;'><div style=' text-align: left; width: 600px; margin: 0 auto;'><h1 style='font-weight: 800;font-family: Open Sans, sans-serif;font-size: 36px;'>Error: 429 </h1><h2>Too Many Re
+
+==============================================================================
+B. 無 token 的 error 欄位全文
+==============================================================================
+  HTTP 200 | error = "Authentication token missing. Please create an account and generate or renew your API Token."
+  回應 top-level keys: ['error', 'found', 'totalNumPages', 'pageNum', 'results']
+
+==============================================================================
+C. 錯誤/邊界輸入的回應形狀（#14 需要明確狀態）
+==============================================================================
+  空字串            HTTP 429 -> <html><head><title>429 Too Many Requests</title></head><body><div style='text-align: center;font-family: Roboto, sans-se
+  單字元            HTTP 429 -> <html><head><title>429 Too Many Requests</title></head><body><div style='text-align: center;font-family: Roboto, sans-se
+  兩字元            HTTP 429 -> <html><head><title>429 Too Many Requests</title></head><body><div style='text-align: center;font-family: Roboto, sans-se
+  亂碼             HTTP 200 found=0     n= 0 keys=['error', 'found', 'totalNumPages', 'pageNum'] top=None
+  非新加坡           HTTP 429 -> <html><head><title>429 Too Many Requests</title></head><body><div style='text-align: center;font-family: Roboto, sans-se
+  SQL注入樣         HTTP 403 -> <html><head><title>403 Forbidden</title></head><body><div style='text-align: center;font-family: Roboto, sans-serif;'><d
+  中文             HTTP 200 found=0     n= 0 keys=['error', 'found', 'totalNumPages', 'pageNum'] top=None
+  超長(150字)       HTTP 429 -> <html><head><title>429 Too Many Requests</title></head><body><div style='text-align: center;font-family: Roboto, sans-se
+
+==============================================================================
+D. ROUTING / 其他需 token 端點 的失敗回應（存取阻塞證據）
+==============================================================================
+  PT 路線規劃            HTTP  401     60ms -> {"message": "Unauthorized"}
+  步行路線               HTTP  401     62ms -> {"message": "Unauthorized"}
+  主題圖資(地鐵站)          HTTP  401     65ms -> {"message": "Unauthorized"}
+  主題圖資清單             HTTP  401    103ms -> {"message": "Unauthorized"}
+  反向地理編碼             HTTP  401    140ms -> {"message": "Unauthorized"}
+  行政區查詢              HTTP  401     59ms -> {"message": "Unauthorized"}
+
+==============================================================================
+E. 取 token 端點是否存在（需帳密，這裡只驗端點與錯誤形狀）
+==============================================================================
+  POST /api/auth/post/getToken HTTP 400 -> {
+  "error": "Your password should be between 8 and 60 characters."
+}
+
+==============================================================================
+F. SEARCH 延遲統計（n=4，上面 A 段的樣本）
+==============================================================================
+  min=86ms  p50=90ms  p95=90ms  max=110ms

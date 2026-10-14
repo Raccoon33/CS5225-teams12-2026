@@ -1,0 +1,213 @@
+{
+  "script": "measure_rate_limit.py",
+  "version": "1.1.0",
+  "issue": 3,
+  "answers": "D-E7",
+  "runAt": "2026-10-11T10:32:08.027468+00:00",
+  "method": {
+    "windowSeconds": 20,
+    "cooldownSeconds": 25,
+    "targetRatesPerMin": [
+      150,
+      250,
+      300,
+      350,
+      420
+    ],
+    "uniqueParameters": true,
+    "note": "每個速率在固定視窗內持續送請求，記錄嘗試/成功/429。每次請求都用唯一參數（輪替查詢詞 / 出發時間），避免量到OneMap 上游對相同請求的快取而非真正的節流。視窗較短，足以定位短期節流邊界，但不足以證明長時段配額。"
+  },
+  "officialLimit": {
+    "current": 300,
+    "previous": 250,
+    "changedOn": "2025-10-01",
+    "source": "SLA OneMap Workshop 26/08/2025, slide 17",
+    "higherLimitContact": "onemap@sla.gov.sg"
+  },
+  "search": {
+    "windows": [
+      {
+        "label": "search",
+        "targetPerMin": 150,
+        "windowSeconds": 19.7,
+        "concurrency": 2,
+        "attempted": 50,
+        "ok": 50,
+        "rateLimited": 0,
+        "otherErrors": [],
+        "achievedPerMin": 152.2,
+        "successfulPerMin": 152.2,
+        "latencyMs": {
+          "p50": 74,
+          "p95": 109,
+          "max": 7229
+        },
+        "throttled": false
+      },
+      {
+        "label": "search",
+        "targetPerMin": 250,
+        "windowSeconds": 20.0,
+        "concurrency": 2,
+        "attempted": 84,
+        "ok": 84,
+        "rateLimited": 0,
+        "otherErrors": [],
+        "achievedPerMin": 252.0,
+        "successfulPerMin": 252.0,
+        "latencyMs": {
+          "p50": 72,
+          "p95": 94,
+          "max": 106
+        },
+        "throttled": false
+      },
+      {
+        "label": "search",
+        "targetPerMin": 300,
+        "windowSeconds": 19.9,
+        "concurrency": 2,
+        "attempted": 100,
+        "ok": 100,
+        "rateLimited": 0,
+        "otherErrors": [],
+        "achievedPerMin": 302.0,
+        "successfulPerMin": 302.0,
+        "latencyMs": {
+          "p50": 74,
+          "p95": 119,
+          "max": 158
+        },
+        "throttled": false
+      },
+      {
+        "label": "search",
+        "targetPerMin": 350,
+        "windowSeconds": 20.0,
+        "concurrency": 2,
+        "attempted": 117,
+        "ok": 117,
+        "rateLimited": 0,
+        "otherErrors": [],
+        "achievedPerMin": 351.7,
+        "successfulPerMin": 351.7,
+        "latencyMs": {
+          "p50": 73,
+          "p95": 120,
+          "max": 164
+        },
+        "throttled": false
+      },
+      {
+        "label": "search",
+        "targetPerMin": 420,
+        "windowSeconds": 19.9,
+        "concurrency": 2,
+        "attempted": 140,
+        "ok": 140,
+        "rateLimited": 0,
+        "otherErrors": [],
+        "achievedPerMin": 421.4,
+        "successfulPerMin": 421.4,
+        "latencyMs": {
+          "p50": 72,
+          "p95": 89,
+          "max": 176
+        },
+        "throttled": false
+      }
+    ],
+    "boundary": {
+      "highestRateWithoutThrottling": 420,
+      "lowestRateWithThrottling": null,
+      "boundaryIdentified": false,
+      "interpretation": "測到的速率全部未被節流（最高 420/min），邊界高於此"
+    }
+  },
+  "routing": {
+    "windows": [
+      {
+        "label": "route",
+        "targetPerMin": 150,
+        "windowSeconds": 22.6,
+        "concurrency": 3,
+        "attempted": 50,
+        "ok": 50,
+        "rateLimited": 0,
+        "otherErrors": [],
+        "achievedPerMin": 133.0,
+        "successfulPerMin": 133.0,
+        "latencyMs": {
+          "p50": 1159,
+          "p95": 1846,
+          "max": 2565
+        },
+        "throttled": false
+      },
+      {
+        "label": "route",
+        "targetPerMin": 250,
+        "windowSeconds": 22.5,
+        "concurrency": 5,
+        "attempted": 84,
+        "ok": 84,
+        "rateLimited": 0,
+        "otherErrors": [],
+        "achievedPerMin": 224.2,
+        "successfulPerMin": 224.2,
+        "latencyMs": {
+          "p50": 148,
+          "p95": 2178,
+          "max": 2463
+        },
+        "throttled": false
+      },
+      {
+        "label": "route",
+        "targetPerMin": 300,
+        "windowSeconds": 21.1,
+        "concurrency": 6,
+        "attempted": 100,
+        "ok": 100,
+        "rateLimited": 0,
+        "otherErrors": [],
+        "achievedPerMin": 284.5,
+        "successfulPerMin": 284.5,
+        "latencyMs": {
+          "p50": 129,
+          "p95": 1459,
+          "max": 2107
+        },
+        "throttled": false
+      }
+    ],
+    "boundary": {
+      "highestRateWithoutThrottling": 300,
+      "lowestRateWithThrottling": null,
+      "boundaryIdentified": false,
+      "interpretation": "測到的速率全部未被節流（最高 300/min），邊界高於此"
+    }
+  },
+  "endpointSharing": {
+    "saturatorOk": 842,
+    "saturatorThrottled": 0,
+    "probeResults": [
+      200,
+      200,
+      200,
+      200,
+      200,
+      200
+    ],
+    "appearsShared": false,
+    "note": "search 被節流時 route 仍可用 → 兩個端點的額度看起來是分開的"
+  },
+  "rawExchanges": "evidence/ratelimit_raw_20261011T102549Z.jsonl",
+  "exchangeCount": 1573,
+  "limitations": [
+    "觀察視窗只有 20 秒，無法證明每小時或每日配額。",
+    "量測點在新加坡境外，延遲含跨境 RTT。",
+    "單一帳號單一 IP；未測試額度是否以帳號或 IP 為單位。",
+    "OneMap 未回傳任何 X-RateLimit-* 或 Retry-After header，所以剩餘額度無法從回應讀取，只能從行為推論。"
+  ]
+}
