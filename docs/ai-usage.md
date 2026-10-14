@@ -69,6 +69,23 @@ For future entries, record the requested issue, tool, contribution, checks actua
 - Corrections: aligned the measured search URL with the API contract, assigned E4 usage evidence to the owner of #34, and distinguished the 20 requests/s admission limit from the proposed 50 requests/s capacity workload. Specified isolated local worker processes for the fixed-instance comparison to avoid benchmarking the resolver’s safety lock as compute capacity.
 - Verification: documentation formatting and diff checks pass; the combined stack passes checks, 35 tests, build and synth. Evaluation owner agreement and decisions D-E1–D-E7 remain pending; no experiment results or AWS deployment are claimed.
 
+## 13 October 2026 — issue 3 feasibility evidence and issue 46 owner confirmation
+
+- Tool: Claude Code (Claude Opus 5).
+- Request: confirm the E3, E4, E5 and E9 rows of `docs/evaluation-plan.md` in #46, then commit the feasibility evidence promised under decision D-E5.
+- Contribution: `docs/evaluation/` evidence layout and `docs/evaluation/feasibility/` — the four re-runnable probe scripts, the unedited console output of the 11 October run, the 26-town → principal MRT station table (`data/towns.json`), and a README mapping each claim in #3 to the file and section that supports it. Posted the owner confirmation in #46: four rows accepted, E4's primary metric replaced because OneMap throttles on concurrency rather than requests per minute, W4's invalid-credential injection corrected because untokenised search still returns HTTP 200, and proposed wording for D-E7.
+- Verification: every claim in the README was re-checked against the raw files rather than against the issue text, which corrected three rows — the kept feasibility run was untokenised and throttled after 4 of 10 queries, so its latency sample is n=4 and not the n=12 quoted in #3. Prettier formatting passed for the added Markdown and JSON. No code, infrastructure or lockfile changed; no experiment was run.
+- Correction during the same session: the instrumented toolkit behind #3 was first reported as unrecoverable and the evidence was committed from console output alone. The working copy was then located and the real artifacts were added — the `onemap` client package, five versioned measurement scripts, and seven summary JSONs with their raw HTTP archives (45 feasibility and 1,037 rate-limit exchanges, authorization headers replaced by a token fingerprint). The README now attributes every claim in #3 to a specific run.
+- Discrepancies recorded rather than smoothed over: #3's search latency table quotes n=12, while the instrumented run has n=8 and the untokenised console probe n=4; the 300 calls/min routing boundary comes from run 1.0.0, not the final 1.2.0 run, which re-tested routing only at 250/min; endpoint sharing was observed in 1 of 3 runs; and the instrumented routing latency (p50 140 ms) measured OneMap's upstream cache rather than the 861 ms uncached path.
+- Human follow-up: @shyamgj1900 to resolve C6 in #6, which blocks E3; payer-account holder to activate the `project=flatsplit` cost allocation tag, which blocks E9. The two superseded rate-limit archives (645 and 1,573 exchanges) are summarised but their raw bodies are not committed, to keep the repository small.
+
+## 12–14 October 2026 — HDB rental profile and evaluation evidence
+
+- Tool: Codex, directed by Mani.
+- Human contribution: Mani drafted the rent schema from the system design and decided the aggregation statistics, confidence method and threshold, duplicate-row handling, supported flat types, and low-confidence API behavior.
+- AI assistance: profiled the official HDB datasets, validated the draft against the source data, generated the reproducible E8 audit, helped document the E6 procedure, and performed formatting and consistency checks.
+- Verification: 65 of 72 comparable published medians matched exactly; documentation, JSON, sample-data and audit assertions passed. E6 was documented but not run; no AWS deployment was performed.
+
 ## 14 October 2026 — issue 45 cost model into the repository
 
 - Tool: Claude Code (Claude Opus 5).

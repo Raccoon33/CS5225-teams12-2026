@@ -1,0 +1,50 @@
+================================================================================
+C6 驗證：轉乘站的站碼表示方式
+================================================================================
+
+  ▸ Jurong East MRT Station  (HTTP 200, found=6)
+      JURONG EAST MRT STATION (EW24 / NS1)                 codes=[]  lat=1.3330275,103.742370
+      JURONG EAST MRT STATION (JE5)                        codes=['JE5']  lat=1.3337522,103.741638
+      JURONG EAST MRT STATION EXIT A                       codes=[]  lat=1.3340086,103.741735
+      JURONG EAST MRT STATION EXIT B                       codes=[]  lat=1.3325301,103.742643
+      JURONG EAST MRT STATION EXIT C                       codes=[]  lat=1.3327534,103.742753
+      JURONG EAST MRT STATION EXIT D                       codes=[]  lat=1.3335765,103.742292
+
+  ▸ Dhoby Ghaut MRT Station  (HTTP 200, found=10)
+      DHOBY GHAUT MRT STATION (CC1)                        codes=['CC1']  lat=1.2989116,103.846292
+      DHOBY GHAUT MRT STATION (NE6)                        codes=['NE6']  lat=1.2997045,103.845488
+      DHOBY GHAUT MRT STATION (NS24)                       codes=['NS24']  lat=1.2987013,103.846113
+      DHOBY GHAUT MRT STATION EXIT A                       codes=[]  lat=1.2984521,103.846779
+      DHOBY GHAUT MRT STATION EXIT B                       codes=[]  lat=1.2990644,103.845225
+      DHOBY GHAUT MRT STATION EXIT C                       codes=[]  lat=1.2996492,103.844747
+
+  ▸ Bugis MRT Station  (HTTP 200, found=7)
+      BUGIS MRT STATION                                    codes=[]  lat=1.3004650,103.855706
+      BUGIS MRT STATION (DT14)                             codes=['DT14']  lat=1.2993135,103.857125
+      BUGIS MRT STATION (EW12)                             codes=['EW12']  lat=1.3004650,103.855706
+      BUGIS MRT STATION EXIT A                             codes=[]  lat=1.3012040,103.855924
+      BUGIS MRT STATION EXIT B                             codes=[]  lat=1.3007795,103.856327
+      BUGIS MRT STATION EXIT C                             codes=[]  lat=1.3000071,103.855680
+
+  ▸ Outram Park MRT Station  (HTTP 200, found=12)
+      OUTRAM PARK MRT STATION                              codes=[]  lat=1.2802415,103.840052
+      OUTRAM PARK MRT STATION (EW16)                       codes=['EW16']  lat=1.2814050,103.839130
+      OUTRAM PARK MRT STATION (NE3)                        codes=['NE3']  lat=1.2797205,103.839439
+      OUTRAM PARK MRT STATION (TE17)                       codes=['TE17']  lat=1.2813296,103.839137
+      OUTRAM PARK MRT STATION EXIT 1                       codes=[]  lat=1.2814558,103.838811
+      OUTRAM PARK MRT STATION EXIT 2                       codes=[]  lat=1.2816753,103.838934
+
+================================================================================
+C5 前置：HDB 鎮名能否查到參考座標（通勤起點）
+================================================================================
+  ANG MO KIO     HTTP 200 found=310   top=ANG MO KIO 22                      1.365820,103.84284
+  TAMPINES       HTTP 200 found=623   top=TAMPINES 9 BUILDING                1.343330,103.94437
+  WOODLANDS      HTTP 200 found=535   top=WOODLANDS 11                       1.434758,103.80272
+  BUKIT BATOK    HTTP 200 found=304   top=BUKIT BATOK BUS INTERCHANGE        1.349719,103.75096
+  PUNGGOL        HTTP 200 found=326   top=PUNGGOL BUS INTERCHANGE            1.404277,103.90230
+
+================================================================================
+地鐵站總量能否靠 search 列舉（themesvc 需 token 的替代方案）
+================================================================================
+  searchVal='MRT STATION' → HTTP 200 found=785 totalNumPages=79 (每頁 10 筆)
+  → 若靠分頁列舉需 79 次請求，約 79 秒（1 req/s）
