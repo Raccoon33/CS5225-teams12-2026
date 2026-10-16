@@ -542,22 +542,240 @@ def test_place_expiry_during_save_rolls_back_preferences_and_revision(
     assert not state.members[0].ready
 
 
-def test_provider_transaction_failures_are_not_reported_as_user_errors(
-    store: GroupStore, monkeypatch: pytest.MonkeyPatch
+@pytest.mark.parametrize("operation", ["join", "save"])
+@pytest.mark.parametrize(
+    "codes",
+    [
+        ["ThrottlingError"],
+        ["TransactionConflict", "ProvisionedThroughputExceeded"],
+        ["TransactionConflict", "ConditionalCheckFailed"],
+        ["None"],
+        [],
+    ],
+)
+def test_non_conflict_cancellations_are_not_retried_or_reclassified(
+    store: GroupStore,
+    table: Table,
+    clock: Clock,
+    monkeypatch: pytest.MonkeyPatch,
+    operation: str,
+    codes: list[str],
 ) -> None:
     group = create(store)
+    seed_place(table, clock)
     error_type = store._client.exceptions.TransactionCanceledException
+    calls = 0
 
     def fail(**kwargs: Any) -> Any:
+        nonlocal calls
+        calls += 1
         raise error_type(
             {
                 "Error": {"Code": "TransactionCanceledException"},
-                "CancellationReasons": [{"Code": "TransactionConflict"}],
+                "CancellationReasons": [{"Code": code} for code in codes],
             },
             "TransactWriteItems",
         )
 
     monkeypatch.setattr(store._client, "transact_write_items", fail)
     with pytest.raises(error_type):
-        join(store, group)
-    assert store.read(group.group.groupId, group.memberToken).revision == 1
+        join(store, group) if operation == "join" else save(store, group)
+    assert calls == 1
+    state = store.read(group.group.groupId, group.memberToken)
+    assert state.revision == 1
+    assert [m.name for m in state.members] == ["Alex"]
+    assert not state.members[0].ready
+
+
+def conflict(store: GroupStore) -> Any:
+    return store._client.exceptions.TransactionCanceledException(
+        {
+            "Error": {"Code": "TransactionCanceledException"},
+            "CancellationReasons": [{"Code": "TransactionConflict"}, {"Code": "None"}],
+        },
+        "TransactWriteItems",
+    )
+
+
+@pytest.mark.parametrize("operation", ["join", "save"])
+def test_transaction_conflict_then_success_commits_exactly_once(
+    store: GroupStore,
+    table: Table,
+    clock: Clock,
+    monkeypatch: pytest.MonkeyPatch,
+    operation: str,
+) -> None:
+    group = create(store)
+    seed_place(table, clock)
+    original = store._client.transact_write_items
+    delays: list[float] = []
+    calls = 0
+
+    def transact(**kwargs: Any) -> Any:
+        nonlocal calls
+        calls += 1
+        if calls == 1:
+            raise conflict(store)
+        return original(**kwargs)
+
+    monkeypatch.setattr(store._client, "transact_write_items", transact)
+    monkeypatch.setattr("flatsplit_api.groups.sleep", delays.append)
+    if operation == "join":
+        member = join(store, group)
+        state = store.read(group.group.groupId, member.memberToken)
+        assert [m.name for m in state.members] == ["Alex", "Jamie"]
+        assert len(items(table, group)) == 5
+    else:
+        state = save(store, group, "New name")
+        assert state.members[0].name == "New name"
+        assert state.members[0].budget == 1400.25
+        assert state.members[0].ready
+        assert {
+            i["sk"] for i in items(table, group) if i["sk"].startswith("NAME#")
+        } == {"NAME#new name"}
+    assert state.revision == 2
+    assert calls == 2
+    assert len(delays) == 1 and 0.02 <= delays[0] <= 0.1
+
+
+@pytest.mark.parametrize("operation", ["join", "save"])
+def test_transaction_conflict_exhaustion_returns_409_without_mutation(
+    store: GroupStore,
+    table: Table,
+    clock: Clock,
+    monkeypatch: pytest.MonkeyPatch,
+    operation: str,
+) -> None:
+    group = create(store)
+    seed_place(table, clock)
+    delays: list[float] = []
+    calls = 0
+
+    def fail(**kwargs: Any) -> Any:
+        nonlocal calls
+        calls += 1
+        raise conflict(store)
+
+    monkeypatch.setattr(store._client, "transact_write_items", fail)
+    monkeypatch.setattr("flatsplit_api.groups.sleep", delays.append)
+    with pytest.raises(ApiError) as exc:
+        join(store, group) if operation == "join" else save(store, group, "New name")
+    assert (exc.value.status_code, exc.value.code) == (409, "CONFLICT")
+    state = store.read(group.group.groupId, group.memberToken)
+    assert state.revision == 1
+    assert [m.name for m in state.members] == ["Alex"]
+    assert not state.members[0].ready
+    assert len(items(table, group)) == 3
+    assert calls == 3
+    assert len(delays) == 2 and all(0.02 <= delay <= 0.1 for delay in delays)
+
+
+@pytest.mark.parametrize("operation", ["join", "save"])
+def test_group_expiry_is_rechecked_after_conflict_backoff(
+    store: GroupStore,
+    table: Table,
+    clock: Clock,
+    monkeypatch: pytest.MonkeyPatch,
+    operation: str,
+) -> None:
+    group = create(store)
+    seed_place(table, clock)
+
+    def fail(**kwargs: Any) -> Any:
+        raise conflict(store)
+
+    def expire(delay: float) -> None:
+        clock.now = group.group.expiresAt
+
+    monkeypatch.setattr(store._client, "transact_write_items", fail)
+    monkeypatch.setattr("flatsplit_api.groups.sleep", expire)
+    with pytest.raises(ApiError) as exc:
+        join(store, group) if operation == "join" else save(store, group)
+    assert exc.value.code == "NOT_FOUND"
+    stored = items(table, group)
+    assert next(i for i in stored if i["sk"] == "META")["revision"] == 1
+    assert not next(i for i in stored if i["sk"].startswith("MEMBER#"))["ready"]
+
+
+def test_place_expiry_is_rechecked_after_conflict_backoff(
+    store: GroupStore,
+    table: Table,
+    clock: Clock,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    group = create(store)
+    seed_place(table, clock)
+
+    def fail(**kwargs: Any) -> Any:
+        raise conflict(store)
+
+    def expire(delay: float) -> None:
+        clock.now += timedelta(days=1)
+
+    monkeypatch.setattr(store._client, "transact_write_items", fail)
+    monkeypatch.setattr("flatsplit_api.groups.sleep", expire)
+    with pytest.raises(ApiError) as exc:
+        save(store, group, "New name")
+    assert exc.value.code == "NOT_FOUND"
+    state = store.read(group.group.groupId, group.memberToken)
+    assert state.revision == 1
+    assert state.members[0].name == "Alex"
+    assert not state.members[0].ready
+
+
+def test_last_slot_taken_during_conflict_is_not_retried_as_a_stale_join(
+    store: GroupStore, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    group = create(store, size=2)
+    original = store._client.transact_write_items
+    fired = False
+
+    def transact(**kwargs: Any) -> Any:
+        nonlocal fired
+        if not fired:
+            fired = True
+            join(store, group, "Winner")
+            raise conflict(store)
+        return original(**kwargs)
+
+    monkeypatch.setattr(store._client, "transact_write_items", transact)
+    monkeypatch.setattr("flatsplit_api.groups.sleep", lambda delay: None)
+    with pytest.raises(ApiError) as exc:
+        join(store, group, "Loser")
+    assert exc.value.code == "GROUP_FULL"
+    state = store.read(group.group.groupId, group.memberToken)
+    assert [m.name for m in state.members] == ["Alex", "Winner"]
+    assert state.revision == 2
+
+
+def test_name_taken_during_conflict_is_not_overwritten_by_retry(
+    store: GroupStore,
+    table: Table,
+    clock: Clock,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    group = create(store)
+    member = join(store, group)
+    seed_place(table, clock)
+    original = store._client.transact_write_items
+    fired = False
+
+    def transact(**kwargs: Any) -> Any:
+        nonlocal fired
+        if not fired:
+            fired = True
+            save(store, member, "Target")
+            raise conflict(store)
+        return original(**kwargs)
+
+    monkeypatch.setattr(store._client, "transact_write_items", transact)
+    monkeypatch.setattr("flatsplit_api.groups.sleep", lambda delay: None)
+    with pytest.raises(ApiError) as exc:
+        save(store, group, "target")
+    assert exc.value.code == "VALIDATION_FAILED"
+    state = store.read(group.group.groupId, group.memberToken)
+    assert [(m.name, m.ready) for m in state.members] == [
+        ("Alex", False),
+        ("Target", True),
+    ]
+    assert state.revision == 3

@@ -15,6 +15,8 @@ from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import UTC, datetime, timedelta
 from decimal import Decimal
+from random import uniform
+from time import sleep
 from typing import TYPE_CHECKING, Any
 
 from flatsplit_api.errors import ApiError, not_found, validation_failed
@@ -220,7 +222,36 @@ class GroupStore:
         if any(m["nameKey"] == _name_key(name) for m in snapshot.members):
             raise _duplicate_name()
 
+    def _retry_conflicts[T](self, operation: Callable[[], T]) -> T:
+        attempts = 0
+        while True:
+            try:
+                return operation()
+            except self._client.exceptions.TransactionCanceledException as exc:
+                codes = {
+                    reason.get("Code", "None")
+                    for reason in exc.response.get("CancellationReasons", [])
+                }
+                if "TransactionConflict" not in codes or not codes <= {
+                    "TransactionConflict",
+                    "None",
+                }:
+                    raise
+                attempts += 1
+                if attempts == 3:
+                    raise ApiError(
+                        409, "CONFLICT", "The group is busy. Try again shortly."
+                    ) from exc
+                sleep(uniform(0.02, 0.1))
+                # Retry the operation, not its stale transaction: expiry, capacity,
+                # permissions and name reservations must be checked again.
+
     def join(
+        self, group_id: str, token: str | None, request: JoinGroupRequest
+    ) -> Membership:
+        return self._retry_conflicts(lambda: self._join_once(group_id, token, request))
+
+    def _join_once(
         self, group_id: str, token: str | None, request: JoinGroupRequest
     ) -> Membership:
         snapshot = self._load(group_id)
@@ -305,6 +336,17 @@ class GroupStore:
         return Place.model_validate({**item, "placeId": place_id})
 
     def save_preferences(
+        self,
+        group_id: str,
+        member_id: str,
+        token: str | None,
+        request: PreferencesRequest,
+    ) -> GroupState:
+        return self._retry_conflicts(
+            lambda: self._save_preferences_once(group_id, member_id, token, request)
+        )
+
+    def _save_preferences_once(
         self,
         group_id: str,
         member_id: str,
