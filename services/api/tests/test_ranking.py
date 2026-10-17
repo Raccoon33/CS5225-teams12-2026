@@ -172,6 +172,37 @@ def test_limits_are_inclusive_and_compared_unrounded() -> None:
     ]
 
 
+def test_fractional_minutes_are_kept_unrounded() -> None:
+    members = [
+        MemberInput("a", "A", 1000, 45, "s1"),
+        MemberInput("b", "B", 1000, 30, "s2"),
+    ]
+    fractional = {"s1": Commute("ok", 30.5), "s2": Commute("ok", 18.25)}
+
+    feasible = rank_towns(members, *one_town(members, usable(2000), fractional))
+    area = feasible.ranked[0]
+    assert [(m.commuteMinutes, m.commuteHeadroom) for m in area.members] == [
+        (30.5, 14.5),
+        (18.25, 11.75),
+    ]
+    assert (area.longestCommute, area.shortestCommute, area.commuteGap) == (
+        30.5,
+        18.25,
+        12.25,
+    )
+    assert area.averageCommute == 24.38
+    assert area.mostBurdenedMemberId == "a"
+
+    # Half a minute over is still over: never truncated to the limit.
+    late = {"s1": Commute("ok", 30.5), "s2": Commute("ok", 30.5)}
+    excluded = rank_towns(members, *one_town(members, usable(2000), late))
+    assert excluded.ranked == []
+    [reason] = excluded.excluded[0].reasons
+    assert (reason.code, reason.memberId, reason.amount) == ("OVER_COMMUTE", "b", 0.5)
+    assert reason.message == "B's commute exceeds their limit by 1 min"
+    assert excluded.excluded[0].members[1].commuteHeadroom == -0.5
+
+
 def test_unavailable_route_is_never_zero_minutes() -> None:
     members = SAMPLE_GROUP
     minutes = {

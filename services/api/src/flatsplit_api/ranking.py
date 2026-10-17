@@ -6,7 +6,7 @@ group's members, the pinned rent snapshot and the commute matrix, then calls
 
 - A town is feasible only when its rent summary is USABLE and, for every member,
   rentPerPerson <= budget and commuteMinutes <= maxCommute (both inclusive,
-  compared unrounded).
+  compared unrounded; commute minutes may be fractional).
 - cost = wRent * rentPerPerson/2000 + wAvg * averageCommute/90 + wGap * gap/90
   and score = max(0, round-half-up(100 * (1 - cost))). The arithmetic order
   mirrors the wireframe's `evaluateAreas` so both produce identical scores.
@@ -81,15 +81,15 @@ class Commute:
     """A `COMMUTE#<stationKey>/TOWN#<town>` item; minutes only when status is ok."""
 
     status: RouteStatus
-    minutes: int | None = None
+    minutes: float | None = None
 
 
 class MemberOutcome(BaseModel):
     memberId: str
-    commuteMinutes: int | None
+    commuteMinutes: float | None
     routeStatus: RouteStatus
     budgetHeadroom: float | None
-    commuteHeadroom: int | None
+    commuteHeadroom: float | None
 
 
 class Reason(BaseModel):
@@ -113,9 +113,9 @@ class AreaResult(BaseModel):
     rentSampleSize: int | None
     rentQualityStatus: QualityStatus | None
     averageCommute: float | None
-    longestCommute: int | None
-    shortestCommute: int | None
-    commuteGap: int | None
+    longestCommute: float | None
+    shortestCommute: float | None
+    commuteGap: float | None
     mostBurdenedMemberId: str | None
     members: list[MemberOutcome]
     reasons: list[Reason]
@@ -186,7 +186,7 @@ def _evaluate(
         )
 
     outcomes: list[MemberOutcome] = []
-    times: list[int] = []
+    times: list[float] = []
     for member in members:
         commute = commutes.get((member.stationKey, town))
         if commute is None or commute.status == "pending":
@@ -229,7 +229,8 @@ def _evaluate(
                         memberId=member.memberId,
                         amount=over,
                         message=(
-                            f"{member.name}'s commute exceeds their limit by {over} min"
+                            f"{member.name}'s commute exceeds their limit by "
+                            f"{math.ceil(over)} min"
                         ),
                     )
                 )
@@ -249,7 +250,7 @@ def _evaluate(
     average = longest = shortest = gap = None
     burdened = None
     if all_routes:
-        total = 0
+        total = 0.0
         for minutes in times:
             total += minutes
         average = total / size
