@@ -5,6 +5,7 @@ description = "FlatSplit API and data-pipeline Lambda handlers"
 requires-python = ">=3.13,<3.14"
 dependencies = [
     "aws-lambda-powertools>=3.20,<4",
+    "boto3>=1.43.114",
     "pydantic>=2.11,<3",
 ]
 

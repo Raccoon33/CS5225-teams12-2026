@@ -103,12 +103,11 @@ def resolve_token() -> str:
     if not secret_name:
         raise OneMapUnavailable("No OneMap credential is configured.")
 
-    # Lazy import: boto3 ships with the Lambda runtime and is not a test
-    # dependency, so importing it at module scope would break local runs.
+    # Keep provider initialization lazy so inline local tokens need no AWS client.
     global _secret_provider
     try:
         from aws_lambda_powertools.utilities import parameters
-        from botocore.config import Config  # type: ignore[import-not-found]
+        from botocore.config import Config
 
         if _secret_provider is None:
             _secret_provider = parameters.SecretsProvider(
