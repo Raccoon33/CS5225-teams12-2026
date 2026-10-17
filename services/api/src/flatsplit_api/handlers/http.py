@@ -8,7 +8,8 @@ from aws_lambda_powertools import Logger
 from aws_lambda_powertools.event_handler import APIGatewayHttpResolver, Response
 from aws_lambda_powertools.event_handler.exceptions import NotFoundError
 from aws_lambda_powertools.utilities.typing import LambdaContext
-from botocore.exceptions import ClientError
+from botocore.exceptions import ClientError, HTTPClientError
+from botocore.exceptions import ConnectionError as BotocoreConnectionError
 from pydantic import BaseModel, ValidationError
 
 from flatsplit_api.errors import ApiError, not_found, validation_failed
@@ -66,6 +67,19 @@ def handle_storage_error(exc: ClientError) -> Response[str]:
         "Storage request failed",
         extra={"error_code": exc.response.get("Error", {}).get("Code")},
     )
+    return _storage_unavailable()
+
+
+# Connect failures, read timeouts and dropped connections never reach DynamoDB,
+# so they are not ClientErrors but must still return the contract's 503.
+@app.exception_handler([BotocoreConnectionError, HTTPClientError])  # type: ignore[untyped-decorator]
+def handle_storage_transport_error(exc: Exception) -> Response[str]:
+    # The class name is enough; messages can include endpoint URLs.
+    logger.error("Storage unreachable", extra={"error_type": type(exc).__name__})
+    return _storage_unavailable()
+
+
+def _storage_unavailable() -> Response[str]:
     return _error_response(
         ApiError(503, "SERVICE_UNAVAILABLE", "Storage is busy. Try again shortly.")
     )
@@ -172,7 +186,23 @@ def _documented(status: int, model: type[BaseModel]) -> dict[int, Any]:
     }
 
 
-@app.post("/groups", responses=_documented(201, CreatedGroupResponse))
+def _request(model: type[BaseModel]) -> dict[str, Any]:
+    # `_body` parses requests itself to keep the contract's 400/422 envelope and
+    # check IDs first, so Powertools cannot infer the body. The request models
+    # are flat, so their schemas inline without $defs.
+    return {
+        "requestBody": {
+            "required": True,
+            "content": {"application/json": {"schema": model.model_json_schema()}},
+        }
+    }
+
+
+@app.post(
+    "/groups",
+    responses=_documented(201, CreatedGroupResponse),
+    openapi_extensions=_request(CreateGroupRequest),
+)
 def create_group() -> Response[str]:
     membership = group_store().create(_body(CreateGroupRequest))
     return _json(created_response(membership), 201)
@@ -184,7 +214,11 @@ def read_group(group_id: str) -> Response[str]:
     return _json(group_response(state))
 
 
-@app.post("/groups/<group_id>/members", responses=_documented(201, MembershipResponse))
+@app.post(
+    "/groups/<group_id>/members",
+    responses=_documented(201, MembershipResponse),
+    openapi_extensions=_request(JoinGroupRequest),
+)
 def join_group(group_id: str) -> Response[str]:
     gid = _id(group_id, "Group")
     membership = group_store().join(gid, _bearer(), _body(JoinGroupRequest))
@@ -194,6 +228,7 @@ def join_group(group_id: str) -> Response[str]:
 @app.put(
     "/groups/<group_id>/members/<member_id>",
     responses=_documented(200, GroupResponse),
+    openapi_extensions=_request(PreferencesRequest),
 )
 def save_preferences(group_id: str, member_id: str) -> Response[str]:
     gid = _id(group_id, "Group")

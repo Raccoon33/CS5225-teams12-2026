@@ -10,7 +10,13 @@ from typing import Any
 
 import boto3
 import pytest
-from botocore.exceptions import ClientError
+from botocore.exceptions import (
+    ClientError,
+    ConnectionClosedError,
+    ConnectTimeoutError,
+    EndpointConnectionError,
+    ReadTimeoutError,
+)
 from moto import mock_aws
 from mypy_boto3_dynamodb.service_resource import Table
 
@@ -366,6 +372,72 @@ def test_storage_faults_use_the_error_envelope(
 
     assert reply.status == 503
     assert reply.body["error"]["code"] == "SERVICE_UNAVAILABLE"
+
+
+@pytest.mark.parametrize(
+    "fault",
+    [
+        EndpointConnectionError(endpoint_url="https://dynamodb.example"),
+        ConnectTimeoutError(endpoint_url="https://dynamodb.example"),
+        ReadTimeoutError(endpoint_url="https://dynamodb.example"),
+        ConnectionClosedError(endpoint_url="https://dynamodb.example"),
+    ],
+    ids=type,
+)
+def test_storage_transport_faults_are_service_unavailable(
+    table: Table, monkeypatch: pytest.MonkeyPatch, fault: Exception
+) -> None:
+    def unreachable() -> GroupStore:
+        raise fault
+
+    monkeypatch.setattr(http, "group_store", unreachable)
+    reply = call("GET", "/api/groups/abc", token="secret-token")
+
+    assert reply.status == 503
+    assert reply.body["error"]["code"] == "SERVICE_UNAVAILABLE"
+    assert "secret-token" not in json.dumps(reply.body)
+
+
+@pytest.mark.parametrize(
+    ("method", "path", "model", "required"),
+    [
+        ("post", "/groups", "CreateGroupRequest", ["groupName", "size", "name"]),
+        ("post", "/groups/{group_id}/members", "JoinGroupRequest", ["name"]),
+        (
+            "put",
+            "/groups/{group_id}/members/{member_id}",
+            "PreferencesRequest",
+            ["name", "placeId", "budget", "maxCommute"],
+        ),
+    ],
+)
+def test_openapi_documents_request_bodies(
+    method: str, path: str, model: str, required: list[str]
+) -> None:
+    operation = http.app.get_openapi_schema().model_dump(
+        by_alias=True, exclude_none=True
+    )["paths"][path][method]
+
+    body = operation["requestBody"]
+    schema = body["content"]["application/json"]["schema"]
+    assert body["required"] is True
+    assert schema["title"] == model
+    assert schema["required"] == required
+
+
+def test_openapi_request_body_keeps_constraints() -> None:
+    operation = http.app.get_openapi_schema().model_dump(
+        by_alias=True, exclude_none=True
+    )["paths"]["/groups/{group_id}/members/{member_id}"]["put"]
+    props = operation["requestBody"]["content"]["application/json"]["schema"][
+        "properties"
+    ]
+
+    assert (props["budget"]["minimum"], props["budget"]["maximum"]) == (300, 5000)
+    assert (props["maxCommute"]["minimum"], props["maxCommute"]["maximum"]) == (
+        10,
+        120,
+    )
 
 
 def test_missing_table_configuration_is_service_unavailable(
