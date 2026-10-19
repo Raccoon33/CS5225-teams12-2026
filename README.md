@@ -1,6 +1,6 @@
 # FlatSplit
 
-A React and TanStack monorepo with Python Lambda handlers and an AWS CDK app. The frontend includes an interactive group flat-hunting wireframe with fictional data. The backend exposes health and server-side destination lookup endpoints; destination caching and group/search APIs remain implementation work. Its CDK stack defines DynamoDB, an HTTP API Lambda, and CloudFront serving the web app with `/api`. See the [backend and AWS design](docs/backend-design.md).
+A React and TanStack monorepo with Python Lambda handlers and an AWS CDK app. The frontend includes an interactive group flat-hunting wireframe with fictional data. The backend implements health, destination lookup, token-authorised group APIs, and search submission/status with filtering and fairness ranking. Live rental publication, persistent destinations and the commute worker remain integration work. Its CDK stack defines DynamoDB, an HTTP API Lambda, encrypted commute queues, and CloudFront serving the web app with `/api`. See the [backend and AWS design](docs/backend-design.md).
 
 For issue #1, start with the [user journey and responsive wireframes](docs/user-journey.md). Run `pnpm dev:web`, then use the Design review selector to explore group creation, member input, processing, ranked comparisons, and recovery states. This prototype runs locally without the API, does not share groups across devices, and resets on refresh.
 
