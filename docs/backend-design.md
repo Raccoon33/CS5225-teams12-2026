@@ -18,7 +18,7 @@ This document turns the preliminary report (sections 3, 4.2, 5.2, 6) and the wir
 
 ## Architecture
 
-The diagram preserves the target architecture. On main `760dd1f`, group, search and place routes share **one HTTP Lambda**; the three API labels below are logical responsibilities, not separate deployed functions. CDK defines the table, hosting and source/DLQ queues. The commute worker, terminal-failure/DLQ handling, monthly scheduler, rent publication and automatic post-ingestion commute seeding are not implemented on main; the feasibility archive contains a standalone seed script. Raw ingestion is open PR #64; persistent places/station pins/query caching are open PR #65. Neither PR is merged or deployed at this snapshot. The last recorded shared deployment is 14 October from `4394195`; see the [deployment handoff](aws-dev-handoff.md).
+The diagram preserves the target architecture. On main, group, search and place routes share **one HTTP Lambda**; the three API labels below are logical responsibilities, not separate deployed functions. CDK defines the table, hosting, source/DLQ queues and the private raw-rental evidence bucket/Lambda from #9. The commute worker, terminal-failure/DLQ handling, monthly scheduler, rent publication and automatic post-ingestion commute seeding are not implemented on main; the feasibility archive contains a standalone seed script. The last recorded shared deployment is 14 October from `4394195`; see the [deployment handoff](aws-dev-handoff.md). Raw rent ingestion is implemented locally in #9, while summary publication remains #10 work.
 
 ```text
 CloudFront ─┬─ /*      → S3 (web build, private, OAC)
@@ -52,7 +52,7 @@ The SQS source queue/DLQ exist in CDK to carry cache-miss work, not to perform r
 
 The HTTP role can send to only that queue (no receive/delete), read rent/place partitions, read/write group partitions and read/claim/delete commute items. Partition-scoped DynamoDB grants require a non-null `dynamodb:LeadingKeys`. Conditional 900-second job leases recover failed sends/crashes; worker completion must be fenced by matching `jobId` and pending status. The [API contract](api-contract.md#16-producer-and-15-worker-handoff) records the payload and retry/profile semantics.
 
-Cost remains a request-based design assumption, not a billing measurement: this adds two queues, DynamoDB claims/metadata reads and SQS sends, without a VPC or continuously running compute. API timeout is 30 seconds to admit cold submissions; cold work can include 135 claims and 130 sends for five distinct stations, so the latency target still needs #30 evidence. Local tests use seeded rent/place records and injected worker-contract completions. Live ingestion (#10), place persistence (#14), routing/consumer/DLQ work (#15/#27), deployment and deployed performance acceptance remain separate.
+Cost remains a request-based design assumption, not a billing measurement: this adds two queues, DynamoDB claims/metadata reads and SQS sends, without a VPC or continuously running compute. API timeout is 30 seconds to admit cold submissions; cold work can include 135 claims and 130 sends for five distinct stations, so the latency target still needs #30 evidence. Local tests use seeded rent/place records and injected worker-contract completions. Live summary publication (#10), place persistence (#14), routing/consumer/DLQ work (#15/#27), deployment and deployed performance acceptance remain separate.
 
 ### Local frontend integration (#7/#17)
 
