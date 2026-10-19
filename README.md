@@ -1,6 +1,6 @@
 # FlatSplit
 
-A React and TanStack monorepo with Python Lambda handlers and an AWS CDK app. The frontend includes an interactive group flat-hunting wireframe with fictional data. The backend exposes health and server-side destination lookup endpoints; destination caching and group/search APIs remain implementation work. Its CDK stack defines DynamoDB, an HTTP API Lambda, and CloudFront serving the web app with `/api`. See the [backend and AWS design](docs/backend-design.md).
+A React and TanStack monorepo with Python Lambda handlers and an AWS CDK app. The frontend includes an interactive group flat-hunting wireframe with fictional data. The backend implements health, destination lookup, token-authorised group APIs, and search submission/status with filtering and fairness ranking. Live rental publication, persistent destinations and the commute worker remain integration work. Its CDK stack defines DynamoDB, an HTTP API Lambda, encrypted commute queues, and CloudFront serving the web app with `/api`. See the [backend and AWS design](docs/backend-design.md).
 
 For issue #1, start with the [user journey and responsive wireframes](docs/user-journey.md). Run `pnpm dev:web`, then use the Design review selector to explore group creation, member input, processing, ranked comparisons, and recovery states. This prototype runs locally without the API, does not share groups across devices, and resets on refresh.
 
@@ -91,9 +91,11 @@ Deployment is manual and needs credentials for the team account in `ap-southeast
 
 ## Local configuration
 
-Vite proxies `/api` to the local Python service. No environment file or cloud credentials are required for this scaffold. If needed, copy `apps/web/.env.example` to `apps/web/.env.local`.
+Vite proxies `/api` to the local Python service. The prototype shell and health endpoint need no environment file or cloud credentials. If needed, copy `apps/web/.env.example` to `apps/web/.env.local`.
 
 Every `VITE_` variable is public in the browser bundle. Keep credentials on the server. A future static host must serve `index.html` for frontend routes, and needs its own API routing or an explicit public API URL; Vite's proxy only runs in development.
+
+Group/search APIs require server-side `TABLE_NAME` and SDK region/credentials; use `DYNAMODB_ENDPOINT_URL` for a local compatible service. Cache-miss searches also require `COMMUTE_QUEUE_URL` (optional local `SQS_ENDPOINT_URL`). Local emulators may use dummy SDK credentials, never real secrets in browser configuration. Preference saves need persisted `PLACE#` records; searches need a validated `RENT/CURRENT` pointer and snapshot summaries. The API does not seed those records or fabricate results. CDK provides the queue/table configuration, but the #15 worker must still consume jobs; without it, queued pairs stay pending until their results are written. See the [producer/worker contract](docs/api-contract.md#16-producer-and-15-worker-handoff).
 
 ## Codex and Claude Code
 
