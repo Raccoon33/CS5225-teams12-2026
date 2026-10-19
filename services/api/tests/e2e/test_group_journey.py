@@ -5,8 +5,9 @@ Uses only the public HTTP contract, so it runs unchanged against a deployed API
 them.
 """
 
-from dataclasses import dataclass
-from typing import Any
+from copy import deepcopy
+from dataclasses import dataclass, replace
+from typing import Any, Literal
 
 import pytest
 
@@ -22,9 +23,36 @@ class Member:
     name: str
 
 
-def _ok(reply: Reply, status: int = 200) -> dict[str, Any]:
+def _no_credentials(value: Any) -> None:
+    if isinstance(value, dict):
+        for key, child in value.items():
+            assert key not in {
+                "memberToken",
+                "inviteToken",
+                "tokenHash",
+                "inviteTokenHash",
+            }, f"Unexpected credential field: {key}"
+            _no_credentials(child)
+    elif isinstance(value, list):
+        for child in value:
+            _no_credentials(child)
+
+
+def _ok(
+    reply: Reply,
+    status: int = 200,
+    *,
+    credentials: Literal["create", "join"] | None = None,
+) -> dict[str, Any]:
     assert reply.status == status, reply.body
     assert reply.headers.get("cache-control") == "no-store"
+    public = dict(reply.body)
+    if credentials is not None:
+        public.pop("memberToken", None)
+    if credentials == "create":
+        public["group"] = dict(public["group"])
+        public["group"].pop("inviteToken", None)
+    _no_credentials(public)
     return reply.body
 
 
@@ -56,6 +84,7 @@ def test_group_journey(api: Api, place_id: str, size: int) -> None:
             {"groupName": f"E2E flat for {size}", "size": size, "name": NAMES[0]},
         ),
         201,
+        credentials="create",
     )
     gid = created["group"]["groupId"]
     invite = created["group"]["inviteToken"]
@@ -72,7 +101,9 @@ def test_group_journey(api: Api, place_id: str, size: int) -> None:
     # Join through the link until the group is full.
     for name in NAMES[1:size]:
         joined = _ok(
-            api.call("POST", f"/groups/{gid}/members", {"name": name}, invite), 201
+            api.call("POST", f"/groups/{gid}/members", {"name": name}, invite),
+            201,
+            credentials="join",
         )
         assert "inviteToken" not in joined["group"]
         members.append(Member(joined["memberId"], joined["memberToken"], name))
@@ -118,3 +149,50 @@ def test_group_journey(api: Api, place_id: str, size: int) -> None:
     assert [m["ready"] for m in group["members"]] == [True] * size
     assert group["members"][-1]["maxCommute"] == 60
     assert all(m["destination"]["placeId"] == place_id for m in group["members"])
+
+
+@pytest.mark.parametrize(
+    ("method", "location"),
+    [
+        ("GET", "envelope"),
+        ("PUT", "envelope"),
+        ("POST", "group"),
+        ("GET", "member"),
+        ("PUT", "member"),
+        ("POST", "member"),
+    ],
+)
+@pytest.mark.parametrize("field", ["memberToken", "inviteToken"])
+def test_journey_rejects_leaked_credentials(
+    api: Api,
+    place_id: str,
+    monkeypatch: pytest.MonkeyPatch,
+    method: str,
+    location: str,
+    field: str,
+) -> None:
+    if api.remote:
+        pytest.skip("Response mutations use only the isolated local API.")
+    original = api.call
+
+    def leaking(
+        verb: str, path: str, body: Any = None, token: str | None = None
+    ) -> Reply:
+        reply = original(verb, path, body, token)
+        if verb != method or reply.status not in (200, 201):
+            return reply
+        mutated = deepcopy(reply.body)
+        target = mutated
+        if location == "group":
+            target = mutated["group"]
+            # inviteToken belongs only in this exact create response location.
+            if field == "inviteToken" and path == "/groups":
+                return reply
+        elif location == "member":
+            target = mutated["group"]["members"][0]
+        target[field] = "synthetic-leaked-credential"
+        return replace(reply, body=mutated)
+
+    monkeypatch.setattr(api, "call", leaking)
+    with pytest.raises(AssertionError, match="credential"):
+        test_group_journey(api, place_id, 2)

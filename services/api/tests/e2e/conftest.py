@@ -106,6 +106,21 @@ class LambdaApi:
         )
 
 
+class _NoRedirect(urllib.request.HTTPRedirectHandler):
+    def redirect_request(
+        self,
+        req: urllib.request.Request,
+        fp: Any,
+        code: int,
+        msg: str,
+        headers: Any,
+        newurl: str,
+    ) -> urllib.request.Request | None:
+        # Treat every redirect as a failed contract response. In particular,
+        # urllib must not carry a member/invite bearer token to another origin.
+        return None
+
+
 class HttpApi:
     """Real HTTP against a running or deployed API."""
 
@@ -113,6 +128,7 @@ class HttpApi:
 
     def __init__(self, base_url: str) -> None:
         self.base_url = base_url
+        self._opener = urllib.request.build_opener(_NoRedirect())
 
     def call(
         self, method: str, path: str, body: Any = None, token: str | None = None
@@ -124,18 +140,20 @@ class HttpApi:
             method=method,
         )
         try:
-            with urllib.request.urlopen(request, timeout=30) as response:
+            with self._opener.open(request, timeout=30) as response:
                 status, headers, raw = (
                     response.status,
                     response.headers,
                     response.read(),
                 )
         except urllib.error.HTTPError as error:
-            status, headers, raw = error.code, error.headers, error.read()
+            with error:
+                status, headers = error.code, error.headers
+                raw = b"" if 300 <= status < 400 else error.read()
         return Reply(
             status,
             {k.lower(): v for k, v in headers.items()},
-            json.loads(raw) if raw else {},
+            json.loads(raw) if raw and not 300 <= status < 400 else {},
         )
 
 
