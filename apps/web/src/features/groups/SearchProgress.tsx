@@ -66,6 +66,10 @@ export function SearchProgress({
       (search.status === 'stale' || search.groupRevision !== group.revision));
   const pending = !stale && search?.status === 'pending';
   const complete = !stale && search?.status === 'complete' && !status.isError;
+  const routesFailed =
+    complete &&
+    search.progress.total > 0 &&
+    search.progress.unavailable === search.progress.total;
   const ownMember = group.members.find(
     (member) => member.memberId === membership.memberId,
   );
@@ -88,15 +92,17 @@ export function SearchProgress({
             ? 'Needs attention'
             : stale
               ? 'Needs a new search'
-              : complete
-                ? 'Ready'
-                : pending
-                  ? search.progress.resolved > search.progress.unavailable
-                    ? 'Checking routes'
-                    : 'Queued'
-                  : group.allReady
-                    ? 'Ready to search'
-                    : 'Waiting for group'}
+              : routesFailed
+                ? 'Routes unavailable'
+                : complete
+                  ? 'Ready'
+                  : pending
+                    ? search.progress.resolved > search.progress.unavailable
+                      ? 'Checking routes'
+                      : 'Queued'
+                    : group.allReady
+                      ? 'Ready to search'
+                      : 'Waiting for group'}
         </Badge>
       </div>
       <p className="live-search-principle">
@@ -176,10 +182,18 @@ export function SearchProgress({
       {complete && (
         <div className="live-complete-state" role="status">
           <h3>
-            {search.ranked.length
-              ? `${search.ranked.length} neighbourhoods meet everyone’s limits.`
-              : 'No neighbourhood meets all your current limits.'}
+            {routesFailed
+              ? 'We couldn’t calculate your group’s routes.'
+              : search.ranked.length
+                ? `${search.ranked.length} neighbourhoods meet everyone’s limits.`
+                : 'No neighbourhood meets all your current limits.'}
           </h3>
+          {routesFailed && (
+            <p className="live-caption">
+              Your group inputs are saved. You can retry without re-entering
+              anyone’s preferences.
+            </p>
+          )}
           {search.ranked.length > 0 && (
             <div>
               <div className="live-town-heading">
@@ -206,7 +220,11 @@ export function SearchProgress({
           </p>
           {search.progress.unavailable > 0 && (
             <Alert>
-              <AlertTitle>Some routes were unavailable</AlertTitle>
+              <AlertTitle>
+                {routesFailed
+                  ? 'All routes were unavailable'
+                  : 'Some routes were unavailable'}
+              </AlertTitle>
               <AlertDescription>
                 {search.progress.unavailable}{' '}
                 {search.progress.unavailable === 1
@@ -218,7 +236,7 @@ export function SearchProgress({
               </AlertDescription>
             </Alert>
           )}
-          {!search.ranked.length && (
+          {!search.ranked.length && !routesFailed && (
             <p>
               Review the group’s budgets and commute limits together before
               changing any preference. Missing or low-confidence rent and
@@ -239,9 +257,11 @@ export function SearchProgress({
                 ? 'Search in progress'
                 : stale
                   ? 'Search latest preferences'
-                  : search
-                    ? 'Search again'
-                    : 'Find our neighbourhoods'}
+                  : routesFailed
+                    ? 'Retry route calculations'
+                    : search
+                      ? 'Search again'
+                      : 'Find our neighbourhoods'}
             {!pending && <ArrowRight data-icon="inline-end" />}
           </Button>
         )}
