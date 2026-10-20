@@ -14,6 +14,7 @@ export interface Membership {
 }
 const prefix = 'flatsplit:membership:';
 const memory = new Map<string, Membership>();
+const unpersisted = new Set<string>();
 const invitations = new Map<string, string>();
 export const validId = (value: string) => /^[A-Za-z0-9_-]{22}$/.test(value);
 const validToken = (value: unknown): value is string =>
@@ -37,6 +38,9 @@ function parse(value: unknown): Membership | null {
 }
 export function readMembership(groupId: string): Membership | null {
   if (!validId(groupId)) return null;
+  // A replacement capability may be newer than storage when its write failed.
+  // Keep this tab on the membership it just received, including its warning.
+  if (unpersisted.has(groupId)) return parse(memory.get(groupId));
   try {
     const item = parse(
       JSON.parse(localStorage.getItem(prefix + groupId) ?? 'null'),
@@ -68,8 +72,10 @@ export function saveMembership(
       prefix + membership.groupId,
       JSON.stringify(membership),
     );
+    unpersisted.delete(membership.groupId);
     return { membership, persisted: true };
   } catch {
+    unpersisted.add(membership.groupId);
     return { membership, persisted: false };
   }
 }

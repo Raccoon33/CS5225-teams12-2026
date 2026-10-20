@@ -105,6 +105,46 @@ describe('browser membership and invitation capabilities', () => {
       expect(storage.readMembership(membership.groupId)).toBeNull();
     }
   });
+  it('keeps a replacement membership when an older stored credential cannot be overwritten', async () => {
+    const storage = await import('./membership');
+    storage.saveMembership(createdFixture());
+    const replacement = {
+      group: groupFixture(),
+      memberId: 'N'.repeat(22),
+      memberToken: 'R'.repeat(43),
+    };
+    const blocked = vi
+      .spyOn(Storage.prototype, 'setItem')
+      .mockImplementation(() => {
+        throw new DOMException('Quota exceeded');
+      });
+    try {
+      const result = storage.saveMembership(replacement);
+      expect(result.persisted).toBe(false);
+      expect(storage.readMembership(membership.groupId)).toEqual(
+        result.membership,
+      );
+      expect(storage.savedMemberships()).toEqual([result.membership]);
+      expect(storage.membershipIsPersisted(result.membership)).toBe(false);
+      expect(
+        storage.inviteLink(storage.readMembership(membership.groupId)!),
+      ).toBeNull();
+      expect(
+        JSON.parse(
+          localStorage.getItem(`flatsplit:membership:${membership.groupId}`)!,
+        ),
+      ).toEqual(membership);
+    } finally {
+      blocked.mockRestore();
+    }
+    // A later successful save resumes persistence and survives a module reload.
+    expect(storage.saveMembership(replacement).persisted).toBe(true);
+    vi.resetModules();
+    expect(
+      (await import('./membership')).readMembership(membership.groupId)
+        ?.memberId,
+    ).toBe(replacement.memberId);
+  });
   it('preserves access in memory and reports a blocked persistence write', async () => {
     const storage = await import('./membership');
     const blocked = vi
