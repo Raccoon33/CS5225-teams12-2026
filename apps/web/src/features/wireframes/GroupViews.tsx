@@ -39,9 +39,15 @@ import {
 export function CreateGroup({
   onCreate,
   onDemo,
+  live = false,
+  pending = false,
+  errorMessage,
 }: {
   onCreate: (group: Group) => void;
   onDemo: () => void;
+  live?: boolean;
+  pending?: boolean;
+  errorMessage?: string;
 }) {
   const [size, setSize] = useState('3');
   const [error, setError] = useState('');
@@ -61,6 +67,7 @@ export function CreateGroup({
           className="setup-form"
           onSubmit={(event) => {
             event.preventDefault();
+            if (pending) return;
             const values = new FormData(event.currentTarget);
             const name = String(values.get('group')).trim();
             const creator = String(values.get('name')).trim();
@@ -91,7 +98,7 @@ export function CreateGroup({
                 id="group-name"
                 name="group"
                 placeholder="e.g. Our next chapter"
-                maxLength={50}
+                maxLength={40}
                 required
               />
             </Field>
@@ -127,15 +134,25 @@ export function CreateGroup({
                 ))}
               </ToggleGroup>
             </Field>
-            {error && <FieldError role="alert">{error}</FieldError>}
-            <Button size="lg" type="submit" className="w-full">
-              Create your group <ArrowRight data-icon="inline-end" />
+            {(error || errorMessage) && (
+              <FieldError role="alert">{error || errorMessage}</FieldError>
+            )}
+            <Button
+              size="lg"
+              type="submit"
+              className="w-full"
+              disabled={pending}
+            >
+              {pending ? 'Creating…' : 'Create your group'}{' '}
+              <ArrowRight data-icon="inline-end" />
             </Button>
           </FieldGroup>
         </form>
         <p className="fine-print">
-          <ShieldCheck size={15} /> No account needed. Use sample information in
-          this prototype.
+          <ShieldCheck size={15} />{' '}
+          {live
+            ? 'No account needed. Membership is saved in this browser for 30 days. Your group can see names and submitted preferences.'
+            : 'No account needed. Use sample information in this prototype.'}
         </p>
         <Button variant="link" onClick={onDemo}>
           Just exploring? Open the sample shortlist{' '}

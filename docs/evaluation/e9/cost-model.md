@@ -1,10 +1,26 @@
 # FlatSplit hosting cost model: AWS versus on-premise
 
 **Issue:** [#45 — Compare AWS and on-premise hosting costs](https://github.com/horiiiiii032929/CS5225-teams12-2026/issues/45) · **Experiment:** E9 in [evaluation-plan.md](https://github.com/horiiiiii032929/CS5225-teams12-2026/blob/main/docs/evaluation-plan.md)
-**Draft:** 12 October 2026 · **Owner:** Ming (@lukerspace) · **Reviewer:** Mani (@saravanamani1999) · **Status:** Proposed — initial assumptions and model skeleton
-**Intended repository path:** `docs/evaluation/E9-cost/cost-model.md` (D-E5: evidence lives in `docs/evaluation/<experiment>/` with raw data, script version and date)
+**Draft:** 12 October 2026 · **Owner:** Ming (@lukerspace) · **Reviewer:** Mani (@saravanamani1999) · **Status:** Provisional runnable model; historical inputs/outputs require reconciliation before current-cost claims
+**Repository path:** `docs/evaluation/e9/cost-model.md` (the original draft proposed `docs/evaluation/E9-cost/cost-model.md`; D-E5 now uses lowercase experiment IDs)
 
 Nothing in this document is a result. Every workload figure is an assumption until #30 and #34 supply measured usage. The on-premise figures are an estimate built on stated assumptions, **not a quote** (required wording, evaluation-plan limitations).
+
+## Status reconciliation — 20 October 2026
+
+The runnable model and dated 12/14 October outputs are preserved, including the original tables below. They are assumption-based scenarios, not the current deployed bill. This documentation update does not change model inputs, rerun the model or recalculate historical totals. The original architecture/driver discussion below describes the model baseline, including components that are still planned.
+
+Before publishing a refreshed result, the model owner must reconcile these inputs:
+
+- **DynamoDB:** the old 7/8-request budget is superseded. The implemented complete status path uses eight calls for two distinct stations and 11 for five when partitions fit one page; claims, submission, pagination and retries add work. Measure the actual workload in #30 instead of treating the old fixed budget as a current fact.
+- **Routing:** main resolves non-routable TENGAH directly to `unavailable`; it does not enqueue that pair. There are 27 town records but 26 routable town pairs per distinct destination station. The JSON's statement that TENGAH is enqueued is historical and must be corrected with the next model revision. The historical 187,200-job table and 194,400-job prose use different town counts; neither is a measured monthly total.
+- **Destination lookup:** [Ming's 20 October evidence](https://github.com/horiiiiii032929/CS5225-teams12-2026/issues/45#issuecomment-6286439604) reports cold lookup cost of `1 + N` upstream calls and repeat-query cache hits of zero for open PR #65. Its Kent Ridge sample used six calls cold and zero warm, through a local handler with live OneMap and Moto. Candidate count and distinct-query/cache-hit rate must drive the lookup estimate; a fixed two-call assumption is superseded. Sample timings are not deployed p95/capacity evidence, and the query cache is not merged on main.
+- **Runtime/admission:** main's HTTP Lambda timeout is 30 seconds, not the draft's 10. CDK now defines 100 requests/s, burst 200 for `eval` only; other stages retain 20/40. Verify actual deployed configuration and authorisation before W2; configuration does not establish capacity or a 500 ms result.
+- **Resource scope:** the worker/event-source mapping, scheduled ingestion, custom metrics, dashboard and queue/DLQ alarms are not implemented on main. Their model costs remain planned assumptions; SQS idle-poll volume is not an observed charge. Budget alerts are conditional on `budgetEmail` configuration.
+
+Payer-side cost-tag status/history, account allowances, actual worker/usage measurements (#34), node throughput (#30) and final price refresh remain outstanding. The 14 October linked-account billing access denial remains the recorded limitation. See the [measurement requests](evidence/measurement-requests.md) and [deployment handoff](../../aws-dev-handoff.md); no billing or deployment change is claimed.
+
+## Historical model baseline — 12–14 October 2026
 
 ## What this answers
 
