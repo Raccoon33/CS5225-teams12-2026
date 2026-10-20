@@ -39,8 +39,8 @@ export class RentIngestion extends Construct {
       architecture: Architecture.ARM_64,
       code: props.code ?? pythonApiCode(),
       handler: 'flatsplit_api.handlers.ingest_rent.handler',
-      memorySize: 512,
-      timeout: Duration.minutes(4),
+      memorySize: 1024,
+      timeout: Duration.minutes(10),
       environment: {
         POWERTOOLS_SERVICE_NAME: 'flatsplit-rent-ingestion',
         POWERTOOLS_LOG_LEVEL: 'INFO',
@@ -52,8 +52,14 @@ export class RentIngestion extends Construct {
       }),
     });
 
-    // The ingestion path never reads snapshots. It can only create evidence
-    // and replace raw/current.json after validation succeeds.
+    // The handler reads only the current pointer to prevent an older valid
+    // export from replacing a newer snapshot. All evidence writes are append-only.
+    this.handler.addToRolePolicy(
+      new PolicyStatement({
+        actions: ['s3:GetObject'],
+        resources: [this.bucket.arnForObjects('raw/current.json')],
+      }),
+    );
     this.handler.addToRolePolicy(
       new PolicyStatement({
         actions: ['s3:PutObject'],

@@ -66,6 +66,12 @@ The frontend now calls the group and search APIs for creation, invite join, save
 - **Commute:** OneMap public-transport route from the town point to the destination's snapped station, on a weekday at 08:30 departure, requesting three itineraries and selecting their minimum duration. Destination selection is explicit, station snapping is bounded to 1,000 m with a warning above 800 m, and the result is labelled station-to-station, not door-to-door. All interchange aliases use an application-owned canonical `stationKey` and a pinned routing coordinate. A route that cannot be found is UNAVAILABLE; it is never treated as zero minutes (D06).
 - **Ranking:** the merged engine ports `evaluateAreas` with the same weights and scales; tests establish fixture parity for all three priorities, including fractional commute handling. D07 remains a fairness hypothesis requiring empirical user evaluation; parity does not establish deployed recommendation quality.
 
+### Raw rental ingestion (#9)
+
+The ingestion Lambda calls the official data.gov.sg metadata and whole-dataset export APIs, validates the exact six-column schema, the reviewed 27-town inventory, all six flat types, a complete trailing 12-month window, and agreement between the CSV's latest month and the source metadata coverage end. Valid evidence is written first under `raw/source_month=<YYYY-MM>/retrieved_at=<UTC>/<sha256>`, followed by a manifest and the `raw/current.json` pointer. The pointer is read before publication so an older source month or retrieval cannot replace the current snapshot; an ETag condition also prevents an overlapping run from overwriting a pointer that changed during the write. Invalid input is retained under `rejected/` and never updates the pointer.
+
+The Lambda is configured with 1024 MiB memory and a 10-minute timeout. The source body remains bounded at 64 MiB, while API polling and response limits are bounded in the client. Its role can read only `raw/current.json`; raw and rejected evidence writes remain append-only. Monthly scheduling and validated summary publication remain separate #10 work.
+
 ## Security
 
 - Tokens are 256-bit random values. Only SHA-256 hashes are stored. An invite token can only join; it cannot read or edit the group (D11). Invite tokens travel in the URL fragment, so they never reach server logs.

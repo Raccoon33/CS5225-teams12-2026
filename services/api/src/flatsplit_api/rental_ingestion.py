@@ -16,6 +16,8 @@ from datetime import UTC, datetime
 from importlib.resources import files
 from typing import Any, Protocol
 
+from botocore.exceptions import ClientError
+
 DATASET_ID = "d_c9f57187485a850908655db0e8cfe651"
 DATASET_TITLE = "Renting Out of Flats from Jan 2021"
 PUBLISHER = "Housing & Development Board"
@@ -141,6 +143,8 @@ def validate_source(body: bytes) -> ValidationSummary:
     row_count = 0
     try:
         for line_number, row in enumerate(reader, start=2):
+            if not row or not any(row):
+                continue
             if len(row) != len(EXPECTED_COLUMNS):
                 raise SnapshotValidationError(
                     f"Row {line_number} does not contain exactly six fields."
@@ -242,6 +246,13 @@ class DataGovClient:
             raise IngestionError("data.gov.sg returned malformed JSON.") from exc
         if not isinstance(payload, dict):
             raise IngestionError("data.gov.sg returned an unexpected API response.")
+        code = payload.get("code")
+        if code not in (None, 0):
+            detail = payload.get("errorMsg")
+            suffix = f": {detail}" if isinstance(detail, str) and detail else ""
+            raise IngestionError(
+                f"data.gov.sg export API returned error code {code}{suffix}."
+            )
         error = payload.get("errorMsg")
         if isinstance(error, str) and error.strip():
             raise IngestionError("data.gov.sg rejected the export request.")
@@ -349,6 +360,62 @@ class S3SnapshotWriter:
             IfNoneMatch="*",
         )
 
+    def _current_pointer(self) -> tuple[dict[str, Any] | None, str | None]:
+        try:
+            response = self._client.get_object(
+                Bucket=self._bucket,
+                Key="raw/current.json",
+            )
+        except ClientError as exc:
+            code = str(exc.response.get("Error", {}).get("Code", ""))
+            if code not in {"404", "NoSuchKey", "NotFound"}:
+                raise IngestionError(
+                    "Could not read the current rent pointer."
+                ) from exc
+            return None, None
+        try:
+            raw = response["Body"].read()
+            pointer = json.loads(raw)
+        except (KeyError, TypeError, UnicodeDecodeError, json.JSONDecodeError) as exc:
+            raise IngestionError("The current rent pointer is malformed.") from exc
+        if not isinstance(pointer, dict):
+            raise IngestionError("The current rent pointer is malformed.")
+        etag = response.get("ETag")
+        if etag is not None and not isinstance(etag, str):
+            raise IngestionError("The current rent pointer has an invalid ETag.")
+        return pointer, etag
+
+    @staticmethod
+    def _is_older_than_current(
+        pointer: Mapping[str, Any],
+        summary: ValidationSummary,
+        retrieved_at: datetime,
+    ) -> bool:
+        current_month = pointer.get("sourceMonthTo")
+        if not isinstance(current_month, str) or not _MONTH.fullmatch(current_month):
+            raise IngestionError(
+                "The current rent pointer has an invalid source month."
+            )
+        current_index = _month_index(current_month)
+        new_index = _month_index(summary.source_month_to)
+        if current_index != new_index:
+            return current_index > new_index
+
+        current_retrieved = pointer.get("retrievedAt")
+        if not isinstance(current_retrieved, str):
+            return False
+        try:
+            current_time = datetime.fromisoformat(
+                current_retrieved.replace("Z", "+00:00")
+            )
+        except ValueError as exc:
+            raise IngestionError(
+                "The current rent pointer has an invalid timestamp."
+            ) from exc
+        if current_time.tzinfo is None:
+            raise IngestionError("The current rent pointer timestamp has no timezone.")
+        return current_time > retrieved_at
+
     @staticmethod
     def _source_metadata(metadata: DatasetMetadata | None) -> dict[str, Any] | None:
         if metadata is None:
@@ -416,12 +483,35 @@ class S3SnapshotWriter:
             "rawObjectKey": raw_key,
             "manifestObjectKey": manifest_key,
         }
-        self._client.put_object(
-            Bucket=self._bucket,
-            Key="raw/current.json",
-            Body=self._json(pointer),
-            ContentType="application/json",
-        )
+        current, etag = self._current_pointer()
+        if current is not None and self._is_older_than_current(
+            current, summary, retrieved_at
+        ):
+            raise IngestionError(
+                "The candidate rent snapshot is older than the current snapshot."
+            )
+        put_kwargs: dict[str, Any] = {
+            "Bucket": self._bucket,
+            "Key": "raw/current.json",
+            "Body": self._json(pointer),
+            "ContentType": "application/json",
+        }
+        if etag is not None:
+            put_kwargs["IfMatch"] = etag
+        try:
+            self._client.put_object(**put_kwargs)
+        except ClientError as exc:
+            code = str(exc.response.get("Error", {}).get("Code", ""))
+            if code in {
+                "409",
+                "412",
+                "ConditionalRequestConflict",
+                "PreconditionFailed",
+            }:
+                raise IngestionError(
+                    "The current rent pointer changed during ingestion; retry."
+                ) from exc
+            raise
         return pointer
 
     def write_rejected(
@@ -476,4 +566,14 @@ def run_ingestion(
     except SnapshotValidationError as exc:
         writer.write_rejected(source, str(exc), retrieved_at)
         raise
+    if source.metadata is not None:
+        coverage_month = source.metadata.coverage_end[:7]
+        if not _MONTH.fullmatch(coverage_month):
+            reason = "Source metadata has an invalid coverage end month."
+            writer.write_rejected(source, reason, retrieved_at)
+            raise SnapshotValidationError(reason)
+        if coverage_month != summary.source_month_to:
+            reason = "Source metadata coverage end does not match the latest CSV month."
+            writer.write_rejected(source, reason, retrieved_at)
+            raise SnapshotValidationError(reason)
     return writer.write_valid(source, summary, retrieved_at)

@@ -6,13 +6,16 @@ from datetime import UTC, datetime
 from typing import Any
 
 import pytest
+from botocore.exceptions import ClientError
 
 from flatsplit_api.rental_ingestion import (
+    DATASET_ID,
     EXPECTED_COLUMNS,
     EXPECTED_FLAT_TYPES,
     DataGovClient,
     DatasetMetadata,
     DownloadedSource,
+    IngestionError,
     S3SnapshotWriter,
     SnapshotValidationError,
     ValidationSummary,
@@ -151,12 +154,50 @@ def test_invalid_download_is_preserved_but_never_published() -> None:
     assert len(writer.rejected) == 1
 
 
+def test_metadata_coverage_must_match_latest_source_month() -> None:
+    writer = FakeWriter()
+    source = DownloadedSource(
+        source_csv(),
+        metadata=DatasetMetadata(
+            created_at="2021-10-12T12:09:55+08:00",
+            last_updated_at="2026-10-02T10:06:14+08:00",
+            coverage_start="2021-01-01T08:00:00+08:00",
+            coverage_end="2026-08-01T08:00:00+08:00",
+            dataset_size=10_440_420,
+            source_format="CSV",
+        ),
+    )
+
+    with pytest.raises(SnapshotValidationError, match="coverage end"):
+        run_ingestion(
+            FakeClient(source),
+            writer,
+            now=lambda: datetime(2026, 10, 19, tzinfo=UTC),
+        )
+
+    assert writer.valid == []
+    assert len(writer.rejected) == 1
+
+
 class FakeS3:
     def __init__(self) -> None:
         self.puts: list[dict[str, Any]] = []
+        self.current: bytes | None = None
+        self.current_etag = '"current-etag"'
 
     def put_object(self, **kwargs: Any) -> None:
         self.puts.append(kwargs)
+        if kwargs["Key"] == "raw/current.json":
+            self.current = kwargs["Body"]
+
+    def get_object(self, **kwargs: Any) -> dict[str, Any]:
+        assert kwargs["Key"] == "raw/current.json"
+        if self.current is None:
+            raise ClientError(
+                {"Error": {"Code": "NoSuchKey"}},
+                "GetObject",
+            )
+        return {"Body": io.BytesIO(self.current), "ETag": self.current_etag}
 
 
 def test_valid_s3_write_updates_current_pointer_last() -> None:
@@ -188,13 +229,58 @@ def test_valid_s3_write_updates_current_pointer_last() -> None:
     assert keys[1].endswith(".manifest.json")
     assert s3.puts[0]["IfNoneMatch"] == "*"
     assert s3.puts[1]["IfNoneMatch"] == "*"
-    assert "IfNoneMatch" not in s3.puts[-1]
+    assert "IfMatch" not in s3.puts[-1]
     assert pointer["sourceMonthTo"] == "2026-09"
     manifest = json.loads(s3.puts[1]["Body"])
     assert manifest["rowCount"] == 12 * 27 * 6
     assert manifest["sourceHeaders"]["etag"] == '"source-etag"'
     assert manifest["sourceUpdatedAt"] == "2026-10-02T10:06:14+08:00"
     assert manifest["sourceMetadata"]["datasetSize"] == 10_440_420
+
+
+def test_trailing_blank_csv_rows_are_ignored() -> None:
+    body = source_csv() + b"\n"
+
+    summary = validate_source(body)
+
+    assert summary.row_count == 12 * 27 * 6
+
+
+def test_older_valid_snapshot_cannot_replace_current_pointer() -> None:
+    s3 = FakeS3()
+    writer = S3SnapshotWriter(s3, "bucket")
+    current = {
+        "sourceMonthTo": "2026-09",
+        "retrievedAt": "2026-10-20T00:00:00Z",
+    }
+    s3.current = (json.dumps(current) + "\n").encode()
+    older_months = [
+        f"{year:04d}-{month:02d}"
+        for year, month in (
+            (2025, 9),
+            (2025, 10),
+            (2025, 11),
+            (2025, 12),
+            (2026, 1),
+            (2026, 2),
+            (2026, 3),
+            (2026, 4),
+            (2026, 5),
+            (2026, 6),
+            (2026, 7),
+            (2026, 8),
+        )
+    ]
+    summary = validate_source(source_csv(months=older_months))
+
+    with pytest.raises(IngestionError, match="older than the current"):
+        writer.write_valid(
+            DownloadedSource(source_csv(months=older_months)),
+            summary,
+            datetime(2026, 10, 19, 1, 2, 3, tzinfo=UTC),
+        )
+
+    assert sum(item["Key"] == "raw/current.json" for item in s3.puts) == 0
 
 
 def test_rejected_s3_write_never_touches_current_pointer() -> None:
@@ -286,3 +372,53 @@ def test_data_gov_client_uses_initiate_poll_then_export() -> None:
     assert downloaded.etag == '"abc"'
     assert downloaded.metadata is not None
     assert downloaded.metadata.last_updated_at == "2026-10-02T10:06:14+08:00"
+
+
+def test_data_gov_client_fails_immediately_on_export_error_code() -> None:
+    def open_response(request: Any, *, timeout: float) -> FakeResponse:
+        del request, timeout
+        return FakeResponse(b'{"code":4,"data":{}}')
+
+    with pytest.raises(IngestionError, match="error code 4"):
+        DataGovClient(opener=open_response)._get_json("https://example.test/export")
+
+
+def test_data_gov_client_reports_poll_exhaustion() -> None:
+    metadata = {
+        "code": 0,
+        "data": {
+            "datasetId": DATASET_ID,
+            "createdAt": "2021-10-12T12:09:55+08:00",
+            "name": "Renting Out of Flats from Jan 2021",
+            "lastUpdatedAt": "2026-10-02T10:06:14+08:00",
+            "managedBy": "Housing & Development Board",
+            "coverageStart": "2021-01-01T08:00:00+08:00",
+            "coverageEnd": "2026-09-01T08:00:00+08:00",
+            "format": "CSV",
+            "datasetSize": 10_440_420,
+            "columnMetadata": {
+                "order": list(EXPECTED_COLUMNS),
+                "map": {column: column for column in EXPECTED_COLUMNS},
+            },
+        },
+    }
+    responses = iter(
+        [
+            FakeResponse(json.dumps(metadata).encode()),
+            FakeResponse(b'{"code":0,"data":{"message":"initiated"}}'),
+            *[
+                FakeResponse(b'{"code":0,"data":{"status":"processing"}}')
+                for _ in range(9)
+            ],
+        ]
+    )
+    sleeps: list[float] = []
+
+    def open_response(request: Any, *, timeout: float) -> FakeResponse:
+        del request, timeout
+        return next(responses)
+
+    with pytest.raises(IngestionError, match="not ready before the deadline"):
+        DataGovClient(opener=open_response, sleep=sleeps.append).download()
+
+    assert sleeps == [15.0] * 8

@@ -90,9 +90,8 @@ For future entries, record the requested issue, tool, contribution, checks actua
 ## 12–14 October 2026 — HDB rental profile and evaluation evidence
 
 - Tool: Codex, directed by Mani.
-- Human contribution: Mani drafted the rent schema from the system design and decided the aggregation statistics, confidence method and threshold, duplicate-row handling, supported flat types, and low-confidence API behavior.
-- AI assistance: profiled the official HDB datasets, validated the draft against the source data, generated the reproducible E8 audit, helped document the E6 procedure, and performed formatting and consistency checks.
-- Verification: 65 of 72 comparable published medians matched exactly; documentation, JSON, sample-data and audit assertions passed. E6 was documented but not run; no AWS deployment was performed.
+- Contribution: profiled the official HDB datasets, validated Mani's rent schema decisions, documented E6, and generated the reproducible E8 audit.
+- Verification: 65 of 72 comparable published medians matched exactly; documentation, JSON, sample-data and audit checks passed. E6 was documented but not run; no AWS deployment was performed.
 
 ## 14 October 2026 — issue 14 destination search endpoint
 
@@ -260,5 +259,5 @@ For future entries, record the requested issue, tool, contribution, checks actua
 ## 19 October 2026 — issue 9 raw HDB rental ingestion
 
 - Tool: Codex, directed by Mani; ingestion policy and schedule choices remained with Mani.
-- Contribution: implemented the data.gov.sg export client, reviewed source validation, immutable valid/rejected S3 evidence, last-good raw pointer, private versioned bucket, least-privilege ingestion Lambda and regression tests. #10 still owns rental summaries and DynamoDB publication.
-- Verification: 270 API tests, 29 web tests, eight CDK tests, three evaluation tests, repository check/build and local CDK synthesis passed. A live read-only data.gov.sg export validated 212,597 rows, 27 towns, six flat types, authoritative source metadata and source month `2026-09`; nothing was written to AWS. No deployment or schedule was run. The monthly trigger time remains an owner decision.
+- Contribution: implemented the data.gov.sg export client, HDB source validation, S3 evidence/pointer handling, ingestion Lambda, and regression tests. #10 owns rental summaries and DynamoDB publication.
+- Verification: API, web, CDK and evaluation tests, repository checks/build, and local CDK synthesis passed. A read-only export validated 212,597 rows, 27 towns, six flat types and source month `2026-09`; nothing was written to AWS and no deployment or schedule was run.

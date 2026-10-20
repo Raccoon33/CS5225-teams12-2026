@@ -53,14 +53,14 @@ test('raw rental evidence is private, encrypted and versioned', () => {
   });
 });
 
-test('ingestion Lambda has bounded resources and put-only snapshot access', () => {
+test('ingestion Lambda has bounded resources and pointer read plus evidence write access', () => {
   const template = synthesize();
   template.hasResourceProperties('AWS::Lambda::Function', {
     Architectures: ['arm64'],
     Runtime: 'python3.13',
     Handler: 'flatsplit_api.handlers.ingest_rent.handler',
-    MemorySize: 512,
-    Timeout: 240,
+    MemorySize: 1024,
+    Timeout: 600,
     Environment: {
       Variables: Match.objectLike({
         POWERTOOLS_SERVICE_NAME: 'flatsplit-rent-ingestion',
@@ -84,8 +84,11 @@ test('ingestion Lambda has bounded resources and put-only snapshot access', () =
     )
     .flatMap((statement) => [statement.Action].flat());
   assert(s3Actions.includes('s3:PutObject'));
-  assert.deepEqual([...new Set(s3Actions)].sort(), ['s3:PutObject']);
-  assert(!s3Actions.includes('s3:GetObject'));
+  assert(s3Actions.includes('s3:GetObject'));
+  assert.deepEqual([...new Set(s3Actions)].sort(), [
+    's3:GetObject',
+    's3:PutObject',
+  ]);
   assert(!s3Actions.includes('s3:DeleteObject'));
 });
 
