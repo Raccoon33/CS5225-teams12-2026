@@ -36,7 +36,7 @@ from flatsplit_api.onemap import (
 )
 from flatsplit_api.ranking import WEIGHTS, Priority
 from flatsplit_api.search_models import SearchView
-from flatsplit_api.storage import group_store, search_store
+from flatsplit_api.storage import group_store, place_store, search_store
 
 logger = Logger()
 
@@ -127,6 +127,11 @@ def places() -> PlacesResponse:
             "Destination search is unavailable. Try again shortly.",
         ) from exc
 
+    # A placeId that was never stored cannot be saved (#14): persist before
+    # answering, and let a storage failure surface instead of handing the
+    # client an id that groups.py will reject.
+    if found["places"]:
+        found = place_store().persist(found)
     return PlacesResponse.model_validate(found)
 
 
