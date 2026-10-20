@@ -7,14 +7,19 @@ nothing ever created the record they read. This module is that missing write
 side. A lookup that cannot be persisted is not a successful lookup, because the
 `placeId` it returns cannot be saved.
 
-Two different lifetimes, both from `docs/api-contract.md`:
+Three records, with three different lifetimes, all from `docs/api-contract.md`:
 
-- `PLACE#<placeId>/META` is a 24-hour lookup cache. Looking the same place up
-  again rewrites the record and refreshes the ttl. An older `placeId` is not
-  valid for a save and must fail honestly rather than invent a destination.
+- `PLACE#<placeId>/META` is a 24-hour cache of one resolved place. An older
+  `placeId` is not valid for a save and must fail honestly rather than invent a
+  destination.
 - `STATION#<stationKey>/META` is the pinned routing coordinate and carries no
   ttl. It is created conditionally, the first writer wins, and every later
   lookup that snaps to that station reuses the winning coordinate.
+- `PLACELOOKUP#<query>/META` is the 24-hour query cache: it maps a normalised
+  query to the response it produced, so a repeated query costs no upstream
+  calls at all. Without it a repeat of the same query still cost one search
+  plus one nearest-station call per candidate — measured at six calls and
+  ~800 ms for `kent ridge` on 20 October.
 
 #3 measured why the station coordinate has to be pinned rather than refreshed:
 `getNearestMrtStops` returns one entry per line code for an interchange, in a
@@ -57,12 +62,32 @@ logger = Logger(child=True)
 #: docs/api-contract.md: the Place item expires after 24 hours.
 PLACE_TTL_SECONDS = 24 * 60 * 60
 
+#: docs/api-contract.md: "Query/lookup cache entries expire after 24 hours."
+LOOKUP_TTL_SECONDS = 24 * 60 * 60
+
 _TOO_FAR_MESSAGE = "Choose a nearby MRT station or a more precise address."
 
 
 def _storable(value: Any) -> Any:
     """DynamoDB rejects floats; JSON conversion keeps coordinate precision."""
     return json.loads(json.dumps(value), parse_float=Decimal)
+
+
+def _plain(value: Any) -> Any:
+    """The inverse: `Decimal` back to the JSON numbers the response uses."""
+    return json.loads(json.dumps(value, default=float))
+
+
+def _lookup_key(query: str) -> str:
+    """The query cache key.
+
+    Case-folded because OneMap's search is case-insensitive: on 20 October,
+    `kent ridge`, `KENT RIDGE`, `Kent Ridge` and `kEnT rIdGe` all returned
+    found=80 with byte-identical results. Folding the key turns those four into
+    one cache entry instead of four. The handler has already trimmed and
+    collapsed whitespace.
+    """
+    return query.casefold()
 
 
 def _unavailable(action: str, exc: ClientError) -> ApiError:
@@ -89,8 +114,15 @@ class PlaceStore:
     def _now(self) -> int:
         return int(self._clock().astimezone(UTC).timestamp())
 
-    def persist(self, found: dict[str, Any]) -> dict[str, Any]:
-        """Store every selectable candidate and return the adjusted response."""
+    def persist(
+        self, found: dict[str, Any], *, query: str | None = None
+    ) -> dict[str, Any]:
+        """Store every selectable candidate and return the adjusted response.
+
+        With `query`, the resulting response is also cached under that query so
+        the next identical lookup needs no upstream call. An empty result is
+        cached too: a repeated typo should not keep spending quota.
+        """
         places: list[dict[str, Any]] = []
         unsupported: list[dict[str, Any]] = list(found.get("unsupported") or [])
         for candidate in found.get("places") or []:
@@ -110,11 +142,97 @@ class PlaceStore:
                 continue
             self._write_place(candidate, station)
             places.append(dict(candidate, station=station))
+        if query is not None:
+            self._write_lookup(query, places, unsupported)
         return {
             "places": places,
             "unsupported": unsupported,
             "ambiguous": len(places) > 1,
         }
+
+    # --------------------------------------------------------- query cache
+
+    def cached(self, query: str) -> dict[str, Any] | None:
+        """The stored response for this query, or None if it must be looked up.
+
+        A hit has to reproduce a response whose `placeId`s are all still
+        saveable, so every referenced place record is re-read and its own ttl
+        checked. An alias that outlives one of its place records is a miss, not
+        a partial answer: handing back a `placeId` that `groups.py` will reject
+        is the exact defect this module exists to prevent.
+
+        A hit does not extend any ttl. The contract gives these entries 24
+        hours, not a sliding window, so a stale upstream result cannot live
+        indefinitely by being queried often.
+        """
+        alias = self._read(f"PLACELOOKUP#{_lookup_key(query)}")
+        if alias is None or not self._fresh(alias):
+            return None
+        places: list[dict[str, Any]] = []
+        for place_id in alias.get("placeIds") or []:
+            record = self._read(f"PLACE#{place_id}")
+            if record is None or not self._fresh(record):
+                return None
+            places.append(
+                {
+                    "placeId": str(place_id),
+                    "label": str(record["label"]),
+                    "address": str(record["address"]),
+                    "station": _plain(record["station"]),
+                }
+            )
+        return {
+            "places": places,
+            "unsupported": _plain(alias.get("unsupported") or []),
+            "ambiguous": len(places) > 1,
+        }
+
+    def _write_lookup(
+        self,
+        query: str,
+        places: list[dict[str, Any]],
+        unsupported: list[dict[str, Any]],
+    ) -> None:
+        item = _storable(
+            {
+                "query": query,
+                "placeIds": [str(place["placeId"]) for place in places],
+                "unsupported": unsupported,
+                "refreshedAt": self._clock().astimezone(UTC).isoformat(),
+            }
+        )
+        try:
+            self.table.put_item(
+                Item=dict(
+                    item,
+                    pk=f"PLACELOOKUP#{_lookup_key(query)}",
+                    sk="META",
+                    ttl=self._now() + LOOKUP_TTL_SECONDS,
+                )
+            )
+        except ClientError as exc:
+            raise _unavailable("write-lookup", exc) from exc
+
+    # ------------------------------------------------------------- reading
+
+    def _read(self, pk: str) -> dict[str, Any] | None:
+        try:
+            item: dict[str, Any] | None = self.table.get_item(
+                Key={"pk": pk, "sk": "META"}, ConsistentRead=True
+            ).get("Item")
+        except ClientError as exc:
+            raise _unavailable("read-item", exc) from exc
+        return item
+
+    def _fresh(self, item: dict[str, Any]) -> bool:
+        """Expiry is decided here, never by whether a read came back empty.
+
+        DynamoDB deletes expired items asynchronously and keeps returning them
+        until it does, which the contract states for group access and which
+        `groups.py` already honours for place records.
+        """
+        ttl = item.get("ttl")
+        return ttl is None or int(ttl) > self._now()
 
     # ------------------------------------------------------------- stations
 

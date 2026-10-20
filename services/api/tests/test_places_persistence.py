@@ -10,12 +10,17 @@ what the #16 handoff in the issue thread asked for: repeated lookups, a
 replaced container, and an expired lookup cache. OneMap is stubbed with the
 behaviour measured in #3 — in particular a station coordinate that moves
 between calls, because `getNearestMrtStops` returns one entry per line code for
-an interchange, in a varying order, up to ~100 m apart.
+an interchange, in a varying order, up to ~100 m apart (re-measured at 133 m
+against live OneMap on 20 October).
+
+Several tests deliberately use a distinct query per lookup: identical queries
+are served by the 24-hour query cache and never reach upstream, which would
+make a pinning assertion pass for the wrong reason.
 """
 
 import base64
 import json
-from collections.abc import Callable, Iterator
+from collections.abc import Iterator
 from dataclasses import dataclass
 from datetime import UTC, datetime, timedelta
 from decimal import Decimal
@@ -128,21 +133,36 @@ def table(clock: Clock, monkeypatch: pytest.MonkeyPatch) -> Iterator[Table]:
         yield created
 
 
-Lookup = Callable[..., Reply]
+class Lookup:
+    """Runs `GET /places` against stubbed OneMap results, counting the calls.
 
+    `calls` is what makes the query cache testable: a cache hit has to add
+    nothing to it.
+    """
 
-@pytest.fixture
-def lookup(monkeypatch: pytest.MonkeyPatch) -> Lookup:
-    """Run `GET /places` against stubbed OneMap results."""
+    def __init__(self, monkeypatch: pytest.MonkeyPatch) -> None:
+        self._monkeypatch = monkeypatch
+        self.calls: list[str] = []
 
-    def run(
-        lat: float = STATION_LAT, lng: float = STATION_LNG, *, code: str = "CC24"
+    def __call__(
+        self,
+        lat: float = STATION_LAT,
+        lng: float = STATION_LNG,
+        *,
+        code: str = "CC24",
+        query: str = "kent ridge",
+        search: dict[str, Any] | None = None,
     ) -> Reply:
-        def transport(path: str, params: dict[str, Any]) -> Any:
-            return SEARCH if path.endswith("search") else stations(lat, lng, code=code)
+        payload = SEARCH if search is None else search
 
-        monkeypatch.setattr(
-            http, "find_places", lambda query: find_places(query, transport)
+        def transport(path: str, params: dict[str, Any]) -> Any:
+            self.calls.append(path)
+            if path.endswith("search"):
+                return payload
+            return stations(lat, lng, code=code)
+
+        self._monkeypatch.setattr(
+            http, "find_places", lambda q: find_places(q, transport)
         )
         event = {
             "version": "2.0",
@@ -150,7 +170,7 @@ def lookup(monkeypatch: pytest.MonkeyPatch) -> Lookup:
             "rawPath": "/api/places",
             "rawQueryString": "",
             "headers": {},
-            "queryStringParameters": {"q": "kent ridge"},
+            "queryStringParameters": {"q": query},
             "requestContext": {
                 "http": {
                     "method": "GET",
@@ -165,7 +185,10 @@ def lookup(monkeypatch: pytest.MonkeyPatch) -> Lookup:
         response = http.handler(event, FakeContext())  # type: ignore[arg-type]
         return Reply(response["statusCode"], json.loads(response["body"]))
 
-    return run
+
+@pytest.fixture
+def lookup(monkeypatch: pytest.MonkeyPatch) -> Lookup:
+    return Lookup(monkeypatch)
 
 
 def call(method: str, path: str, body: Any = None, token: str | None = None) -> Reply:
@@ -263,7 +286,13 @@ def test_repeated_lookups_do_not_move_the_pinned_coordinate(
 
     for index in range(5):
         clock.advance(minutes=10)
-        again = lookup(OTHER_EXIT_LAT + index / 10_000, OTHER_EXIT_LNG)
+        # A distinct query each round, so every round really goes upstream
+        # instead of being served by the query cache.
+        again = lookup(
+            OTHER_EXIT_LAT + index / 10_000,
+            OTHER_EXIT_LNG,
+            query=f"kent ridge {index}",
+        )
         candidate = again.body["places"][0]
         assert candidate["placeId"] == place_id
         assert candidate["station"] == pinned, f"the coordinate moved on round {index}"
@@ -285,7 +314,9 @@ def test_a_replaced_container_reuses_the_pinned_coordinate(
     pinned = first.body["places"][0]["station"]
 
     monkeypatch.setattr(http, "place_store", lambda: PlaceStore(table, clock=clock))
-    again = lookup(OTHER_EXIT_LAT, OTHER_EXIT_LNG)
+    # A different query, so the pin has to come from the table rather than
+    # from the query cache.
+    again = lookup(OTHER_EXIT_LAT, OTHER_EXIT_LNG, query="nus kent ridge")
 
     assert again.body["places"][0]["station"] == pinned
     assert again.body["places"][0]["placeId"] == first.body["places"][0]["placeId"]
@@ -335,7 +366,9 @@ def test_aliases_merge_without_moving_the_coordinate(
 ) -> None:
     """#6: `EW24 / NS1` splits into aliases; merging them must not re-pin."""
     lookup(STATION_LAT, STATION_LNG, code="CC24")
-    lookup(OTHER_EXIT_LAT, OTHER_EXIT_LNG, code="NS1")
+    # Another query reaching the same place, so the station is resolved again
+    # and its new alias has to merge into the pinned record.
+    lookup(OTHER_EXIT_LAT, OTHER_EXIT_LNG, code="NS1", query="nus")
 
     record = station_item(table)
     assert record is not None
@@ -366,6 +399,107 @@ def test_a_pinned_station_beyond_the_bound_is_not_selectable(
     assert reply.body["unsupported"][0]["code"] == "STATION_TOO_FAR"
     assert reply.body["unsupported"][0]["snapMetres"] > 1000
     assert reply.body["ambiguous"] is False
+
+
+# --------------------------------------------------------------- query cache
+
+
+def test_a_repeated_query_costs_no_upstream_calls(table: Table, lookup: Lookup) -> None:
+    """Without this cache, a repeat of the same query cost six calls (#14).
+
+    One search plus one nearest-station call per candidate: measured at six
+    calls and ~800 ms for `kent ridge` against live OneMap on 20 October.
+    """
+    first = lookup()
+    assert lookup.calls, "the first lookup has to reach upstream"
+    before = len(lookup.calls)
+
+    second = lookup()
+
+    assert len(lookup.calls) == before, "a cached query must not reach upstream"
+    assert second.body == first.body
+
+
+def test_the_query_cache_is_case_insensitive(table: Table, lookup: Lookup) -> None:
+    """One entry serves every spelling, because the upstream search ignores case.
+
+    Measured 20 October: `kent ridge`, `KENT RIDGE`, `Kent Ridge` and
+    `kEnT rIdGe` all returned found=80 with byte-identical results.
+    """
+    first = lookup(query="kent ridge")
+    before = len(lookup.calls)
+
+    second = lookup(query="Kent Ridge")
+
+    assert len(lookup.calls) == before
+    assert second.body == first.body
+
+
+def test_the_query_cache_expires_after_24_hours(
+    table: Table, clock: Clock, lookup: Lookup
+) -> None:
+    lookup()
+    before = len(lookup.calls)
+
+    clock.advance(hours=25)
+    lookup()
+
+    assert len(lookup.calls) > before, "a 25-hour-old query must be looked up again"
+
+
+def test_an_expired_place_record_makes_the_query_cache_a_miss(
+    table: Table, lookup: Lookup
+) -> None:
+    """Never serve a cached placeId that a save would reject.
+
+    The alias can outlive a place record it points at, because that place may
+    have been created by an earlier query and carry an older ttl. Serving it
+    anyway would hand back exactly the unsaveable placeId this module exists to
+    prevent, so a missing record is a miss rather than a partial answer.
+    """
+    place_id = lookup().body["places"][0]["placeId"]
+    table.delete_item(Key={"pk": f"PLACE#{place_id}", "sk": "META"})
+    before = len(lookup.calls)
+
+    again = lookup()
+
+    assert len(lookup.calls) > before
+    assert again.body["places"][0]["placeId"] == place_id
+    assert place_item(table, place_id) is not None, "the record is written again"
+
+
+def test_a_query_with_no_results_is_cached_too(table: Table, lookup: Lookup) -> None:
+    """A repeated typo should not keep spending quota."""
+    empty: dict[str, Any] = {"found": 0, "totalNumPages": 0, "results": []}
+
+    first = lookup(query="somewhere in tokyo", search=empty)
+    before = len(lookup.calls)
+    second = lookup(query="somewhere in tokyo", search=empty)
+
+    assert first.body == {"places": [], "unsupported": [], "ambiguous": False}
+    assert second.body == first.body
+    assert len(lookup.calls) == before
+
+
+def test_the_query_cache_does_not_slide(
+    table: Table, clock: Clock, lookup: Lookup
+) -> None:
+    """A hit must not extend the ttl, or a stale result could live forever."""
+    lookup()
+    stored = table.get_item(
+        Key={"pk": "PLACELOOKUP#kent ridge", "sk": "META"}, ConsistentRead=True
+    ).get("Item")
+    assert stored is not None
+    expiry = stored["ttl"]
+
+    clock.advance(hours=12)
+    lookup()
+
+    after = table.get_item(
+        Key={"pk": "PLACELOOKUP#kent ridge", "sk": "META"}, ConsistentRead=True
+    ).get("Item")
+    assert after is not None
+    assert after["ttl"] == expiry
 
 
 # ------------------------------------------------------- the save it unblocks
@@ -455,8 +589,10 @@ def test_a_relookup_after_expiry_restores_the_place_and_saves(
 
     clock.advance(hours=25)
     table.delete_item(Key={"pk": f"PLACE#{place_id}", "sk": "META"})
+    lookup.calls.clear()
     again = lookup(OTHER_EXIT_LAT, OTHER_EXIT_LNG)
 
+    assert lookup.calls, "the 24-hour query cache should have expired as well"
     assert again.body["places"][0]["placeId"] == place_id
     assert again.body["places"][0]["station"] == pinned, "the pin survived expiry"
 
