@@ -1,6 +1,6 @@
 import { useEffect, useRef, type ReactNode } from 'react';
 import { Link } from '@tanstack/react-router';
-import { House, Users } from 'lucide-react';
+import { ArrowUpRight, House, Users } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 
 export function GroupShell({
@@ -12,11 +12,13 @@ export function GroupShell({
 }) {
   const main = useRef<HTMLElement>(null);
   useEffect(() => {
-    main.current?.focus({ preventScroll: true });
+    const heading = main.current?.querySelector('h1');
+    if (heading) heading.tabIndex = -1;
+    (heading ?? main.current)?.focus({ preventScroll: true });
   }, []);
   return (
     <>
-      <header className="app-header">
+      <header className="app-header live-header">
         <Link to="/" search={{}} className="brand" aria-label="FlatSplit home">
           <span className="brand-icon">
             <House size={20} />
@@ -24,12 +26,8 @@ export function GroupShell({
           FlatSplit<span className="brand-period">.</span>
         </Link>
         <div className="header-context">A better move, together.</div>
-        <Link
-          to="/"
-          search={{ review: 'results' }}
-          className="text-sm underline"
-        >
-          Explore the demo
+        <Link to="/" search={{ review: 'results' }} className="live-demo-link">
+          Explore the demo <ArrowUpRight size={14} aria-hidden="true" />
         </Link>
       </header>
       <main
@@ -39,7 +37,7 @@ export function GroupShell({
         className="workspace live-workspace"
       >
         <div className="workspace-breadcrumb">
-          <Users size={16} />
+          <Users size={16} aria-hidden="true" />
           <span>Your home search</span>
           <span>/</span>
           <strong>{step}</strong>

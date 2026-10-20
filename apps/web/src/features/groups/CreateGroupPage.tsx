@@ -1,3 +1,4 @@
+import { ArrowRight } from 'lucide-react';
 import { useMutation } from '@tanstack/react-query';
 import { Link, useNavigate } from '@tanstack/react-router';
 import { CreateGroup } from '@/features/wireframes/GroupViews';
@@ -24,7 +25,7 @@ export function CreateGroupPage() {
     },
   });
   return (
-    <GroupShell>
+    <GroupShell step="Create a group">
       {groups.length > 0 && (
         <section className="live-saved-groups" aria-label="Your saved groups">
           <h2>Pick up where you left off</h2>
@@ -33,6 +34,7 @@ export function CreateGroupPage() {
               <li key={group.groupId}>
                 <Link to="/groups/$groupId" params={{ groupId: group.groupId }}>
                   {group.groupName}
+                  <ArrowRight size={16} aria-hidden="true" />
                 </Link>
               </li>
             ))}

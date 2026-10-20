@@ -55,9 +55,7 @@ describe('real search lifecycle UI', () => {
       ).disabled,
     ).toBe(true);
     expect(
-      screen.getByText(
-        'Waiting for 1 flatmate to join and submit preferences.',
-      ),
+      screen.getByText('Waiting for 1 flatmate to submit preferences.'),
     ).toBeTruthy();
     expect(transport).not.toHaveBeenCalled();
   });
@@ -78,7 +76,7 @@ describe('real search lifecycle UI', () => {
     expect(
       (
         screen.getByRole('button', {
-          name: /Search again/,
+          name: 'Search in progress',
         }) as HTMLButtonElement
       ).disabled,
     ).toBe(true);
@@ -169,7 +167,7 @@ describe('real search lifecycle UI', () => {
     });
     await screen.findByText('Your group has changed');
     fireEvent.click(
-      screen.getByRole('button', { name: 'Search with latest preferences' }),
+      screen.getByRole('button', { name: 'Search latest preferences' }),
     );
     await screen.findByText('Your route checks are queued.');
     expect(screen.queryByText('Your group has changed')).toBeNull();
@@ -246,6 +244,38 @@ describe('real search lifecycle UI', () => {
       screen.getByRole('button', { name: 'Check progress again' }),
     );
     await screen.findByText('Your route checks are queued.');
+    expect(
+      transport.mock.calls.every(
+        ([request]) => (request as Request).method === 'GET',
+      ),
+    ).toBe(true);
+  });
+  it('offers one recovery action when a pending search status refresh fails', async () => {
+    const pending = searchFixture();
+    transport
+      .mockResolvedValueOnce(json(pending))
+      .mockResolvedValue(json({ error: { code: 'SERVICE_UNAVAILABLE' } }, 503));
+    mount({
+      ...groupFixture(),
+      latestSearch: {
+        searchId: pending.searchId,
+        status: 'pending',
+        createdAt: groupFixture().createdAt,
+      },
+    });
+    await screen.findByText('Your route checks are queued.');
+    fireEvent.click(screen.getByRole('button', { name: 'Check progress now' }));
+    await screen.findByText('Could not check search progress');
+    expect(
+      screen.queryByRole('button', { name: 'Check progress now' }),
+    ).toBeNull();
+    expect(
+      screen.getByRole('button', { name: 'Check progress again' }),
+    ).toBeTruthy();
+    expect(screen.getByText('Needs attention')).toBeTruthy();
+    expect(
+      screen.queryByRole('button', { name: 'Search in progress' }),
+    ).toBeNull();
     expect(
       transport.mock.calls.every(
         ([request]) => (request as Request).method === 'GET',

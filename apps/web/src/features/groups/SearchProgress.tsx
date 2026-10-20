@@ -1,3 +1,4 @@
+import { ArrowRight, RefreshCw, ShieldCheck } from 'lucide-react';
 import { useState } from 'react';
 import type { GroupView } from '@flatsplit/contracts/api';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
@@ -68,32 +69,45 @@ export function SearchProgress({
   const ownMember = group.members.find(
     (member) => member.memberId === membership.memberId,
   );
+  const placesToJoin = group.size - group.members.length;
+  const preferencesToSubmit = group.members.length - group.readyCount;
   const canSearch = group.allReady && ownMember?.ready;
   return (
     <section className="surface live-search" aria-labelledby="search-heading">
       <div className="section-heading">
-        <h2 id="search-heading">Find your middle ground</h2>
+        <div>
+          <h2 id="search-heading" tabIndex={-1}>
+            Find your middle ground
+          </h2>
+          <p className="live-caption">
+            One shortlist. Everyone’s limits respected.
+          </p>
+        </div>
         <Badge variant="outline">
-          {stale
-            ? 'Needs a new search'
-            : complete
-              ? 'Ready'
-              : pending
-                ? search.progress.resolved > search.progress.unavailable
-                  ? 'Checking routes'
-                  : 'Queued'
-                : 'Your shortlist'}
+          {status.isError || submission.isError
+            ? 'Needs attention'
+            : stale
+              ? 'Needs a new search'
+              : complete
+                ? 'Ready'
+                : pending
+                  ? search.progress.resolved > search.progress.unavailable
+                    ? 'Checking routes'
+                    : 'Queued'
+                  : group.allReady
+                    ? 'Ready to search'
+                    : 'Waiting for group'}
         </Badge>
       </div>
-      <p className="muted">
-        Every flatmate’s budget and commute limit is a hard requirement. Rent
-        assumes an equal split of a whole flat, excluding bills.
+      <p className="live-search-principle">
+        <ShieldCheck size={16} aria-hidden="true" />
+        Every flatmate’s budget and commute limit is a hard requirement.
       </p>
       {!group.allReady && (
-        <p role="status">
-          Waiting for {group.size - group.readyCount}{' '}
-          {group.size - group.readyCount === 1 ? 'flatmate' : 'flatmates'} to
-          join and submit preferences.
+        <p role="status" className="live-waiting">
+          {placesToJoin > 0
+            ? `Waiting for ${placesToJoin} ${placesToJoin === 1 ? 'flatmate' : 'flatmates'} to join${preferencesToSubmit > 0 ? ` and ${preferencesToSubmit} to submit preferences` : ''}.`
+            : `Waiting for ${preferencesToSubmit} ${preferencesToSubmit === 1 ? 'flatmate' : 'flatmates'} to submit preferences.`}
         </p>
       )}
       {submission.isError && (
@@ -108,8 +122,8 @@ export function SearchProgress({
       {status.isError && (
         <Alert role="alert" variant="destructive">
           <AlertTitle>Could not check search progress</AlertTitle>
-          <AlertDescription>
-            {errorMessage(status.error)} Your group inputs are saved.
+          <AlertDescription className="live-recovery">
+            <span>{errorMessage(status.error)}</span>
             <Button
               variant="outline"
               disabled={status.isFetching}
@@ -132,7 +146,7 @@ export function SearchProgress({
         </Alert>
       )}
       {pending && !status.isError && (
-        <div className="flex flex-col gap-4" role="status" aria-live="polite">
+        <div className="live-progress-state" role="status" aria-live="polite">
           <h3>
             {search.progress.resolved === search.progress.unavailable
               ? 'Your route checks are queued.'
@@ -146,44 +160,50 @@ export function SearchProgress({
             }
             aria-label="Commute routes checked"
           />
-          <p>
+          <p className="live-progress-count">
             {search.progress.resolved} of {search.progress.total} routes checked
             {search.progress.unavailable
               ? ` · ${search.progress.unavailable} unavailable`
               : ''}
             .
           </p>
-          <p className="muted">
-            New routes can take a while. You can leave and reopen this group
-            later; your inputs and search are saved. We’ll show a comparison
-            once all routes have been checked.
+          <p className="live-caption">
+            New routes can take a while. You can reopen this group later; your
+            inputs and search are saved. Results appear when all checks finish.
           </p>
         </div>
       )}
       {complete && (
-        <div className="flex flex-col gap-4" role="status">
+        <div className="live-complete-state" role="status">
           <h3>
             {search.ranked.length
               ? `${search.ranked.length} neighbourhoods meet everyone’s limits.`
               : 'No neighbourhood meets all your current limits.'}
           </h3>
-          <p className="muted">
-            Rent period: {search.data.rentPeriod}. {search.data.commuteBasis}.
-          </p>
           {search.ranked.length > 0 && (
-            <ul className="live-town-list">
-              {search.ranked.map((area) => (
-                <li key={area.town}>
-                  <strong>{area.displayName}</strong>
-                  <span>
-                    {area.rentPerPerson === null
-                      ? 'Rent unavailable'
-                      : `S$${area.rentPerPerson.toLocaleString('en-SG')} per person/month`}
-                  </span>
-                </li>
-              ))}
-            </ul>
+            <div>
+              <div className="live-town-heading">
+                <span>Neighbourhood</span>
+                <span>Monthly rent / person</span>
+              </div>
+              <ul className="live-town-list">
+                {search.ranked.map((area) => (
+                  <li key={area.town}>
+                    <strong>{area.displayName}</strong>
+                    <span>
+                      {area.rentPerPerson === null
+                        ? 'Rent unavailable'
+                        : `S$${area.rentPerPerson.toLocaleString('en-SG')} per person/month`}
+                    </span>
+                  </li>
+                ))}
+              </ul>
+            </div>
           )}
+          <p className="live-caption live-rent-note">
+            Equal split of a whole flat, excluding bills. Rent period:{' '}
+            {search.data.rentPeriod}. {search.data.commuteBasis}.
+          </p>
           {search.progress.unavailable > 0 && (
             <Alert>
               <AlertTitle>Some routes were unavailable</AlertTitle>
@@ -192,9 +212,9 @@ export function SearchProgress({
                 {search.progress.unavailable === 1
                   ? 'route could'
                   : 'routes could'}{' '}
-                not be calculated. Affected towns are excluded; unknown commute
-                times are never treated as zero. You can request a retry after
-                the service’s retry delay.
+                not be calculated. Affected towns are excluded. Search again to
+                retry when the service allows; unknown times are never treated
+                as zero.
               </AlertDescription>
             </Alert>
           )}
@@ -207,20 +227,25 @@ export function SearchProgress({
           )}
         </div>
       )}
-      <div className="flex flex-wrap gap-3">
-        <Button
-          disabled={!canSearch || submission.isPending || !!pending}
-          onClick={() => submission.mutate()}
-        >
-          {submission.isPending
-            ? 'Submitting search…'
-            : stale
-              ? 'Search with latest preferences'
-              : search
-                ? 'Search again / retry unavailable routes'
-                : 'Find our neighbourhoods'}
-        </Button>
-        {pending && (
+      <div className="live-search-actions">
+        {!status.isError && (
+          <Button
+            disabled={!canSearch || submission.isPending || !!pending}
+            onClick={() => submission.mutate()}
+          >
+            {submission.isPending
+              ? 'Submitting search…'
+              : pending
+                ? 'Search in progress'
+                : stale
+                  ? 'Search latest preferences'
+                  : search
+                    ? 'Search again'
+                    : 'Find our neighbourhoods'}
+            {!pending && <ArrowRight data-icon="inline-end" />}
+          </Button>
+        )}
+        {pending && !status.isError && (
           <Button
             variant="outline"
             disabled={status.isFetching}
@@ -228,6 +253,7 @@ export function SearchProgress({
               void status.refetch();
             }}
           >
+            <RefreshCw size={14} aria-hidden="true" />
             {status.isFetching ? 'Checking…' : 'Check progress now'}
           </Button>
         )}

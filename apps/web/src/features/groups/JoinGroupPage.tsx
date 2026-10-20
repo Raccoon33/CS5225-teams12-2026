@@ -1,3 +1,4 @@
+import { ArrowRight, ShieldCheck } from 'lucide-react';
 import { useState } from 'react';
 import { Link, Navigate, useNavigate, useParams } from '@tanstack/react-router';
 import { skipToken, useMutation, useQuery } from '@tanstack/react-query';
@@ -61,7 +62,7 @@ export function JoinGroupPage({ groupId }: { groupId: string }) {
   // must not spend another group slot for an existing member.
   if (membership && !invalidMembership)
     return (
-      <GroupShell>
+      <GroupShell step="Join a group">
         <section className="surface live-join">
           <h1>Reopening your membership.</h1>
           {access.isPending || access.isFetching ? (
@@ -87,9 +88,16 @@ export function JoinGroupPage({ groupId }: { groupId: string }) {
       </GroupShell>
     );
   return (
-    <GroupShell>
+    <GroupShell step="Join a group">
       <section className="surface live-join">
-        <h1>Make room for your next chapter.</h1>
+        <div className="live-join-intro">
+          <span className="live-invitation-label">A place in your group</span>
+          <h1>
+            You’re invited.
+            <br />
+            Make yourself at home.
+          </h1>
+        </div>
         {!validId(groupId) || !token ? (
           <Alert role="alert">
             <AlertTitle>This invite is incomplete</AlertTitle>
@@ -101,8 +109,8 @@ export function JoinGroupPage({ groupId }: { groupId: string }) {
         ) : (
           <>
             <p className="lead">
-              Join your flatmates with your first name. Your membership will be
-              saved in this browser.
+              Start with your first name. Your flatmates will know it’s you, and
+              your membership will stay in this browser.
             </p>
             <form
               onSubmit={(event) => {
@@ -142,14 +150,12 @@ export function JoinGroupPage({ groupId }: { groupId: string }) {
                     <FieldError id="join-name-error">{nameError}</FieldError>
                   )}
                 </Field>
-                <Alert>
-                  <AlertDescription>
-                    Your flatmates can see your name and any destination area,
-                    budget and commute limit you later submit. Groups expire 30
-                    days after creation. Keep your membership in this browser;
-                    lost access cannot be recovered when the group is full.
-                  </AlertDescription>
-                </Alert>
+                <p className="live-privacy-note">
+                  <ShieldCheck size={16} aria-hidden="true" />
+                  Your group can see your name and any destination area, budget
+                  and commute limit you submit. Groups expire 30 days after
+                  creation.
+                </p>
                 {join.isError && (
                   <Alert role="alert" variant="destructive">
                     <AlertTitle>Could not join the group</AlertTitle>
@@ -158,14 +164,23 @@ export function JoinGroupPage({ groupId }: { groupId: string }) {
                     </AlertDescription>
                   </Alert>
                 )}
-                <Button type="submit" disabled={join.isPending}>
+                <Button type="submit" size="lg" disabled={join.isPending}>
                   {join.isPending ? 'Joining…' : 'Join the group'}
+                  <ArrowRight data-icon="inline-end" />
                 </Button>
               </FieldGroup>
             </form>
           </>
         )}
-        <Link to="/" search={{}} className="text-sm underline">
+        <details className="live-access-details">
+          <summary>How your membership is saved</summary>
+          <p>
+            Keep using this browser to reopen your group. There is no account
+            login or token recovery. If the group is full, lost membership
+            cannot be replaced.
+          </p>
+        </details>
+        <Link to="/" search={{}} className="text-link live-return-link">
           Return home
         </Link>
       </section>
