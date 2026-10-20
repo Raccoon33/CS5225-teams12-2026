@@ -142,6 +142,46 @@ describe('real search lifecycle UI', () => {
     expect(screen.getByText('Ready')).toBeTruthy();
     expect(screen.getByText('Some routes were unavailable')).toBeTruthy();
   });
+  it('distinguishes total route failure and retries the same calculation without changing group inputs', async () => {
+    const failed = searchFixture('complete');
+    failed.progress = { total: 52, resolved: 52, unavailable: 52 };
+    const retry = searchFixture();
+    transport.mockImplementation(async (request) =>
+      json((request as Request).method === 'POST' ? retry : failed),
+    );
+    const group = {
+      ...groupFixture(),
+      latestSearch: {
+        searchId: failed.searchId,
+        status: 'complete' as const,
+        createdAt: groupFixture().createdAt,
+      },
+    };
+    const before = structuredClone(group);
+    mount(group);
+    await screen.findByText('We couldn’t calculate your group’s routes.');
+    expect(screen.getByText('Routes unavailable')).toBeTruthy();
+    expect(screen.queryByText('Ready')).toBeNull();
+    expect(
+      screen.queryByText('No neighbourhood meets all your current limits.'),
+    ).toBeNull();
+    fireEvent.click(
+      screen.getByRole('button', { name: 'Retry route calculations' }),
+    );
+    await screen.findByText('Your route checks are queued.');
+    const posts = transport.mock.calls
+      .map(([request]) => request as Request)
+      .filter((request) => request.method === 'POST');
+    expect(posts).toHaveLength(1);
+    expect(posts[0]!.url).toBe(
+      `https://flatsplit.test/api/groups/${membership.groupId}/searches`,
+    );
+    expect(await posts[0]!.text()).toBe('');
+    expect(cache.getQueryData(searchKey(membership, failed.searchId))).toEqual(
+      retry,
+    );
+    expect(group).toEqual(before);
+  });
   it('shows a newly accepted search while the group still carries its previous stale summary', async () => {
     const old = {
       ...searchFixture('stale'),

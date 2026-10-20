@@ -42,3 +42,35 @@ The last recorded deployed frontend still uses fictional prototype data; local #
 Secrets Manager creates a placeholder for the OneMap token. The live token and its renewal must be provided through the server-side secret; deployment does not establish live destination-lookup acceptance.
 
 The read-only Cost Explorer `ListCostAllocationTags` request returned `AccessDeniedException`: the linked account cannot access cost allocation tags. The organisation's management/payer-account billing operator must verify the `project` tag activation and measurement window for #45. Application deployment credentials alone cannot resolve that control. No cost-tag activation, historical backfill or budget change was performed.
+
+## Acceptance attempt — 20 October 2026, 19:30–19:35 SGT (#7/#17)
+
+After [PR #66](https://github.com/horiiiiii032929/CS5225-teams12-2026/pull/66) merged, acceptance was checked against repository main `2f6ae012562be66077227a3e5ad49c7bf7a5ad86` and the existing shared CloudFront URL. [Main CI passed](https://github.com/horiiiiii032929/CS5225-teams12-2026/actions/runs/39414062114). Neither issue passed deployed acceptance, so both remain open. This dated attempt supplements the earlier evidence; it does not identify a new deployment revision.
+
+Observed deployed responses:
+
+| Request                                            | HTTP | Result                                                      |
+| -------------------------------------------------- | ---- | ----------------------------------------------------------- |
+| `GET /api/health`                                  | 200  | `{"status":"ok","service":"flatsplit-api"}`                 |
+| `POST /api/groups` with valid creation fields      | 404  | `{"error":{"code":"NOT_FOUND","message":"Unknown route."}}` |
+| `GET /api/groups/AAAAAAAAAAAAAAAAAAAAAA`           | 404  | Same `Unknown route.` envelope                              |
+| `POST /api/groups/AAAAAAAAAAAAAAAAAAAAAA/searches` | 404  | Same `Unknown route.` envelope                              |
+
+The example ID is a synthetic probe, not a stored group or credential. The creation request returned no member/invite capability. The deployed HTML referenced `index-CJLLsq1s.js` and `index-B9SdQ4c6.css`. Its exact Git revision could not be established through the public health endpoint; the availability response alone does not establish that the merged APIs are running.
+
+Playwright against the shared deployment showed the explicit “Interactive wireframe · fictional data” banner. The creation flow produced a **preview** invite (`?review=join`), not a group capability. In an independent mobile browser, that link opened fictional sample data rather than the custom group. The processing preview explicitly identified simulated progress. These observations establish that the visible prototype cannot satisfy cross-device persistence or real queued/processing/ready/failed-calculation acceptance. Desktop/mobile screenshots and raw HTTP captures were kept outside the repository; no live credentials are included in this record.
+
+### Remaining closure gate
+
+- **#7:** deploy the reviewed API-backed frontend and group APIs to the designated shared dev account. Verify a real creation POST and copyable capability link; open/join it in an independent browser/device, confirm the same group after reload, and exercise useful loading, invalid/full-group and transient-error recovery states. Link the deployed revision and that evidence in the issue. #7 can be verified independently of an operating commute worker.
+- **#17:** provide integrated preference entry (#8/#13), persisted destinations (#14), validated rent publication (#10), and an operating commute worker/retry handoff (#15/#27), then deploy the integrated build. Observe actual queued → processing → ready progress, terminal unavailable/failed calculations, and an explicit eligible calculation retry while both members’ saved inputs remain unchanged after reload. A request-status outage retry and injected local worker results do not establish this calculation-retry gate. #14 is still in open PR #65; open PR #67 is acceptance tooling, not worker completion or deployed evidence.
+
+The ignored root `.env` was loaded only for an STS identity check against the designated account configuration. `GetCallerIdentity` returned `InvalidClientTokenId`; account identity could not be verified. No CDK diff/deployment, bootstrap, direct table/queue mutation, token-secret operation or live OneMap lookup was attempted. Temporary credentials must be refreshed locally before any deployment can proceed; they must not be pasted into GitHub or chat.
+
+Local supporting verification passed again: **35 frontend group/search tests**, **67 API search/queue/group-journey tests**, and the non-mutating API contract drift check. These are fixture/Moto checks and do not change the failed/blocked deployed verdict above. The full merged-build suite had already passed 330 tests, with the linked main CI passing as well.
+
+### Local #17 acceptance follow-up
+
+The same audit found one client-state gap: when every route was unavailable, the completed calculation was still labelled “Ready” and used the limits/no-match heading. The follow-up distinguishes that case as “Routes unavailable” and offers “Retry route calculations”; partially successful results and genuine constraint failures retain their existing behavior. Its new regression failed before the fix and passed afterwards. In the actual local resolver/Moto browser harness, injected unavailable claims with an elapsed retry window became pending under the same search ID after retry, and saved members/revision stayed identical through reload. Completion was also injected conditionally, not produced by OneMap. This supports the local retry behavior only.
+
+Final local checks passed: format/check/test/build/synth and generated-contract drift, with 331 tests (258 API, 65 web, five CDK, three offline evidence tests). The earlier 35-test frontend rerun above predates this additional regression. The user could not refresh AWS credentials during this attempt, so the integrated deployment and issue closure checks remain deferred.
