@@ -2,7 +2,9 @@
 
 **Issue:** [#1 — Map user journey and responsive wireframes](https://github.com/horiiiiii032929/CS5225-teams12-2026/issues/1)  
 **Draft:** 9 October 2026, Singapore time  
-**Owner:** Hikaru · **Reviewer:** @Raccoon33 · **Status:** Ready for team review; scope decisions below are proposed, not approved.
+**Owner:** Hikaru · **Reviewer:** @Raccoon33 · **Original status (9 October):** Ready for team review; scope decisions below were proposed, not approved.
+
+**Status reconciliation — 20 October 2026:** this document preserves the original wireframe proposal and review record. Issue #1 is closed; its historical review checklist below is not a current closure instruction. The explicit `?review=...` previews retain this fictional, in-memory journey. Backend group/search APIs and ranking merged into main (`760dd1f`). The local #7/#17 follow-up now makes `/` API-backed creation and adds invite joining, persisted membership/reopening and real search progress; live preference entry/full comparisons and deployed acceptance remain outstanding. See the [frontend implementation and acceptance boundary](../README.md#frontend-implementation--7-and-17). The [API contract](api-contract.md#group-defaults-that-unblock-1112) and [backend design](backend-design.md) record the later 14 October PM implementation baseline; they do not claim six-person approval or completed user evaluation.
 
 FlatSplit helps 2–5 flatmates find Singapore rental areas that respect every member’s budget and public-transport commute limit. The key design principle is that a good group average must never hide an unacceptable outcome for one person.
 
@@ -10,7 +12,7 @@ This deliverable combines a working React wireframe with the journey, screen beh
 
 ## Open the prototype
 
-From the repository root, run `pnpm dev:web` and open **http://127.0.0.1:5173/**. The API is optional. Install dependencies first with `pnpm install --frozen-lockfile` on a fresh checkout.
+From the repository root, run `pnpm dev:web` and open **http://127.0.0.1:5173/?review=create**. The API is optional. Install dependencies first with `pnpm install --frozen-lockfile` on a fresh checkout.
 
 Use the **Design review** selector to load each scenario. Choosing a scenario replaces the current draft with a fixture. **Restart journey** clears the current draft. Refresh also resets the page to its URL’s fixture; inputs are held in memory only. Use sample personal information.
 
@@ -178,6 +180,8 @@ For the later integrated demo, contrast a warm cached search with a queued missi
 
 ## Proposed decisions and open questions
 
+**Historical proposal — 9 October:** the table preserves the proposal's review status at the time. Later implementation adopts D01–D03 and fixed group size/expiry defaults; D04's shared fields and retention are specified in the API contract. D05 now has a backend lookup (persistence remains in open PR #65). D06/D08 have implemented pending/unavailable and revision-staleness handling. D07 has backend parity tests for all three priority presets, but no empirical fairness result. D11 became separate invite/member capabilities, rather than an organiser editing role. D12 has the PM prototype flat-type mapping, which is not an occupancy or eligibility guarantee. D09 usability and D10 map integration remain open. See [contract decisions](api-contract.md#evidence-and-implementation-decisions) for the current baseline; the original table is not an unresolved implementation blocker list.
+
 | ID  | Proposed decision                                                                            | Rationale                                                                                          | Review status                                           |
 | --- | -------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------- | ------------------------------------------------------- |
 | D01 | Require all declared members before search                                                   | A missing member could invalidate the group result                                                 | Pending six-person review                               |
@@ -193,7 +197,7 @@ For the later integrated demo, contrast a warm cached search with a queued missi
 | D11 | No login in the prototype; separate unguessable member/organiser capabilities in live design | Preserve low-friction entry without treating a shared link as unrestricted authority               | Pending group API/security design                       |
 | D12 | Confirm dwelling type and appropriate group occupancy assumptions before live rent estimates | Group size alone does not establish room capacity or eligibility                                   | Pending rental-data scope; current numbers are fixtures |
 
-No team review or external approval is implied by this draft. Do not close issue #1 until the human review and any applicable integrated-deployment evidence required by the issue are complete.
+Original closure guidance (9 October): no team review or external approval was implied by this draft; issue #1 was to remain open until its required review and evidence were complete. Issue #1 is now closed. The historical review rows below do not establish later team sign-off or acceptance of the live group/search journey.
 
 ## Team review and usability script
 

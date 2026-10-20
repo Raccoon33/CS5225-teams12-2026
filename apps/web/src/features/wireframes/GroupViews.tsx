@@ -39,14 +39,20 @@ import {
 export function CreateGroup({
   onCreate,
   onDemo,
+  live = false,
+  pending = false,
+  errorMessage,
 }: {
   onCreate: (group: Group) => void;
   onDemo: () => void;
+  live?: boolean;
+  pending?: boolean;
+  errorMessage?: string;
 }) {
   const [size, setSize] = useState('3');
   const [error, setError] = useState('');
   return (
-    <div className="create-layout">
+    <div className={`create-layout${live ? ' live-create' : ''}`}>
       <section>
         <h1>
           Different destinations.
@@ -59,8 +65,10 @@ export function CreateGroup({
         </p>
         <form
           className="setup-form"
+          aria-busy={pending}
           onSubmit={(event) => {
             event.preventDefault();
+            if (pending) return;
             const values = new FormData(event.currentTarget);
             const name = String(values.get('group')).trim();
             const creator = String(values.get('name')).trim();
@@ -82,6 +90,12 @@ export function CreateGroup({
             });
           }}
         >
+          {live && (
+            <div className="live-form-intro">
+              <h2>Start with your people.</h2>
+              <p>Create a group, then share the invite with your flatmates.</p>
+            </div>
+          )}
           <FieldGroup>
             <Field>
               <FieldLabel htmlFor="group-name">
@@ -91,7 +105,8 @@ export function CreateGroup({
                 id="group-name"
                 name="group"
                 placeholder="e.g. Our next chapter"
-                maxLength={50}
+                maxLength={40}
+                disabled={pending}
                 required
               />
             </Field>
@@ -102,6 +117,7 @@ export function CreateGroup({
                 name="name"
                 placeholder="What should your flatmates call you?"
                 maxLength={30}
+                disabled={pending}
                 autoComplete="given-name"
                 required
               />
@@ -112,6 +128,7 @@ export function CreateGroup({
               </FieldLabel>
               <ToggleGroup
                 type="single"
+                disabled={pending}
                 value={size}
                 onValueChange={(value) => {
                   if (value) setSize(value);
@@ -127,15 +144,25 @@ export function CreateGroup({
                 ))}
               </ToggleGroup>
             </Field>
-            {error && <FieldError role="alert">{error}</FieldError>}
-            <Button size="lg" type="submit" className="w-full">
-              Create your group <ArrowRight data-icon="inline-end" />
+            {(error || errorMessage) && (
+              <FieldError role="alert">{error || errorMessage}</FieldError>
+            )}
+            <Button
+              size="lg"
+              type="submit"
+              className="w-full"
+              disabled={pending}
+            >
+              {pending ? 'Creating…' : 'Create your group'}{' '}
+              <ArrowRight data-icon="inline-end" />
             </Button>
           </FieldGroup>
         </form>
         <p className="fine-print">
-          <ShieldCheck size={15} /> No account needed. Use sample information in
-          this prototype.
+          <ShieldCheck size={15} />{' '}
+          {live
+            ? 'No account needed. Groups expire after 30 days. Your membership stays in this browser. Your group can see names and submitted preferences.'
+            : 'No account needed. Use sample information in this prototype.'}
         </p>
         <Button variant="link" onClick={onDemo}>
           Just exploring? Open the sample shortlist{' '}

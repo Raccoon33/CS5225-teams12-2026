@@ -157,6 +157,9 @@ export function WireframeApp({
     <div className="wireframe-app">
       <div className="review-toolbar">
         <div className="review-label">
+          <Link to="/" search={{}} className="underline">
+            Use shared groups
+          </Link>
           <span className="review-dot" />
           <strong>Design review</strong>
           <span className="hidden sm:inline">

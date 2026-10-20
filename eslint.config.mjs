@@ -15,6 +15,8 @@ export default tseslint.config(
       '**/.venv/**',
       '**/.turbo/**',
       '**/routeTree.gen.ts',
+      '**/api/generated/**',
+      'packages/contracts/src/generated/**',
     ],
   },
   js.configs.recommended,

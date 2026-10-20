@@ -7,6 +7,8 @@ This plan shows how we will demonstrate that each AWS technique in FlatSplit sol
 
 Nothing in this document is a result. Targets are hypotheses until an experiment records evidence.
 
+**Status reconciliation — 20 October 2026:** the 14 October plan, original checkpoints and decision baseline below are retained. Main `760dd1f` now has group/search APIs, ranking parity tests, queue production and partial group E2E/security coverage. These local/emulator tests do not complete E7's real concurrent-write or deployed acceptance, nor E1/E2's latency/capacity measurements. The worker and its metrics/retry/DLQ alarms remain unimplemented on main; custom metrics, load/fault runs, PITR recovery and the user study remain outstanding. E8 has source-level rental audit evidence; E9 is an assumption model awaiting reconciliation and measured account/usage inputs. See the [evidence index](evaluation/README.md) and [E9 status](evaluation/e9/cost-model.md#status-reconciliation--20-october-2026). The overdue 18 October shared-input checkpoint has not been replaced by a newly agreed completion date.
+
 ## Technique matrix
 
 | ID  | AWS technique                                                            | Application problem it addresses                                                | Experiment |

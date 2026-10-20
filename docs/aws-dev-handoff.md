@@ -6,6 +6,14 @@ Hikaru supplied and designated account `553455762180` on 14 October 2026 for the
 
 Credentials are temporary NUS SSO credentials stored only in the ignored root `.env`. They expire and need local replacement when AWS reports an expired session. Never commit them or put them in frontend variables. Follow the root README's credential loading and account identity checks for future operations.
 
+## Current implementation versus deployment — 20 October 2026
+
+`main` at `760dd1f` includes group persistence/APIs, filtering/ranking, search submission/status and the SQS producer/queue definitions. These changes merged after the deployment recorded below. No later deployment is recorded here; do not infer that the shared environment runs current main.
+
+Read-only HTTP checks on 20 October returned 200 for the shared frontend and `/api/health`, with health body `{"status":"ok","service":"flatsplit-api"}`. This verifies availability only. It does not establish the deployed revision, live OneMap credentials, shared-device persistence, an operating worker or real recommendations. The browser and deployment evidence below remains dated 14 October and was not repeated by this HTTP check.
+
+Raw ingestion (PR #64) and persistent places/station pins/query caching (PR #65) are open, unmerged work at this snapshot. Validated rent publication (#10), the commute worker/retries/DLQ handling (#15/#27), frontend integration and deployed group/search acceptance remain outstanding. See the [repository status](../README.md#repository-status--20-october-2026) and [current issue hub](https://github.com/horiiiiii032929/CS5225-teams12-2026/issues/44).
+
 ## Deployment evidence — 14 October 2026
 
 - The supplied credentials passed STS identity verification for the designated account.
@@ -29,7 +37,7 @@ The secret name is configuration; its value is never recorded here. CDK used the
 
 ## Remaining integration and billing work
 
-The frontend currently uses fictional prototype data. Group persistence/APIs, rental ingestion/publication and persistent destination caching remain open implementation work. Provisioning the stack does not complete the shared-group journey.
+The last recorded deployed frontend still uses fictional prototype data; local #7/#17 API-backed creation/join/reopen/progress has not been deployed. Group persistence/APIs are implemented on main; acceptance against real persisted destinations and the shared deployment is outstanding. Rental publication, persistent destination integration and an operating commute worker are separate remaining handoffs. Provisioning the stack or passing health checks does not complete the shared-group journey.
 
 Secrets Manager creates a placeholder for the OneMap token. The live token and its renewal must be provided through the server-side secret; deployment does not establish live destination-lookup acceptance.
 
