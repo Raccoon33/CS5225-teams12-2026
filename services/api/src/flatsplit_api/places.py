@@ -65,6 +65,14 @@ PLACE_TTL_SECONDS = 24 * 60 * 60
 #: docs/api-contract.md: "Query/lookup cache entries expire after 24 hours."
 LOOKUP_TTL_SECONDS = 24 * 60 * 60
 
+#: Compare-and-swap attempts when merging line-code aliases into a pinned
+#: station. Two lookups that resolve the same station concurrently both try to
+#: add their own aliases, and a read-modify-write loses one of them (found by
+#: @wkkuu on #65 with a controlled Moto interleaving). Three attempts is
+#: generous: the window is one round trip, and the merge is retried by the next
+#: cold lookup of that station anyway.
+ALIAS_MERGE_ATTEMPTS = 3
+
 _TOO_FAR_MESSAGE = "Choose a nearby MRT station or a more precise address."
 
 
@@ -270,6 +278,9 @@ class PlaceStore:
             pk=f"STATION#{key}",
             sk="META",
             pinnedAt=self._clock().astimezone(UTC).isoformat(),
+            # Optimistic lock for the alias list only. The coordinate is
+            # immutable, so nothing else on this item needs versioning.
+            codesRevision=0,
         )
         try:
             self.table.put_item(
@@ -282,41 +293,99 @@ class PlaceStore:
         return candidate
 
     def _merge_aliases(self, key: str, codes: list[str]) -> dict[str, Any]:
-        """Reuse the pinned record, adding any line codes it does not have yet."""
-        try:
-            existing: dict[str, Any] | None = self.table.get_item(
-                Key={"pk": f"STATION#{key}", "sk": "META"}, ConsistentRead=True
-            ).get("Item")
-        except ClientError as exc:
-            raise _unavailable("read-station", exc) from exc
-        if existing is None:
-            # Only reachable if the record were deleted between the two calls.
-            # STATION# has no ttl, so this is a signal, not an expected state.
+        """Reuse the pinned record, adding any line codes it does not have yet.
+
+        The addition is a compare-and-swap on `codesRevision`, not a plain
+        write. A read-modify-write here loses aliases: two lookups that resolve
+        the same station concurrently both read `[CC1]`, one stores
+        `[CC1, NS24]` and the other then stores `[CC1, NE6]`, dropping `NS24`
+        while both lookups report success. @wkkuu reproduced exactly that on
+        #65 with a controlled two-writer interleaving.
+
+        The coordinate was never at risk — it is written once and never
+        updated — but a silently shortened alias list is still wrong, and
+        `codes` is what the contract calls the upstream aliases of one physical
+        station.
+
+        On a conflict the record is re-read and the union recomputed, so the
+        loser of a race adds its own codes on top of the winner's. If every
+        attempt conflicts the pinned record is returned as it stands: the
+        coordinate is correct, aliases are informational, and the next cold
+        lookup of this station merges again, so this self-heals rather than
+        failing a user's search over a cosmetic field.
+        """
+        for attempt in range(ALIAS_MERGE_ATTEMPTS):
+            existing = self._read(f"STATION#{key}")
+            if existing is None:
+                # Only reachable if the record were deleted between the two
+                # calls. STATION# has no ttl, so this is a signal, not an
+                # expected state.
+                raise ApiError(
+                    503,
+                    "SERVICE_UNAVAILABLE",
+                    "Destination search is unavailable. Try again shortly.",
+                )
+            pinned_codes = [str(code) for code in existing.get("codes") or []]
+            merged = sorted(set(pinned_codes) | set(codes))
+            if merged == pinned_codes:
+                return self._station_record(key, pinned_codes, existing)
+
+            revision = existing.get("codesRevision")
+            values: dict[str, Any] = {":codes": merged}
+            if revision is None:
+                # A record written before this field existed.
+                condition = (
+                    "attribute_exists(pk) AND attribute_not_exists(codesRevision)"
+                )
+                values[":next"] = 1
+            else:
+                condition = "attribute_exists(pk) AND codesRevision = :current"
+                values[":current"] = int(revision)
+                values[":next"] = int(revision) + 1
+            try:
+                self.table.update_item(
+                    Key={"pk": f"STATION#{key}", "sk": "META"},
+                    UpdateExpression=("SET codes = :codes, codesRevision = :next"),
+                    ConditionExpression=condition,
+                    ExpressionAttributeValues=values,
+                )
+            except ClientError as exc:
+                if exc.response["Error"]["Code"] != "ConditionalCheckFailedException":
+                    raise _unavailable("merge-aliases", exc) from exc
+                logger.info(
+                    "Alias merge lost a race; retrying",
+                    extra={"stationKey": key, "attempt": attempt + 1},
+                )
+                continue
+            return self._station_record(key, merged, existing)
+
+        logger.warning(
+            "Alias merge gave up after repeated conflicts",
+            extra={"stationKey": key, "attempts": ALIAS_MERGE_ATTEMPTS},
+        )
+        latest = self._read(f"STATION#{key}")
+        if latest is None:
             raise ApiError(
                 503,
                 "SERVICE_UNAVAILABLE",
                 "Destination search is unavailable. Try again shortly.",
             )
-        pinned_codes = [str(code) for code in existing.get("codes") or []]
-        merged = sorted(set(pinned_codes) | set(codes))
-        if merged != pinned_codes:
-            try:
-                self.table.update_item(
-                    Key={"pk": f"STATION#{key}", "sk": "META"},
-                    UpdateExpression="SET codes = :codes",
-                    ConditionExpression="attribute_exists(pk)",
-                    ExpressionAttributeValues={":codes": merged},
-                )
-            except ClientError as exc:
-                raise _unavailable("merge-aliases", exc) from exc
+        return self._station_record(
+            key, [str(code) for code in latest.get("codes") or []], latest
+        )
+
+    @staticmethod
+    def _station_record(
+        key: str, codes: list[str], item: dict[str, Any]
+    ) -> dict[str, Any]:
         return {
             "stationKey": key,
-            "codes": merged,
-            "name": str(existing["name"]),
+            "codes": codes,
+            "name": str(item["name"]),
             # The coordinate comes from the winning record, never from this
             # lookup. This is the whole point of the pin.
-            "lat": float(existing["lat"]),
-            "lng": float(existing["lng"]),
+            "lat": float(item["lat"]),
+            "lng": float(item["lng"]),
         }
 
     # ---------------------------------------------------------------- places

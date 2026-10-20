@@ -376,6 +376,67 @@ def test_aliases_merge_without_moving_the_coordinate(
     assert float(record["lat"]) == pytest.approx(STATION_LAT)
 
 
+def test_concurrent_alias_additions_are_not_lost(
+    table: Table, clock: Clock, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """@wkkuu's #65 finding: the read-modify-write merge dropped one alias.
+
+    Two lookups resolving the same station both read `[CC1]`; one stored
+    `[CC1, NS24]` and the other then stored `[CC1, NE6]`, dropping `NS24`
+    while both lookups reported success. The coordinate was never at risk.
+
+    This drives `_pin` directly and commits the competing writer between this
+    writer's read and its write, which is the window a read-modify-write
+    loses. It fails against `SET codes = :codes` and passes against the
+    compare-and-swap on `codesRevision`.
+    """
+    one = PlaceStore(table, clock=clock)
+    two = PlaceStore(table, clock=clock)
+    base = {
+        "stationKey": "DHOBY_GHAUT",
+        "name": "Dhoby Ghaut",
+        "lat": 1.298869,
+        "lng": 103.845557,
+    }
+    one._pin(dict(base, codes=["CC1"]))
+
+    original = table.update_item
+    raced = {"done": False}
+
+    def interleaved(**kwargs: Any) -> Any:
+        if not raced["done"]:
+            raced["done"] = True
+            two._pin(dict(base, codes=["NS24"]))
+        return original(**kwargs)
+
+    monkeypatch.setattr(table, "update_item", interleaved)
+    merged = one._pin(dict(base, codes=["NE6"]))
+
+    assert raced["done"], "the competing writer never ran"
+    record = station_item(table, "DHOBY_GHAUT")
+    assert record is not None
+    assert record["codes"] == ["CC1", "NE6", "NS24"], "an alias was lost"
+    assert merged["codes"] == ["CC1", "NE6", "NS24"]
+    assert float(record["lat"]) == pytest.approx(1.298869)
+    assert int(record["codesRevision"]) == 2
+
+
+def test_an_unchanged_alias_list_is_not_rewritten(
+    table: Table, clock: Clock, lookup: Lookup
+) -> None:
+    """No new codes means no write, so the revision stays where it was."""
+    lookup(STATION_LAT, STATION_LNG, code="CC24")
+    before = station_item(table)
+    assert before is not None
+
+    lookup(OTHER_EXIT_LAT, OTHER_EXIT_LNG, code="CC24", query="nus")
+
+    after = station_item(table)
+    assert after is not None
+    assert after["codesRevision"] == before["codesRevision"]
+    assert after["codes"] == ["CC24"]
+
+
 def test_a_pinned_station_beyond_the_bound_is_not_selectable(
     table: Table, lookup: Lookup
 ) -> None:
