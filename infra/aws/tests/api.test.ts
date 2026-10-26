@@ -67,6 +67,13 @@ test('table access is scoped per item type, with rent read-only', () => {
       [statement.Action].flat().sort(),
     ]),
   );
+  // Keying by prefix silently drops a duplicate, which would hide a statement
+  // from the comparison below. Fail instead if two statements share a prefix.
+  assert.equal(
+    Object.keys(byPrefix).length,
+    dynamo.length,
+    'two DynamoDB statements share a LeadingKeys prefix',
+  );
   assert.deepEqual(byPrefix, {
     'GROUP#*': [
       'dynamodb:ConditionCheckItem',
@@ -81,6 +88,7 @@ test('table access is scoped per item type, with rent read-only', () => {
       'dynamodb:GetItem',
       'dynamodb:PutItem',
     ],
+    'PLACELOOKUP#*': ['dynamodb:GetItem', 'dynamodb:PutItem'],
     'STATION#*': [
       'dynamodb:GetItem',
       'dynamodb:PutItem',

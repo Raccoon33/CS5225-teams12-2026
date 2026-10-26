@@ -115,6 +115,23 @@ export class Api extends Construct {
         },
       }),
     );
+    // The query cache needs its own statement: the prefix above is the literal
+    // `PLACE#`, so it does not match `PLACELOOKUP#`. Without this, `/places`
+    // would be denied on the GetItem it makes before reaching OneMap and every
+    // lookup would return 503. Read and write only — a cache entry is replaced
+    // by a whole new item and expires by ttl, never updated or deleted.
+    handler.addToRolePolicy(
+      new PolicyStatement({
+        actions: ['dynamodb:GetItem', 'dynamodb:PutItem'],
+        resources: [props.table.tableArn],
+        conditions: {
+          'ForAllValues:StringLike': {
+            'dynamodb:LeadingKeys': ['PLACELOOKUP#*'],
+          },
+          Null: { 'dynamodb:LeadingKeys': 'false' },
+        },
+      }),
+    );
     handler.addToRolePolicy(
       new PolicyStatement({
         actions: [
