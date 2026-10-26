@@ -273,6 +273,12 @@ For future entries, record the requested issue, tool, contribution, checks actua
 - Review fix: @wkkuu reproduced a P2 lost-update in the alias merge on #65 — two lookups resolving the same station both read `[CC1]`, one stored `[CC1, NS24]` and the other then stored `[CC1, NE6]`, dropping `NS24` while both reported success. The coordinate was never at risk, but the alias list is contract data. The merge is now a compare-and-swap on a `codesRevision` counter with a bounded retry that recomputes the union, and on repeated conflict it returns the pinned record unchanged rather than failing a search over an informational field, because the next cold lookup merges again. The interleaved regression he asked for is included and was confirmed to fail against the previous `SET codes = :codes`.
 - Limits: `pnpm install`, the CDK tests and `pnpm synth` were not run in this environment, which has Node 20 against the repository's Node 24 requirement, so the IAM change is verified by review and by the updated CDK assertion rather than by a local synth; CI covers it. The live run used a Moto table and a local handler, so it does not establish real DynamoDB contention or the deployed journey; a `dev`-stage run with the token in Secrets Manager remains outstanding, as does the maximum-snap decision recorded in #6.
 
+## 21 October 2026 — local API environment passthrough
+
+- Tool: Claude Code (Claude Opus 5.5), directed by Shyam.
+- Contribution: `services/api/turbo.json` lets the API `dev` task receive `TABLE_NAME`, `DYNAMODB_ENDPOINT_URL`, `COMMUTE_QUEUE_URL`, `SQS_ENDPOINT_URL`, `ONEMAP_TOKEN`, `ONEMAP_SECRET_NAME` and `AWS_*`. Turborepo's strict environment mode had been stripping them, so `pnpm dev`/`pnpm dev:api` always reported group storage as not configured even when they were exported. Removed the unused `fastapi` from the API `local` extra with `uv remove` (the local server is plain ASGI under uvicorn). The README notes the passthrough.
+- Verification: before the change, `TABLE_NAME=… pnpm dev:api` answered `Group storage is not configured` while the same server started directly saw the variable; after it, `pnpm dev:api` reaches the configured DynamoDB endpoint. `/health` and `/docs` work without fastapi. `turbo run dev --dry=json` shows the passthrough on `@flatsplit/api` only. `pnpm check`, `pnpm test`, `pnpm build` and `pnpm synth` passed.
+
 ## 21 October 2026 — shared dev deployment checks
 
 - Tool: Claude Code (Claude Opus 5.5), directed by Shyam.
