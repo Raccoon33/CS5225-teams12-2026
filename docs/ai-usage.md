@@ -372,3 +372,15 @@ For future entries, record the requested issue, tool, contribution, checks actua
 - Review follow-up (@wkkuu, #80): two corrections to this entry's own claims. The discrepancy is **not** confined to an ancient interpreter — WK's full-model reproduction shows **Python 3.11.15**, the model's documented minimum, also prints 9.6173, so a supported interpreter was affected and 3.9.6 was only an extra compatibility probe. And "correctly rounded on every version" overstated it: Python documents `math.fsum`'s accuracy as platform-dependent, so the demonstrated claim is that fsum avoids this `sum()` version difference and agrees on 9.6174 across CPython 3.9, 3.11, 3.12 and 3.13. The code comment now says that instead.
 - Provenance, decided on #80: the correction stays schema-neutral and no interpreter field is added. WK's answer is that future runs should record implementation and exact version, source revision, input identities and invocation in a timestamp-matched receipt or sidecar, following the existing `codeRevision`/`toolRevision` convention — and that old artifacts keep their original caveats, with no interpreter guessed back into them.
 - Not done: the artifact still does not record which interpreter produced it. Adding a version field would make any future discrepancy self-explaining, but it also adds a key to the JSON and would show up as a diff in the byte-identical comparison @wkkuu runs, so it is offered on the PR as a separate decision rather than bundled here. No price, assumption, measured count or scenario figure was touched, and no deployment, billing query or measurement was run.
+
+## 25 October 2026 — issue 10 validated rent summaries
+
+- Tool: Codex, directed by Mani.
+- Contribution: implemented trailing-12-month HDB town/flat-type summaries with R-7 quantiles, deterministic block-cluster bootstrap confidence intervals, low-confidence retention, DynamoDB snapshot publication and a monotonic `RENT/CURRENT` pointer.
+- Verification: 279 API tests, eight CDK tests, API lint/type checks, Markdown formatting and CDK synthesis passed. AWS deployment and live scheduled execution remain outstanding.
+
+## 27 October 2026 — issue 10 review fixes
+
+- Tool: Codex, directed by Mani.
+- Contribution: made one-block summaries low-confidence, fenced same-month pointer updates by raw retrieval time, versioned summary snapshot IDs by aggregation algorithm, and corrected the UTC EventBridge date.
+- Verification: added regressions for the confidence and pointer/versioning rules; deployment remains pending merge and shared-account acceptance.

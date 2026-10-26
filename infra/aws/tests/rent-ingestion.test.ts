@@ -97,7 +97,7 @@ test('ingestion Lambda has bounded resources and pointer read plus evidence writ
 test('ingestion runs monthly on the third at 03:00 Singapore time', () => {
   const template = synthesize();
   template.hasResourceProperties('AWS::Events::Rule', {
-    ScheduleExpression: 'cron(0 19 3 * ? *)',
+    ScheduleExpression: 'cron(0 19 2 * ? *)',
     State: 'ENABLED',
     Targets: [{ Arn: Match.anyValue() }],
   });
