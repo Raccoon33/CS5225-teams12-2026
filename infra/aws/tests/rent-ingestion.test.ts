@@ -85,8 +85,10 @@ test('ingestion Lambda has bounded resources and pointer read plus evidence writ
     .flatMap((statement) => [statement.Action].flat());
   assert(s3Actions.includes('s3:PutObject'));
   assert(s3Actions.includes('s3:GetObject'));
+  assert(s3Actions.includes('s3:ListBucket'));
   assert.deepEqual([...new Set(s3Actions)].sort(), [
     's3:GetObject',
+    's3:ListBucket',
     's3:PutObject',
   ]);
   assert(!s3Actions.includes('s3:DeleteObject'));

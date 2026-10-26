@@ -59,6 +59,15 @@ export class RentIngestion extends Construct {
     // export from replacing a newer snapshot. All evidence writes are append-only.
     this.handler.addToRolePolicy(
       new PolicyStatement({
+        actions: ['s3:ListBucket'],
+        resources: [this.bucket.bucketArn],
+        conditions: {
+          StringLike: { 's3:prefix': ['raw/current.json'] },
+        },
+      }),
+    );
+    this.handler.addToRolePolicy(
+      new PolicyStatement({
         actions: ['s3:GetObject'],
         resources: [this.bucket.arnForObjects('raw/current.json')],
       }),
