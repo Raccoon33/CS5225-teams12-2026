@@ -2,7 +2,7 @@
 
 ## Scope and layout
 
-FlatSplit is a CS5224 project. This repository is currently a scaffold; implement only the behavior requested in the active task.
+FlatSplit is a CS5224 project with implemented group/search APIs, ranking, a frontend wireframe and AWS CDK infrastructure. The frontend has API-backed group creation/join/reopen and search progress alongside fictional wireframe previews; member preference entry and full results integration remain separate work. Local or merged implementation does not establish deployed acceptance. Implement only the behavior requested in the active task.
 
 - `apps/web`: React + TypeScript + Vite, TanStack Router and Query.
 - `services/api`: Python Lambda handlers (AWS Lambda Powertools + Pydantic); uv owns Python dependencies.
@@ -21,13 +21,14 @@ pnpm install --frozen-lockfile
 uv sync --locked --all-packages --group dev
 pnpm dev
 pnpm check
+pnpm test
 pnpm build
 pnpm synth
 ```
 
 Use Node 24 LTS, pnpm 11.0.9 and Python 3.13. Dependencies and both lockfiles belong in version control. Update a lockfile with its package manager, never by hand.
 
-Use `pnpm format` after source edits. For a visible UI change, verify the affected flow in a browser. Add tests for new behavior, errors and regressions; the scaffold itself has no test suite.
+Use `pnpm format` after source edits. For a visible UI change, verify the affected flow in a browser. Add tests for new behavior, errors and regressions. `pnpm test` runs the API, frontend, CDK and offline evidence suites; emulator and fixture tests do not replace live integration or deployed acceptance.
 
 ## Boundaries
 

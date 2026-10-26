@@ -17,6 +17,8 @@ Done with `model/measure_operations.py`; raw counts in `measured-operations-2026
 | `shared_assumptions.lambda_places_cold_duration_ms`   | folded into 120 ms          | 600 ms mean of four runs, dominated by real OneMap round trips             |
 | `shared_assumptions.lambda_places_warm_duration_ms`   | folded into 120 ms          | 16 ms, with zero upstream calls and zero writes                            |
 
+**Still open from main's 20 October reconciliation.** The measured rows above close that note's DynamoDB budget, TENGAH queue jobs and `1 + N` cold-lookup items. These remain: main defines a 30-second HTTP Lambda timeout and eval-only 100 requests/s, burst 200, so the deployed limits must be verified rather than repeating the original 20/40 eval assumption; and worker idle polling, custom metrics, dashboards and alarms are still planned costs rather than measured ones. Historical model inputs and generated outputs are not rewritten.
+
 ## From WK (@wkkuu), #30 — E1 and E2
 
 | Field                                       | Currently                  | What to measure                                                                                                                                                  | Why it matters                                                                                |

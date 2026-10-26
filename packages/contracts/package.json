@@ -7,6 +7,10 @@
     "./health": {
       "types": "./dist/health.d.ts",
       "import": "./dist/health.js"
+    },
+    "./api": {
+      "types": "./dist/api.d.ts",
+      "import": "./dist/api.js"
     }
   },
   "scripts": {
