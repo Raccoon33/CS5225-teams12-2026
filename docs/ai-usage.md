@@ -90,9 +90,8 @@ For future entries, record the requested issue, tool, contribution, checks actua
 ## 12–14 October 2026 — HDB rental profile and evaluation evidence
 
 - Tool: Codex, directed by Mani.
-- Human contribution: Mani drafted the rent schema from the system design and decided the aggregation statistics, confidence method and threshold, duplicate-row handling, supported flat types, and low-confidence API behavior.
-- AI assistance: profiled the official HDB datasets, validated the draft against the source data, generated the reproducible E8 audit, helped document the E6 procedure, and performed formatting and consistency checks.
-- Verification: 65 of 72 comparable published medians matched exactly; documentation, JSON, sample-data and audit assertions passed. E6 was documented but not run; no AWS deployment was performed.
+- Contribution: profiled the official HDB datasets, validated Mani's rent schema decisions, documented E6, and generated the reproducible E8 audit.
+- Verification: 65 of 72 comparable published medians matched exactly; documentation, JSON, sample-data and audit checks passed. E6 was documented but not run; no AWS deployment was performed.
 
 ## 14 October 2026 — issue 14 destination search endpoint
 
@@ -256,6 +255,12 @@ For future entries, record the requested issue, tool, contribution, checks actua
 - Tool: Codex, directed by Hikaru to review PR #69, fix remaining issues and merge only after checks pass. This was a local self-review, not independent human approval. Reviewed the total-route-failure predicate against the backend's resolved/unavailable counts, partial-success/no-match/stale/error branches, same-search retry and input preservation, regression coverage, and the dated deployment/access evidence. There were no published review comments or outstanding reviewer requests. No additional blocking issue or source fix was identified.
 - Verification: all 65 web tests and 14 targeted search API tests ran afresh and passed. Root check/test/build/synth, API-generation drift and Git diff checks passed; the full suite remains 331 tests (258 API, 65 web, five CDK, three offline), with unchanged Turbo tasks eligible for cache reuse. The preceding entry retains the actual desktop/mobile browser evidence; no visible source change required another browser run in this review. Added only this review record and preserved all earlier evidence.
 - Handoff: both CI checks passed at reviewed source head `4c27229`; push this documentation record and require successful checks at the resulting head before merging. Keep #7/#17 open for their separately recorded deployed acceptance. AWS credential refresh/deployment remains deferred as requested; no AWS or OneMap operation was attempted in this review.
+
+## 19 October 2026 — issue 9 raw HDB rental ingestion
+
+- Tool: Codex, directed by Mani; ingestion policy and schedule choices remained with Mani.
+- Contribution: implemented the data.gov.sg export client, HDB source validation, S3 evidence/pointer handling, ingestion Lambda, and regression tests. #10 owns rental summaries and DynamoDB publication.
+- Verification: API, web, CDK and evaluation tests, repository checks/build, and local CDK synthesis passed. A read-only export validated 212,597 rows, 27 towns, six flat types and source month `2026-09`; nothing was written to AWS and no deployment or schedule was run.
 
 ## 21 October 2026 — shared dev deployment checks
 
