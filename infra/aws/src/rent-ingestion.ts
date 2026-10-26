@@ -1,4 +1,6 @@
 import { Duration, RemovalPolicy } from 'aws-cdk-lib';
+import { Rule, Schedule } from 'aws-cdk-lib/aws-events';
+import { LambdaFunction } from 'aws-cdk-lib/aws-events-targets';
 import { Architecture, Code, Function, Runtime } from 'aws-cdk-lib/aws-lambda';
 import { PolicyStatement } from 'aws-cdk-lib/aws-iam';
 import { LogGroup, RetentionDays } from 'aws-cdk-lib/aws-logs';
@@ -21,6 +23,7 @@ export interface RentIngestionProps {
 export class RentIngestion extends Construct {
   readonly bucket: IBucket;
   readonly handler: Function;
+  readonly schedule: Rule;
 
   constructor(scope: Construct, id: string, props: RentIngestionProps) {
     super(scope, id);
@@ -69,5 +72,10 @@ export class RentIngestion extends Construct {
         ],
       }),
     );
+    this.schedule = new Rule(this, 'MonthlySchedule', {
+      description: 'Run HDB rental snapshot ingestion on the third of each month.',
+      schedule: Schedule.expression('cron(0 19 3 * ? *)'),
+      targets: [new LambdaFunction(this.handler)],
+    });
   }
 }
