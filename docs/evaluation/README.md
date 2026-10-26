@@ -2,6 +2,10 @@
 
 Evidence for the experiments in [evaluation-plan.md](../evaluation-plan.md), stored under one directory per experiment as agreed in decision **D-E5**: raw data, the script that produced it, and the date.
 
+**Status — 20 October 2026:** merged group/search/ranking code and passing local/CI tests do not complete the deployed experiments. The latest local baseline passed 258 API, 29 web, five CDK and three offline evidence tests; API/web/CDK tests were rerun without Turbo cache. Search coverage uses seeded rent/place records and injected worker completions. #29's group journeys are partial coverage, not complete search/results or deployed-build acceptance. No E1/E2 latency/capacity, E4/E5 worker/recovery, E6 PITR or E10 user-study result is established by these tests.
+
+The 20 October live-OneMap/local-handler/Moto evidence is linked from [#14](https://github.com/horiiiiii032929/CS5225-teams12-2026/issues/14) and the [#45 model update](https://github.com/horiiiiii032929/CS5225-teams12-2026/issues/45#issuecomment-6286439604); it concerns open PR #65, not main or a real-table deployment. The [E9 reconciliation](e9/cost-model.md#status-reconciliation--20-october-2026) lists inputs that must change before the next model run. Existing raw files and dated model outputs remain historical evidence.
+
 ```
 docs/evaluation/
   <experiment>/

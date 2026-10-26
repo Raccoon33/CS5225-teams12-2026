@@ -1,8 +1,35 @@
 # FlatSplit
 
-A React and TanStack monorepo with Python Lambda handlers and an AWS CDK app. The frontend includes an interactive group flat-hunting wireframe with fictional data. The backend implements health, destination lookup, token-authorised group APIs, and search submission/status with filtering and fairness ranking. Live rental publication, persistent destinations and the commute worker remain integration work. Its CDK stack defines DynamoDB, an HTTP API Lambda, encrypted commute queues, and CloudFront serving the web app with `/api`. See the [backend and AWS design](docs/backend-design.md).
+A React and TanStack monorepo with Python Lambda handlers and an AWS CDK app. The frontend supports API-backed group creation, invite joining, reopening and search progress, alongside an interactive wireframe with fictional data. The backend implements health, destination lookup, token-authorised group APIs, search submission/status with filtering and fairness ranking, and validated raw HDB rental snapshot ingestion. Live rental publication, persistent destinations and the commute worker remain integration work. Its CDK stack defines DynamoDB, an HTTP API Lambda, a private versioned rental-evidence bucket, encrypted commute queues, and CloudFront serving the web app with `/api`. See the [backend and AWS design](docs/backend-design.md).
 
-For issue #1, start with the [user journey and responsive wireframes](docs/user-journey.md). Run `pnpm dev:web`, then use the Design review selector to explore group creation, member input, processing, ranked comparisons, and recovery states. This prototype runs locally without the API, does not share groups across devices, and resets on refresh.
+For issue #1, start with the [user journey and responsive wireframes](docs/user-journey.md). Run `pnpm dev:web` and open `/?review=create` for the Design review selector: member input, processing, ranked comparisons and recovery fixtures. Only these explicit previews run without the API, use fictional data and reset on refresh.
+
+## Frontend implementation — #7 and #17
+
+The default `/` route creates a real group through the configured API. The organiser receives a copyable `/join/<groupId>#<inviteToken>` link; a new browser joins with its own name and member token. `/groups/<groupId>` reopens that browser's saved membership and polls group readiness every five seconds. Invite fragments are removed from the address bar before joining and retained in session storage until submission, so a pre-join reload still works. Only the organiser's browser retains the original invitation; an invite cannot read group data. Returning invitations verify any saved membership before reopening it. A confirmed permission failure allows rejoining with the original invite while space remains; a service outage preserves the existing membership and offers verification retry.
+
+Membership is stored in `localStorage`, with fixed server expiry. If browser storage fails, the current tab retains access and displays a warning that refresh/close may lose it. The home page lists saved groups. Losing membership cannot be repaired through the server; use the original invite while space remains, or create a new group if full.
+
+Once every member is ready, the lobby submits a search and polls pending status every two seconds. It shows actual resolved/unavailable counts, supports explicit retry after request failures, resumes the latest search after reload, and withholds results when the group revision changes. A completed search shows a basic server-backed town/rent summary; the full ranked comparison/map remains #23/#24 work. The API has no per-worker running state: queued/checking labels derive from available pair outcomes, not a fabricated timer or a claim that a worker has started.
+
+**Acceptance boundary:** this is local #7/#17 implementation, not deployment evidence or closure of either issue. Preference entry/destination editing (#8/#13) is not implemented in the live lobby. Real readiness/completion still needs those inputs, validated rent publication (#10), persisted places (#14), the commute worker (#15/#27) and an authorised integrated deployment. Browser QA used the actual local resolver with Moto, synthetic rent/place records, API-seeded preferences and conditional injected commute completions; no live OneMap worker was exercised.
+
+`pnpm generate:api` exports the backend's OpenAPI and regenerates public schemas/types in `@flatsplit/contracts/api` and the web SDK. `pnpm generate:api:check` checks drift without modifying repository artifacts and runs in CI. Generated files must not be edited by hand.
+
+## Repository status — 20 October 2026
+
+This historical snapshot, before the frontend work above, describes `main` at `760dd1f` after PRs #60–#63 merged on 19 October. It separates code in the repository from live acceptance; see [issue #44](https://github.com/horiiiiii032929/CS5225-teams12-2026/issues/44) for dated coordination updates.
+
+| Area                     | Implemented on main                                                                                                         | Remaining acceptance / integration                                                                                                                          |
+| ------------------------ | --------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Group APIs               | Token-authorised create, join, read and preference updates; persistence, expiry and revision checks                         | Real destination records, frontend integration, shared-device and deployed verification (#7/#8/#12/#13/#14)                                                 |
+| Search and ranking       | Submission/status, idempotent revisions, pinned rent reads, recoverable queue claims, filtering and per-member explanations | Validated rent publication (#10), persisted destinations (#14), actual worker results (#15/#27), deployed search and latency evidence (#16/#18/#21/#22/#30) |
+| Frontend                 | Responsive journey, comparisons and recovery fixtures; API health page                                                      | Group journey uses fictional in-memory data and resets on refresh; real progress/results integration remains (#17/#23)                                      |
+| Tests and infrastructure | API, web, CDK and offline evidence suites; one HTTP Lambda, table, source/DLQ queues and web hosting defined in CDK         | E2E group tests use Moto by default; search/results journey coverage and deployed-build CI remain (#29). No commute consumer is attached on main            |
+
+Open work as of this snapshot: [PR #64](https://github.com/horiiiiii032929/CS5225-teams12-2026/pull/64) adds raw HDB ingestion (approved, CI passing); [PR #65](https://github.com/horiiiiii032929/CS5225-teams12-2026/pull/65) adds place persistence, pinned stations and query caching (CI passing, review ongoing). Neither is merged or accepted in the shared deployment. Raw ingestion alone does not publish validated `RENT/CURRENT` summaries.
+
+The latest recorded deployment is still **14 October**, from `4394195`. Read-only checks on 20 October returned HTTP 200 for the frontend and API health; they do not identify the deployed revision or prove group/search acceptance. M1's 18 October shared-input checkpoint is overdue; the 29 October integration and 13 November 23:59 SGT submission baselines remain. [Ming's 20 October update](https://github.com/horiiiiii032929/CS5225-teams12-2026/issues/44#issuecomment-6286402588) targets a worker PR by 24 October, with deployed acceptance still outstanding.
 
 ## Get started
 
@@ -16,7 +43,7 @@ pnpm dev
 
 Open <http://127.0.0.1:5173>. Both the frontend and Python API start with `pnpm dev`. The API exposes <http://127.0.0.1:8000/health> and local interactive documentation at <http://127.0.0.1:8000/docs>. The local server runs the same Powertools resolver that is deployed to Lambda.
 
-To work on one side, use `pnpm dev:web` or `pnpm dev:api`. The frontend works without the API and shows an unavailable state on the status page.
+To work on one side, use `pnpm dev:web` or `pnpm dev:api`. The explicit wireframe previews work without the API. The default creation flow requires it and shows a recoverable error when unavailable.
 
 Frontend-only contributors can skip the uv setup and run `pnpm dev:web` after the pnpm install. Shared TypeScript packages build automatically before the web server starts.
 
@@ -51,7 +78,7 @@ CDK synthesis warns when `apps/web/dist` is missing; run `pnpm build` first to i
 
 ## Deploying to AWS
 
-The shared dev environment is deployed in account `553455762180`: [FlatSplit dev](https://d2g88qlwvm8dec.cloudfront.net) and [API health](https://d2g88qlwvm8dec.cloudfront.net/api/health). See the [deployment evidence and remaining handoffs](docs/aws-dev-handoff.md). The frontend remains a prototype while group/data integration is implemented.
+The shared dev environment is deployed in account `553455762180`: [FlatSplit dev](https://d2g88qlwvm8dec.cloudfront.net) and [API health](https://d2g88qlwvm8dec.cloudfront.net/api/health). See the [deployment evidence and remaining handoffs](docs/aws-dev-handoff.md). The last recorded deployed frontend remains the prototype. The 14 October deployment evidence predates the merged group/search APIs and local #7/#17 frontend work; their shared-environment acceptance remains outstanding.
 
 For the new shared account, copy the root credential template and edit the local copy:
 

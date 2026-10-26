@@ -1,6 +1,8 @@
 # Repository decisions
 
-Researched on 8 October 2026. These are scaffold choices, not a detailed application specification.
+Researched on 8 October 2026. The sections below preserve the original scaffold choices, not a detailed application specification.
+
+**Status reconciliation — 20 October 2026:** the Python service now implements group/search APIs and ranking; it is part of the backend rather than only an optional starting scaffold. CI now runs behavior tests as well as formatting, linting, types, builds and local CDK synthesis. The local #7/#17 follow-up establishes runtime OpenAPI as the cross-language source and adds generated schemas/types plus a web SDK, with CI drift checking. The original health schema remains available. Refer to the [current repository status](../README.md#repository-status--20-october-2026) for implementation and deployed-acceptance boundaries. The dated rationale below is retained as history.
 
 ## Structure and dependency ownership
 
@@ -38,4 +40,4 @@ No personal/global agent configuration, tool permission settings or custom hooks
 
 Pin direct JavaScript dependencies, the pnpm version and runtime major versions. Use committed locks and frozen/locked installs in CI. Python uses Python 3.13; the recommended Node runtime is 24 LTS. TypeScript remains on a release compatible with the chosen lint tooling.
 
-CI checks formatting, linting, types, builds and local CDK synthesis. Its GitHub Actions references are pinned to verified commit SHAs. There are no cloud credentials or deployment jobs. When real behavior is added, add tests tied to that behavior and the project evaluation plan.
+CI checks formatting, linting, types, behavior tests, builds and local CDK synthesis. Its GitHub Actions references are pinned to verified commit SHAs. There are no cloud credentials or deployment jobs. The original scaffold plan called for tests when real behavior was added. Those API, web, CDK and offline evidence tests now run in CI; additional behavior still needs tests tied to the project evaluation plan. CI does not deploy or prove live acceptance.

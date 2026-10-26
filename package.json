@@ -21,10 +21,13 @@
     "setup:python": "uv sync --locked --all-packages --group dev",
     "test": "turbo run test && pnpm test:evidence",
     "deploy:aws": "pnpm build && pnpm --filter @flatsplit/aws run deploy",
-    "test:evidence": "uv run python -m unittest discover -s tools/evaluation/tests"
+    "test:evidence": "uv run python -m unittest discover -s tools/evaluation/tests",
+    "generate:api": "node tools/contracts/generate.mjs",
+    "generate:api:check": "node tools/contracts/generate.mjs --check"
   },
   "devDependencies": {
     "@eslint/js": "10.0.1",
+    "@hey-api/openapi-ts": "0.99.0",
     "@tanstack/eslint-plugin-query": "5.104.1",
     "@types/node": "24.10.1",
     "eslint": "10.12.0",

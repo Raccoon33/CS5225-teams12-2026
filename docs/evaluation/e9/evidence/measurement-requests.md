@@ -2,6 +2,8 @@
 
 One row per assumption that must become a measurement before E9 / #45 can be completed (target 8 November 2026). Each row names the field in `model/workloads.json` or `model/onprem.json`, the owner, and the experiment that produces it. Paste the measured value in, re-run `model/cost_model.py`, and commit the new `evidence/cost_model_<utc>.*` files.
 
+**Reconciliation — 20 October 2026:** the rows below retain the original input requests; they are not measurements. Before the next model run, also replace the superseded 7/8-request DynamoDB budget, remove TENGAH queue jobs, and model cold destination lookup as `1 + N` calls with zero on valid query-cache hits once PR #65 is integrated. Record candidate counts and distinct-query/cache-hit rate separately from search rate. Main now defines a 30-second HTTP Lambda timeout and eval-only 100 requests/s, burst 200; verify the deployed limits rather than repeating the original 20/40 eval assumption. Worker idle polling, custom metrics, dashboards and alarms remain planned costs. See the [current E9 reconciliation](../cost-model.md#status-reconciliation--20-october-2026) for evidence and claim limits. Historical model inputs and generated outputs have not been rewritten.
+
 ## From WK (@wkkuu), #30 — E1 and E2
 
 | Field                                       | Currently                  | What to measure                                                                                                                    | Why it matters                                                                                |

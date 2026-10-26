@@ -1,13 +1,17 @@
 # FlatSplit API contract and DynamoDB access patterns
 
 **Issue:** [#6 — Agree API contracts and DynamoDB access patterns](https://github.com/horiiiiii032929/CS5225-teams12-2026/issues/6)
-**Updated:** 14 October 2026 · **Owner:** Shyam · **Reviewer:** WK · **Status:** Implementation baseline. Incorporates the reviewed rental profile (#52), OneMap evidence (#51), and WK/Ming's contract corrections. Product defaults below are PM implementation decisions under Hikaru's request to clear blockers; they do not claim six-person approval or completed endpoints.
+**Updated:** 20 October 2026 (status reconciliation; original PM baseline: 14 October) · **Owner:** Shyam · **Reviewer:** WK · **Status:** Implementation baseline. Incorporates the reviewed rental profile (#52), OneMap evidence (#51), and WK/Ming's contract corrections. Product defaults below are PM implementation decisions under Hikaru's request to clear blockers; they do not claim six-person approval or deployed acceptance.
 
 **Rent evidence:** Ming approved PR #52. See the [source-backed aggregation notes](hdb-rental-data-profile.md) and [sample rows](data/hdb-rental-sample-2026-09.csv).
 
 This is the interface the frontend (#7, #8, #13, #17, #23), data (#10, #14, #15) and API (#11, #12, #16, #18, #21, #22) tasks build against. Architecture and cost are covered in [backend-design.md](backend-design.md).
 
-Once #12 starts, the Pydantic models in `services/api` become the source of truth. Their generated OpenAPI produces the zod schemas in `@flatsplit/contracts`. Until then, this document is the contract. Change it by pull request so every pair sees the change.
+The Pydantic models and handlers in `services/api` now implement the group/search HTTP shapes and produce OpenAPI for the implemented routes. This document records the shared interface, data policy and worker handoff, including planned endpoints. Keep it aligned with runtime models through reviewed PRs. `pnpm generate:api` now exports the resolver OpenAPI to `packages/contracts/openapi.json`, then generates public Zod schemas/types in `@flatsplit/contracts/api` and the web SDK using the pinned Hey API generator. The contracts package contains schemas/types only; HTTP runtime stays in `apps/web`. `pnpm generate:api:check` detects drift in CI without editing repository artifacts. Regenerate after model/route changes instead of hand-editing the snapshot, schemas or SDK. The existing hand-authored health schema remains compatible.
+
+**Implementation status — 20 October:** main `760dd1f` implements health, destination lookup, group APIs, search submission/status, filtering and ranking. Main's destination lookup does not persist selectable places; preference-save tests seed those records. PR #65 adds persistence, immutable station pins and lookup caching but remains unmerged. PR #64's raw ingestion is also unmerged; validated rent publication (#10), the actual commute worker (#15/#27), `/meta` and deployed integrated acceptance remain outstanding. Search tests use seeded rent/place records and injected worker completions. These tests do not establish a live data pipeline or deployed recommendations.
+
+**Frontend follow-up (#7/#17):** the working implementation uses `/` for real creation, `/join/<groupId>#<inviteToken>` for join and `/groups/<groupId>` for saved membership/readiness/search progress. It polls group state every five seconds and pending search state every two seconds, passes fetch cancellation signals, refuses redirects for capability-bearing requests and keeps member tokens out of URLs/query keys. Join consumes/removes the fragment before API use, retaining it in session storage until success. A fresh fragment takes precedence over an older scratch token even if storage writes fail. Returning invite links verify saved member capabilities before redirecting; only confirmed 401/403 failures permit a replacement join, while transient errors preserve membership. A successful search POST is displayed immediately ahead of its older group snapshot until the next successful group refresh; later stale summaries still withhold results. Browser-storage failure has an explicit warning and a current-tab memory fallback. Live preference forms (#8/#13), full results (#23/#24) and deployed acceptance remain separate; local QA supplies saved preferences through the API.
 
 ## Conventions
 
@@ -80,7 +84,7 @@ type Group = {
   members: Member[]; // in join order
   readyCount: number;
   allReady: boolean; // members.length === size && every member ready
-  latestSearch: SearchSummary | null; // always null until searches ship (#16, #18)
+  latestSearch: SearchSummary | null; // latest persisted search, or null before submission
   inviteToken?: string; // only in POST /groups; omitted from every later response
   createdAt: string;
   expiresAt: string; // createdAt + 30 days
@@ -522,7 +526,7 @@ Start with at most three in-flight worker routing requests, shared-budget headro
 - Expiry is 30 days from creation. Check it on every request and in mutations; DynamoDB TTL deletion is asynchronous. No sliding expiry.
 - Any ready member can start a search once the whole group is ready. Members see the declared shared fields after the privacy notice.
 - No member removal, token recovery/reissue, group resizing or accounts in this prototype. Lost-device recovery requires the original invite and a free slot; a full group needs a new group. Explain this limitation instead of adding permissions silently.
-- The equal rent split and flat-type mapping above are implementation defaults. The source metadata's blank rent unit and approximation limitations remain visible in the profile/report. Ranking weights retain the wireframe baseline until #22 validates them; parity tests remain required.
+- The equal rent split and flat-type mapping above are implementation defaults. The source metadata's blank rent unit and approximation limitations remain visible in the profile/report. Ranking retains the wireframe weights and scales. Merged #22 implementation includes parity tests for all three priorities; this establishes fixture parity, while integrated/deployed acceptance and empirical fairness/usability validation remain outstanding.
 
 These decisions close the document/design handoff only. Runtime endpoints, deployment, recovery and user evaluation must satisfy their own issues. Human pair feedback can revise the baseline through a reviewed PR; no missing approval is fabricated.
 
