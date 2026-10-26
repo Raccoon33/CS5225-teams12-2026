@@ -45,7 +45,7 @@ for (const [stage, rate, burst] of [
   });
 }
 
-test('table access separates group/commute writes from place/rent reads', () => {
+test('table access is scoped per item type, with rent read-only', () => {
   const policies = synthesize('dev').findResources('AWS::IAM::Policy');
   const dynamo = Object.values(policies)
     .flatMap(
@@ -67,6 +67,13 @@ test('table access separates group/commute writes from place/rent reads', () => 
       [statement.Action].flat().sort(),
     ]),
   );
+  // Keying by prefix silently drops a duplicate, which would hide a statement
+  // from the comparison below. Fail instead if two statements share a prefix.
+  assert.equal(
+    Object.keys(byPrefix).length,
+    dynamo.length,
+    'two DynamoDB statements share a LeadingKeys prefix',
+  );
   assert.deepEqual(byPrefix, {
     'GROUP#*': [
       'dynamodb:ConditionCheckItem',
@@ -76,7 +83,17 @@ test('table access separates group/commute writes from place/rent reads', () => 
       'dynamodb:Query',
       'dynamodb:UpdateItem',
     ],
-    'PLACE#*': ['dynamodb:ConditionCheckItem', 'dynamodb:GetItem'],
+    'PLACE#*': [
+      'dynamodb:ConditionCheckItem',
+      'dynamodb:GetItem',
+      'dynamodb:PutItem',
+    ],
+    'PLACELOOKUP#*': ['dynamodb:GetItem', 'dynamodb:PutItem'],
+    'STATION#*': [
+      'dynamodb:GetItem',
+      'dynamodb:PutItem',
+      'dynamodb:UpdateItem',
+    ],
     'RENT,RENT#*': ['dynamodb:GetItem', 'dynamodb:Query'],
     'COMMUTE#*': [
       'dynamodb:DeleteItem',
