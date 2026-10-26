@@ -1,7 +1,7 @@
 # FlatSplit hosting cost model: AWS versus on-premise
 
 **Issue:** [#45 — Compare AWS and on-premise hosting costs](https://github.com/horiiiiii032929/CS5225-teams12-2026/issues/45) · **Experiment:** E9 in [evaluation-plan.md](https://github.com/horiiiiii032929/CS5225-teams12-2026/blob/main/docs/evaluation-plan.md)
-**Draft:** 12 October 2026 · **Updated:** 20 October 2026 · **Owner:** Ming (@lukerspace) · **Reviewer:** Mani (@saravanamani1999) · **Status:** Partially measured — per-request operation counts measured; demand volumes and AWS-side metrics still assumed
+**Draft:** 12 October 2026 · **Updated:** 26 October 2026 · **Owner:** Ming (@lukerspace) · **Reviewer:** Mani (@saravanamani1999) · **Status:** Partially measured — per-request operation counts measured; demand volumes and AWS-side metrics still assumed
 **Repository path:** `docs/evaluation/e9/cost-model.md` (the original draft proposed `docs/evaluation/E9-cost/cost-model.md`; D-E5 now uses lowercase experiment IDs)
 
 The demand figures are assumptions. What each request _costs in AWS operations_ is no longer an assumption: on 20 October 2026 every DynamoDB, SQS and OneMap call was counted per request against the real Lambda resolver, and those counts replaced the design budgets the model used before (see [Measured per-request operations](#measured-per-request-operations-20-october-2026)). What remains assumed is how many people do these things, how long Lambda runs outside the lookup path, cold-start share, log volume, and the RRU/WRU conversion — all owned by #30 and #34. The on-premise figures are an estimate built on stated assumptions, **not a quote** (required wording, evaluation-plan limitations).
@@ -73,30 +73,33 @@ Two of those facts are now confirmed by the handler itself rather than by a docu
 
 **Assumptions that must still be replaced by measurements**, each marked `_source: assumed` in `model/workloads.json`: Lambda duration outside the lookup path (120 ms) and the worker (900 ms), cold-start share (5%), log volume per invocation (2 KB), RRU per read request (2.0), WRU per write (1.5), both cache hit ratios, the demand volumes themselves, and `sustained_rps_per_node` for options B and C. See `evidence/measurement-requests.md` (next to this file) for who owns each one.
 
-## Measured per-request operations (20 October 2026)
+## Measured per-request operations (20 and 26 October 2026)
 
-`model/measure_operations.py` drives API Gateway v2 events through the real resolver in `flatsplit_api.handlers.http`, with Moto standing in for DynamoDB and SQS and live OneMap upstream, and counts every botocore call, the items inside each transaction, and every OneMap round trip. Raw output: `evidence/measured-operations-20261020.json`. The `/places` rows need the persistent places work from [#14](https://github.com/horiiiiii032929/CS5225-teams12-2026/pull/65), so they were measured with that branch checked out; everything else is on `main`.
+`model/measure_operations.py` drives API Gateway v2 events through the real resolver in `flatsplit_api.handlers.http`, with Moto standing in for DynamoDB and SQS, and counts every botocore call, the items each one mutates, each transaction's `ConditionCheck` actions separately, and every OneMap round trip. Raw output: `evidence/measured-operations-20261020.json` (all nine rows, live OneMap, `/places` measured with [#65](https://github.com/horiiiiii032929/CS5225-teams12-2026/pull/65) checked out at `c6f7e0c`) and `evidence/measured-operations-20261026.json` (the six rows that do not touch OneMap, re-measured on this branch with `--seeded-place`).
 
-| Request                     | DynamoDB reads | Write items | OneMap calls | SQS sends |   Duration |
-| --------------------------- | -------------: | ----------: | -----------: | --------: | ---------: |
-| `GET /places` (cold)        |            3-5 |        9-11 |            6 |         0 | 557-697 ms |
-| `GET /places` (cache hit)   |              5 |           0 |            0 |         0 |   15-18 ms |
-| `POST /groups`              |              1 |           3 |            0 |         0 |      36 ms |
-| `POST /groups/{id}/members` |              2 |           3 |            0 |         0 |      18 ms |
-| `PUT .../members/{id}`      |              4 |           3 |            0 |         0 |      28 ms |
-| `GET /groups/{id}`          |              2 |           0 |            0 |         0 |      10 ms |
-| `POST .../searches` (first) |              7 |          58 |            0 |        52 |     283 ms |
-| `POST .../searches` (again) |              8 |           0 |            0 |         0 |      94 ms |
-| `GET .../searches/{id}`     |              7 |           0 |            0 |         0 |      93 ms |
+| Request                     | DynamoDB reads | Write mutations | Condition checks | OneMap calls | SQS sends |   Duration |
+| --------------------------- | -------------: | --------------: | ---------------: | -----------: | --------: | ---------: |
+| `GET /places` (cold)        |            3-5 |            9-11 |                0 |            6 |         0 | 557-697 ms |
+| `GET /places` (cache hit)   |              5 |               0 |                0 |            0 |         0 |   15-18 ms |
+| `POST /groups`              |              1 |               3 |                0 |            0 |         0 |      36 ms |
+| `POST /groups/{id}/members` |              2 |               3 |                0 |            0 |         0 |      18 ms |
+| `PUT .../members/{id}`      |              4 |               2 |                1 |            0 |         0 |      28 ms |
+| `GET /groups/{id}`          |              2 |               0 |                0 |            0 |         0 |      10 ms |
+| `POST .../searches` (first) |              7 |              57 |                1 |            0 |        52 |     283 ms |
+| `POST .../searches` (again) |              8 |               0 |                0 |            0 |         0 |      94 ms |
+| `GET .../searches/{id}`     |              7 |               0 |                0 |            0 |         0 |      93 ms |
 
-Four corrections came out of this, and the first two are the reason the model's DynamoDB lines moved:
+Five corrections came out of this, and the first two are the reason the model's DynamoDB lines moved:
 
-1. **A search start writes one record per pair, not two per job.** The old model charged `jobs × 2`; measurement shows one `PutItem` for every pair that has no usable cached result — 54 of them for a two-member search — plus a three-item transaction. A pair with a usable `COMMUTE#` record at the same routing profile returns from the read before writing or sending anything, so the cache hit ratio removes the write and the message together.
+1. **A search start writes one record per pair, not two per job.** The old model charged `jobs x 2`; measurement shows one `PutItem` for every pair that has no usable cached result - 54 of them for a two-member search - plus a four-action transaction. A pair with a usable `COMMUTE#` record at the same routing profile returns from the read before writing or sending anything, so the cache hit ratio removes the write and the message together.
 2. **A cold destination lookup writes 9-11 items** (one `PLACE#` per candidate, one `STATION#` per distinct station, one `PLACELOOKUP#`) and makes six OneMap calls. The old model charged it one read and nothing else.
 3. **The enqueue is not batched**: exactly one `SendMessage` per enqueued pair.
 4. **A cache hit is free of upstream cost**: five reads, no writes, no OneMap call, 15-18 ms against 557-697 ms. That is what makes the lookup cache hit ratio the lever on OneMap quota.
+5. **A transaction's mutations and its condition checks are different things.** The earlier table counted every `TransactWriteItems` action as a written item, which overstated the mutations: a preference save is two Updates plus one `ConditionCheck` on the destination's ttl, and a search start is three Puts plus one check. The 26 October run measures them apart. AWS still bills a `ConditionCheck` as a transactional write and it still consumes one of the 25 action slots, so the model charges mutations plus checks - which raised the search start from 3 to 4 fixed write units and moved the bursty scenario by one cent, to US$2.49 payable. The accounting is now right; the conclusion was never sensitive to it.
 
-Durations here are laptop durations against Moto, so only the lookup paths feed the model: their cost is real upstream network time, which Lambda pays too. Everything else keeps the assumed 120 ms pending #30. Moto is not DynamoDB, so these are request and item counts, not consumed capacity; the RRU/WRU conversion stays with #34. #15's worker does not exist yet, so its routing call and result write are still assumed.
+Durations here are laptop durations against Moto, so only the lookup paths feed the model: their cost is real upstream network time, which Lambda pays too. Everything else keeps the assumed 120 ms pending #30. Moto is not DynamoDB, so these are request, item and action counts, not consumed capacity; the RRU/WRU conversion stays with #34.
+
+**Two limits on the `/places` rows.** They still carry their 20 October values. The measurement script built its query parameters without URL-decoding them, so that run searched OneMap for the literal `kent+ridge` rather than the `kent ridge` an `encodeURIComponent` client produces; the script now decodes with `urllib.parse.parse_qsl`, but re-measuring needs a live OneMap token, which expired on 23 October ([#72](https://github.com/horiiiiii032929/CS5225-teams12-2026/issues/72)), and #65's query cache, which is not yet merged. Whether a correctly decoded query returns the same five candidates as the encoded one is upstream behaviour that has not been re-checked, so the cold-lookup write and call counts are provisional until it is. Everything downstream of `/places` was re-measured on 26 October with a seeded destination record and is unaffected.
 
 ## AWS cost drivers and their on-premise counterparts
 
@@ -132,20 +135,20 @@ Full assumptions in `model/onprem.json`. Sizing follows D-E2: one node is a `t4g
 
 Named but excluded, so the reader can judge the bias: room rent and physical security (assumed free on campus), hardware failure beyond the spares buffer, DDoS protection (CloudFront includes Shield Standard), the one-off time to build a deployment pipeline, and the cost of downtime — the single-box model has no SLA.
 
-## Comparison (model output, updated 20 October 2026)
+## Comparison (model output, updated 26 October 2026)
 
-Generated by `model/cost_model.py`; raw output in `evidence/cost_model_20261020T103456Z.{md,json,csv}`.
-Earlier runs are kept: `evidence/cost_model_20261014T072020Z.*` is the assumption-only version these figures
+Generated by `model/cost_model.py`; raw output in `evidence/cost_model_20261026T042043Z.{md,json,csv}`.
+Earlier runs are kept: `evidence/cost_model_20261020T103456Z.*` is the run before transaction mutations and condition checks were counted apart, `evidence/cost_model_20261014T072020Z.*` is the assumption-only version these figures
 replace, and `evidence/cost_model_20261012T062840Z.*` is the one quoted in #45 (it assumed 26 towns).
 
 | Option                                            | Quiet US$/mo | Typical US$/mo | Bursty US$/mo | US$ per 1,000 searches (typical) |
 | ------------------------------------------------- | -----------: | -------------: | ------------: | -------------------------------: |
-| A. AWS serverless — **payable**                   |         1.13 |           1.27 |          2.48 |                             1.27 |
+| A. AWS serverless — **payable**                   |         1.13 |           1.27 |          2.49 |                             1.27 |
 | A. AWS serverless — list price, free tier removed |         8.20 |           8.83 |         13.90 |                             8.83 |
 | B. AWS always-on VM                               |        38.67 |          38.84 |         57.70 |                            38.84 |
 | C. On-premise                                     |       243.50 |         243.50 |        274.87 |                           243.50 |
 
-Measuring the operation counts moved the serverless total by **+5% at typical demand and +13% in the burst**, all of it in DynamoDB: writes went from US$0.03 to US$0.07 typical and US$0.47 to US$0.70 bursty, reads from US$0.04 to US$0.06 and US$0.27 to US$0.33. Nothing in the comparison's conclusion changes — the gap to option C is still roughly two orders of magnitude — which is itself the useful result: **the on-premise comparison was never sensitive to the per-request accounting**, so the remaining uncertainty that matters is `sustained_rps_per_node` on the on-premise side, not AWS usage.
+Measuring the operation counts moved the serverless total by **+5% at typical demand and +13% in the burst**, all of it in DynamoDB: writes went from US$0.03 to US$0.07 typical and US$0.47 to US$0.71 bursty, reads from US$0.04 to US$0.06 and US$0.27 to US$0.33. Counting each transaction's condition check as the billed write it is added one more fixed write unit per search, which is the one cent between the 20 October bursty figure and this one. Nothing in the comparison's conclusion changes — the gap to option C is still roughly two orders of magnitude — which is itself the useful result: **the on-premise comparison was never sensitive to the per-request accounting**, so the remaining uncertainty that matters is `sustained_rps_per_node` on the on-premise side, not AWS usage.
 
 Free-tier allowances are listed per line item in the generated tables, never netted silently. At typical demand the free tier covers US$7.56 of US$8.83, so **the cloud-versus-on-premise conclusion does not depend on the free tier**: even at list price, option A is roughly 28× cheaper than option C.
 
@@ -154,7 +157,7 @@ Free-tier allowances are listed per line item in the generated tables, never net
 | Option                               | Dominant driver                                                                               | Share                     |
 | ------------------------------------ | --------------------------------------------------------------------------------------------- | ------------------------- |
 | A. AWS serverless, typical (payable) | CloudWatch custom metrics (12 metrics, 10 free) + Secrets Manager flat fee                    | 0.60 + 0.41 of 1.27 (79%) |
-| A. AWS serverless, bursty (payable)  | **DynamoDB** reads + writes + PITR, now the largest payable group                             | 1.14 of 2.48 (46%)        |
+| A. AWS serverless, bursty (payable)  | **DynamoDB** reads + writes + PITR, now the largest payable group                             | 1.16 of 2.49 (47%)        |
 | A. AWS serverless (list price)       | CloudWatch dashboard (US$3.00) + custom metrics (US$3.60)                                     | ~75% typical              |
 | B. AWS always-on VM                  | EC2 instance-hours, billed whether or not anyone searches                                     | ~80%                      |
 | C. On-premise                        | Operational effort and the business internet line — **people and connectivity, not hardware** | ~58%                      |
@@ -199,9 +202,14 @@ python3 cost_model.py            # writes ../evidence/cost_model_<utc>.{md,json,
 python3 cost_model.py --scale 10 # demand sensitivity
 
 # re-measure the per-request operation counts after a handler change
-# (needs the dev dependency group for Moto, and a OneMap token for /places)
-export ONEMAP_TOKEN=...
+# (needs the dev dependency group for Moto)
+export ONEMAP_TOKEN=...   # the /places rows call live OneMap and spend quota
 uv run --package flatsplit-api python docs/evaluation/e9/model/measure_operations.py
+
+# without a token: the six rows that never touch OneMap, against a seeded
+# destination record. The three /places rows are skipped, not estimated.
+uv run --package flatsplit-api python \
+  docs/evaluation/e9/model/measure_operations.py --seeded-place
 ```
 
 Prices come from the AWS Price List bulk API for `ap-southeast-1` (publication date 1 October 2026), captured in `model/prices_ap_southeast_1.json` with the source URL; CloudFront values use the `AP-` usage-type prefix (Asia Pacific price class, which serves Singapore). Refresh before the final report and commit the new file so the figures in the report are reproducible.

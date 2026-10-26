@@ -43,6 +43,7 @@ os.environ.setdefault("AWS_ACCESS_KEY_ID", "testing")
 os.environ.setdefault("AWS_SECRET_ACCESS_KEY", "testing")
 os.environ.setdefault("POWERTOOLS_LOG_LEVEL", "CRITICAL")
 
+import urllib.parse  # noqa: E402
 import urllib.request  # noqa: E402
 
 import boto3  # noqa: E402
@@ -54,18 +55,29 @@ WRITE_OPS = {"PutItem", "UpdateItem", "DeleteItem", "BatchWriteItem", "TransactW
 
 calls: Counter[str] = Counter()
 items: Counter[str] = Counter()
+#: Transaction ConditionCheck actions: billed and limit-consuming, but not mutations.
+checks: Counter[str] = Counter()
 _real_api = botocore.client.BaseClient._make_api_call
 _real_urlopen = urllib.request.urlopen
 
 
 def _counting_api(self: Any, operation_name: str, api_params: dict) -> Any:
-    """Count one AWS API call, and the items inside a batch or transaction."""
+    """Count one AWS API call, the items it mutates, and its condition checks.
+
+    A transaction's `ConditionCheck` action is billed and counts toward the
+    25-action limit, but it changes nothing, so adding it to a write-item total
+    overstates the mutations. The two are counted apart: a preference save is
+    two Updates plus one check, and a search submission three Puts plus one.
+    """
     service = self.meta.service_model.service_name
     key = f"{service}:{operation_name}"
     calls[key] += 1
     count = 1
     if operation_name in {"TransactWriteItems", "TransactGetItems"}:
-        count = len(api_params.get("TransactItems", []))
+        actions = api_params.get("TransactItems", [])
+        condition_checks = sum(1 for a in actions if "ConditionCheck" in a)
+        checks[key] += condition_checks
+        count = len(actions) - condition_checks
     elif operation_name == "BatchGetItem":
         count = sum(len(v.get("Keys", [])) for v in api_params.get("RequestItems", {}).values())
     elif operation_name == "BatchWriteItem":
@@ -97,6 +109,42 @@ SNAPSHOT = "synthetic-local-v1"
 PERIOD = "2025-10/2026-09"
 
 
+def seed_places(table: Any) -> tuple[str, str]:
+    """Two PLACE#/STATION# records, standing in for a real /places lookup.
+
+    `save_preferences` only reads `PLACE#<id>` and condition-checks its ttl, so
+    a seeded record exercises the same transaction as a looked-up one. The
+    coordinates are synthetic; only the operation counts are measured.
+    """
+    expiry = int(time.time()) + 86400
+    ids = []
+    for place_id, name, lat, lng in [
+        ("seeded-kent-ridge", "KENT RIDGE MRT STATION", "1.2936", "103.7845"),
+        ("seeded-raffles-place", "RAFFLES PLACE MRT STATION", "1.2830", "103.8513"),
+    ]:
+        station_key = place_id.replace("seeded-", "").upper().replace("-", "_")
+        table.put_item(
+            Item={
+                "pk": f"PLACE#{place_id}",
+                "sk": "META",
+                "label": name,
+                "address": "Singapore",
+                "station": {
+                    "stationKey": station_key,
+                    "codes": [],
+                    "name": name,
+                    "lat": Decimal(lat),
+                    "lng": Decimal(lng),
+                    "snapMetres": 0,
+                    "snapWarning": False,
+                },
+                "ttl": expiry,
+            }
+        )
+        ids.append(place_id)
+    return ids[0], ids[1]
+
+
 def seed_rent(table: Any) -> None:
     table.put_item(
         Item={
@@ -120,6 +168,27 @@ def seed_rent(table: Any) -> None:
                     "syntheticLocalFixture": True,
                 }
             )
+
+
+def _revision(paths: list[str]) -> str:
+    """HEAD with a dirty flag for the given paths: counts belong to a build."""
+    try:
+        head = subprocess.run(
+            ["git", "-C", REPO, "rev-parse", "--short", "HEAD"],
+            capture_output=True, text=True, check=True,
+        ).stdout.strip()
+        changed = subprocess.run(
+            ["git", "-C", REPO, "status", "--porcelain", *paths],
+            capture_output=True, text=True, check=True,
+        ).stdout.strip()
+        return f"{head}+dirty" if changed else head
+    except (OSError, subprocess.CalledProcessError):
+        return "unknown"
+
+
+def tool_revision() -> str:
+    """The measuring script's own revision, so evidence names its producer."""
+    return _revision(["docs/evaluation/e9/model"])
 
 
 def code_revision() -> str:
@@ -146,6 +215,8 @@ class Context:
 
 
 MEASURED: list[dict[str, object]] = []
+#: Selectable/unsupported candidate counts per measured /places query (WK's ask).
+PLACES_CANDIDATES: dict[str, dict[str, int]] = {}
 
 
 def request(
@@ -168,7 +239,11 @@ def request(
         "rawPath": path,
         "rawQueryString": query,
         "headers": headers,
-        "queryStringParameters": dict(p.split("=", 1) for p in query.split("&") if p) or None,
+        # API Gateway hands the handler *decoded* parameters while leaving
+        # rawQueryString encoded. Splitting on "=" instead kept the encoding, so
+        # `q=kent%20ridge` reached the resolver as the literal `kent%20ridge`
+        # and both the upstream search and the cache key were built from it.
+        "queryStringParameters": dict(urllib.parse.parse_qsl(query)) or None,
         "requestContext": {
             "http": {"method": method, "path": path, "sourceIp": "127.0.0.1"},
             "requestId": "measure",
@@ -178,10 +253,12 @@ def request(
         "isBase64Encoded": True,
     }
     before_calls, before_items = Counter(calls), Counter(items)
+    before_checks = Counter(checks)
     started = time.perf_counter()
     response = http.handler(event, Context())  # type: ignore[arg-type]
     elapsed = round((time.perf_counter() - started) * 1000)
     delta_calls, delta_items = calls - before_calls, items - before_items
+    delta_checks = checks - before_checks
 
     def total(source: Counter[str], ops: set[str]) -> int:
         return sum(
@@ -199,6 +276,7 @@ def request(
         "ddbWriteCalls": total(delta_calls, WRITE_OPS),
         "ddbReadItems": total(delta_items, READ_OPS),
         "ddbWriteItems": total(delta_items, WRITE_OPS),
+        "ddbConditionChecks": total(delta_checks, WRITE_OPS),
         "onemapCalls": delta_calls.get("onemap:http", 0),
         "sqsCalls": sum(v for k, v in delta_calls.items() if k.startswith("sqs:")),
         "ops": dict(sorted(delta_calls.items())),
@@ -207,14 +285,27 @@ def request(
     print(
         f"{label:<34} HTTP {row['status']}  {row['ms']:>5}ms  "
         f"ddb read {row['ddbReadCalls']}  write {row['ddbWriteCalls']} calls "
-        f"/ {row['ddbWriteItems']} items  onemap {row['onemapCalls']}  sqs {row['sqsCalls']}"
+        f"/ {row['ddbWriteItems']} items + {row['ddbConditionChecks']} checks  "
+        f"onemap {row['onemapCalls']}  sqs {row['sqsCalls']}"
     )
     return json.loads(response["body"]) if response.get("body") else {}
 
 
 def main() -> int:
-    if not os.environ.get("ONEMAP_TOKEN"):
-        print("warning: no ONEMAP_TOKEN, so /places returns 503 and its rows are missing")
+    seeded = "--seeded-place" in sys.argv
+    if not os.environ.get("ONEMAP_TOKEN") and not seeded:
+        # Not just the /places rows: every later row saves a preference against
+        # a placeId that a real lookup returned, so there is nothing to measure
+        # without one. Failing here beats a KeyError three rows in.
+        print(
+            "error: ONEMAP_TOKEN is not set.\n"
+            "  /places needs live OneMap, and the preference and search rows need a\n"
+            "  placeId it returned, so no row can be measured without it. Mint a\n"
+            "  token from the project OneMap account and export it (see #72), or\n"
+            "  pass --seeded-place to measure the six rows that do not touch OneMap.",
+            file=sys.stderr,
+        )
+        return 2
     with mock_aws():
         ddb = boto3.resource("dynamodb")
         ddb.create_table(
@@ -234,18 +325,35 @@ def main() -> int:
         seed_rent(ddb.Table("flatsplit-measure"))
         calls.clear()
         items.clear()
+        checks.clear()
 
-        first = request("places cold (A)", "GET", "/api/places", query="q=kent+ridge")
-        request("places warm (A, cache hit)", "GET", "/api/places", query="q=kent+ridge")
-        second = request("places cold (B)", "GET", "/api/places", query="q=raffles+place")
-        place_a = first["places"][0]["placeId"]
-        place_b = second["places"][0]["placeId"]
-        print(
-            f"   candidates: A={len(first['places'])} selectable "
-            f"+ {len(first.get('unsupported', []))} unsupported, "
-            f"B={len(second['places'])} selectable "
-            f"+ {len(second.get('unsupported', []))} unsupported"
-        )
+        if seeded:
+            # The /places rows need live OneMap and #65's query cache, but every
+            # row after them only needs a PLACE# record to exist, so seeding two
+            # keeps the other six measurable while the token is unavailable.
+            place_a, place_b = seed_places(ddb.Table("flatsplit-measure"))
+            print(
+                "places cold/warm rows skipped: --seeded-place, no OneMap call made"
+            )
+        else:
+            first = request(
+                "places cold (A)", "GET", "/api/places", query="q=kent%20ridge"
+            )
+            request(
+                "places warm (A, cache hit)", "GET", "/api/places",
+                query="q=kent%20ridge",
+            )
+            second = request(
+                "places cold (B)", "GET", "/api/places", query="q=raffles%20place"
+            )
+            place_a = first["places"][0]["placeId"]
+            place_b = second["places"][0]["placeId"]
+            for name, reply in [("kent ridge", first), ("raffles place", second)]:
+                PLACES_CANDIDATES[name] = {
+                    "selectable": len(reply["places"]),
+                    "unsupported": len(reply.get("unsupported", [])),
+                }
+            print(f"   candidates: {PLACES_CANDIDATES}")
 
         created = request(
             "group create", "POST", "/api/groups",
@@ -283,7 +391,10 @@ def main() -> int:
 
         print("\ntotals by operation:")
         for key in sorted(calls):
-            print(f"  {key:<34} {calls[key]:>4} calls  {items[key]:>4} items")
+            check = f"  {checks[key]:>3} checks" if checks[key] else ""
+            print(
+                f"  {key:<34} {calls[key]:>4} calls  {items[key]:>4} items{check}"
+            )
 
         stamp = time.strftime("%Y%m%d", time.gmtime())
         os.makedirs(EVIDENCE, exist_ok=True)
@@ -294,8 +405,15 @@ def main() -> int:
                     "generatedAtUtc": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
                     "issue": 45,
                     "experiment": "E9",
-                    "mode": "local-moto + live OneMap",
+                    "mode": (
+                        "local-moto, seeded place, no OneMap call"
+                        if seeded
+                        else "local-moto + live OneMap"
+                    ),
+                    "placesRowsMeasured": not seeded,
                     "codeRevision": code_revision(),
+                    "toolRevision": tool_revision(),
+                    "placesCandidates": PLACES_CANDIDATES or None,
                     "caveats": (
                         "Request and item counts, not consumed capacity. Durations are "
                         "laptop durations; only the OneMap-bound lookup paths feed the "
@@ -305,6 +423,7 @@ def main() -> int:
                     "requests": MEASURED,
                     "totalCalls": dict(sorted(calls.items())),
                     "totalItems": dict(sorted(items.items())),
+                    "totalConditionChecks": dict(sorted(checks.items())),
                 },
                 handle, indent=2, sort_keys=True,
             )

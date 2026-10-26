@@ -4,18 +4,18 @@ One row per assumption that must become a measurement before E9 / #45 can be com
 
 ## Already measured — 20 October 2026 (@lukerspace)
 
-Done with `model/measure_operations.py`; raw counts in `measured-operations-20261020.json`, and the corrections they caused are described in [cost-model.md](../cost-model.md#measured-per-request-operations-20-october-2026). These rows need no further work, only a re-measurement after a handler change.
+Done with `model/measure_operations.py`; raw counts in `measured-operations-20261020.json`, and the corrections they caused are described in [cost-model.md](../cost-model.md#measured-per-request-operations-20-october-2026). These rows need no further work, only a re-measurement after a handler change — except the three `/places` rows, which are provisional: the 20 October run built its query parameters without URL-decoding them, and re-measuring needs a OneMap token (#72) and #65's query cache. The 26 October run re-measured the other six on this branch with `--seeded-place`.
 
-| Field                                                 | Was                         | Now measured                                                               |
-| ----------------------------------------------------- | --------------------------- | -------------------------------------------------------------------------- |
-| `measured_operations.*.ddb_reads` / `ddb_write_items` | design budget from A1/A6/A7 | Per-request DynamoDB call and item counts for all nine request shapes      |
-| `meta.fixed_facts.ddb_requests_first_search`          | 8 (budget)                  | **7** — one less than budgeted                                             |
-| `meta.fixed_facts.ddb_requests_repeat_read`           | 7 (budget)                  | 7 — matched exactly                                                        |
-| `meta.fixed_facts.towns_routable`                     | 26 from the #2 data profile | Confirmed by the handler: 52 sends and 2 unavailable pairs for two members |
-| `measured_operations.search_start.*`                  | `jobs × 2` writes assumed   | 1 write per uncached pair + a 3-item transaction; 1 SQS send per pair      |
-| `measured_operations.places_lookup_cold.onemap_calls` | not modelled at all         | **6** per cold lookup (1 search + 1 per candidate)                         |
-| `shared_assumptions.lambda_places_cold_duration_ms`   | folded into 120 ms          | 600 ms mean of four runs, dominated by real OneMap round trips             |
-| `shared_assumptions.lambda_places_warm_duration_ms`   | folded into 120 ms          | 16 ms, with zero upstream calls and zero writes                            |
+| Field                                                                              | Was                         | Now measured                                                                                                  |
+| ---------------------------------------------------------------------------------- | --------------------------- | ------------------------------------------------------------------------------------------------------------- |
+| `measured_operations.*.ddb_reads` / `ddb_write_mutations` / `ddb_condition_checks` | design budget from A1/A6/A7 | Per-request DynamoDB call, mutation and condition-check counts for all nine request shapes                    |
+| `measured_operations.search_start.ddb_reads`                                       | 8 (budget)                  | **7** — one less than budgeted; the duplicate copy under `fixed_facts` is gone, so the model reads one source |
+| `measured_operations.search_poll.ddb_reads`                                        | 7 (budget)                  | 7 — matched exactly                                                                                           |
+| `meta.fixed_facts.towns_routable`                                                  | 26 from the #2 data profile | Confirmed by the handler: 52 sends and 2 unavailable pairs for two members                                    |
+| `measured_operations.search_start.*`                                               | `jobs × 2` writes assumed   | 1 write per uncached pair + a 3-item transaction; 1 SQS send per pair                                         |
+| `measured_operations.places_lookup_cold.onemap_calls`                              | not modelled at all         | **6** per cold lookup (1 search + 1 per candidate)                                                            |
+| `shared_assumptions.lambda_places_cold_duration_ms`                                | folded into 120 ms          | 600 ms mean of four runs, dominated by real OneMap round trips                                                |
+| `shared_assumptions.lambda_places_warm_duration_ms`                                | folded into 120 ms          | 16 ms, with zero upstream calls and zero writes                                                               |
 
 **Still open from main's 20 October reconciliation.** The measured rows above close that note's DynamoDB budget, TENGAH queue jobs and `1 + N` cold-lookup items. These remain: main defines a 30-second HTTP Lambda timeout and eval-only 100 requests/s, burst 200, so the deployed limits must be verified rather than repeating the original 20/40 eval assumption; and worker idle polling, custom metrics, dashboards and alarms are still planned costs rather than measured ones. Historical model inputs and generated outputs are not rewritten.
 

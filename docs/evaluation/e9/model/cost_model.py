@@ -96,15 +96,27 @@ def derive_usage(
         + joins * measured["member_join"]["ddb_reads"]
         + prefs * measured["preference_save"]["ddb_reads"]
         + group_reads * measured["group_read"]["ddb_reads"]
-        + searches * facts["ddb_requests_first_search"]
-        + polls * facts["ddb_requests_repeat_read"]
+        + searches * start["ddb_reads"]
+        + polls * measured["search_poll"]["ddb_reads"]
     )
+
+    def billed_writes(op: dict, suffix: str = "") -> int:
+        """Mutations plus condition checks.
+
+        A transaction's `ConditionCheck` changes nothing, so it is counted apart
+        from the mutations, but AWS bills it as a transactional write and it
+        consumes one of the 25 action slots. Both therefore cost write units.
+        """
+        return (
+            op[f"ddb_write_mutations{suffix}"] + op[f"ddb_condition_checks{suffix}"]
+        )
+
     ddb_writes = (
         places_cold * cold["ddb_writes"]
-        + groups * measured["group_create"]["ddb_write_items"]
-        + joins * measured["member_join"]["ddb_write_items"]
-        + prefs * measured["preference_save"]["ddb_write_items"]
-        + searches * start["ddb_write_items_fixed"]
+        + groups * billed_writes(measured["group_create"])
+        + joins * billed_writes(measured["member_join"])
+        + prefs * billed_writes(measured["preference_save"])
+        + searches * billed_writes(start, "_fixed")
         + (jobs + non_routable_writes) * start["ddb_writes_per_pair_record"]
         + jobs  # one result write per job by #15's worker (assumed, no worker yet)
         + shared["monthly_ingest_runs"] * shared["rent_snapshot_items"]
