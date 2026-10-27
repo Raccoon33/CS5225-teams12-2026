@@ -105,7 +105,8 @@ def derive_usage(
 
         A transaction's `ConditionCheck` changes nothing, so it is counted apart
         from the mutations, but AWS bills it as a transactional write and it
-        consumes one of the 25 action slots. Both therefore cost write units.
+        consumes one of the transaction's 100 action slots. Both therefore cost
+        write units.
         """
         return (
             op[f"ddb_write_mutations{suffix}"] + op[f"ddb_condition_checks{suffix}"]
@@ -118,7 +119,7 @@ def derive_usage(
         + prefs * billed_writes(measured["preference_save"])
         + searches * billed_writes(start, "_fixed")
         + (jobs + non_routable_writes) * start["ddb_writes_per_pair_record"]
-        + jobs  # one result write per job by #15's worker (assumed, no worker yet)
+        + jobs  # one result write per job by #15's worker (assumed; #74 in review)
         + shared["monthly_ingest_runs"] * shared["rent_snapshot_items"]
     )
 

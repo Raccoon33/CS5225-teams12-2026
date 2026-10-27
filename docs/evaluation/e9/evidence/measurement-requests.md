@@ -2,9 +2,9 @@
 
 One row per assumption that must become a measurement before E9 / #45 can be completed (target 8 November 2026). Each row names the field in `model/workloads.json` or `model/onprem.json`, the owner, and the experiment that produces it. Paste the measured value in, re-run `model/cost_model.py`, and commit the new `evidence/cost_model_<utc>.*` files.
 
-## Already measured — 20 October 2026 (@lukerspace)
+## Already measured — 20, 26 and 27 October 2026 (@lukerspace)
 
-Done with `model/measure_operations.py`; raw counts in `measured-operations-20261020.json`, and the corrections they caused are described in [cost-model.md](../cost-model.md#measured-per-request-operations-20-october-2026). These rows need no further work, only a re-measurement after a handler change — except the three `/places` rows, which are provisional: the 20 October run built its query parameters without URL-decoding them, and re-measuring needs a OneMap token (#72) and #65's query cache. The 26 October run re-measured the other six on this branch with `--seeded-place`.
+Done with `model/measure_operations.py`; the current raw counts are in `measured-operations-20261027.json`, and the corrections they caused are described in [cost-model.md](../cost-model.md#measured-per-request-operations-20-october-2026). All nine rows are now measured and none is provisional: the 27 October run drove the three `/places` rows against live OneMap with decoded queries and #65 merged, and reproduced 20 October's counts exactly. Earlier runs are kept as history — `measured-operations-20261020.json` (first run, un-decoded queries, #65 at `c6f7e0c`) and `measured-operations-20261026.json` (the six non-OneMap rows with `--seeded-place`). These rows need no further work, only a re-measurement after a handler change.
 
 | Field                                                                              | Was                         | Now measured                                                                                                  |
 | ---------------------------------------------------------------------------------- | --------------------------- | ------------------------------------------------------------------------------------------------------------- |
