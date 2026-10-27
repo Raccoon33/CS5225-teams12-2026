@@ -30,6 +30,7 @@ Standard library only, so it runs on any machine with Python 3.
 
 import argparse
 import json
+import math
 import os
 import sys
 import time
@@ -41,6 +42,119 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 EVIDENCE = os.path.join(HERE, "evidence")
 
 PASS, FAIL, INFO = "PASS", "FAIL", "INFO"
+
+#: Any key whose name folds to one of these carries a capability, wherever it
+#: appears. The gate has to reject them at any depth, not only at the top of a
+#: response: an issued token nested inside a member or a snapshot is just as
+#: leaked, and this evidence file is meant to be attached to an issue.
+CREDENTIAL_KEYS = frozenset(
+    {
+        "invitetoken",
+        "membertoken",
+        "token",
+        "accesstoken",
+        "refreshtoken",
+        "authorization",
+        "password",
+        "secret",
+        "apikey",
+        "credentials",
+    }
+)
+REDACTED = "<redacted>"
+
+
+def finite(value: object) -> bool:
+    """A real number, so 0.0 counts and None, True and NaN do not."""
+    return (
+        isinstance(value, (int, float))
+        and not isinstance(value, bool)
+        and math.isfinite(value)
+    )
+
+
+def station_pinned(place: object) -> bool:
+    """A candidate carries a station key and both of its coordinates.
+
+    Checking latitude alone passed a candidate whose `lng` had been removed,
+    and a truthiness test would also pass a zero coordinate.
+    """
+    if not isinstance(place, dict):
+        return False
+    station = place.get("station")
+    if not isinstance(station, dict):
+        return False
+    return (
+        isinstance(station.get("stationKey"), str)
+        and bool(station["stationKey"])
+        and finite(station.get("lat"))
+        and finite(station.get("lng"))
+    )
+
+
+def credential_fields(value: object, path: str = "") -> list[str]:
+    """Every path in `value` whose key names a credential, at any depth."""
+    found: list[str] = []
+    if isinstance(value, dict):
+        for key, item in value.items():
+            here = f"{path}.{key}" if path else str(key)
+            if str(key).replace("_", "").replace("-", "").lower() in CREDENTIAL_KEYS:
+                found.append(here)
+            found += credential_fields(item, here)
+    elif isinstance(value, list):
+        for index, item in enumerate(value):
+            found += credential_fields(item, f"{path}[{index}]")
+    return found
+
+
+def redact(value: object) -> object:
+    """Copy `value` with every credential field replaced.
+
+    Applied to anything API-derived before it is printed or written, because
+    the evidence file is an attachment and stdout is pasted into issues.
+    """
+    if isinstance(value, dict):
+        return {
+            key: (
+                REDACTED
+                if str(key).replace("_", "").replace("-", "").lower() in CREDENTIAL_KEYS
+                else redact(item)
+            )
+            for key, item in value.items()
+        }
+    if isinstance(value, list):
+        return [redact(item) for item in value]
+    return value
+
+
+def detail_of(body: object, limit: int = 160) -> str:
+    """A short, redacted rendering of a response for a check's detail line.
+
+    A failing response is still a response: the 500 body of a creation request
+    carries the tokens it had already issued, and it used to reach stdout and
+    the evidence file through the failure detail.
+    """
+    if isinstance(body, (dict, list)):
+        text = json.dumps(redact(body), ensure_ascii=False, sort_keys=True)
+    else:
+        text = str(body)
+    return text[:limit]
+
+
+def pending_pairs(progress: object) -> int | None:
+    """Pairs with no answer yet.
+
+    `resolved` counts every pair that reached a terminal state, including the
+    unavailable ones, so subtracting both double-counts them: it reported 50
+    of 52 pending, then -2 once the pairs resolved and -54 when every route
+    came back unavailable.
+    """
+    if not isinstance(progress, dict):
+        return None
+    total, resolved = progress.get("total"), progress.get("resolved")
+    if not finite(total) or not finite(resolved):
+        return None
+    return int(total) - int(resolved)  # type: ignore[arg-type]
 
 
 class Api:
@@ -123,7 +237,7 @@ def pick_place(api: Api, report: Report, query: str) -> dict[str, object] | None
             "destinations",
             f"GET /places?q={query!r}",
             False,
-            f"HTTP {status} {str(body)[:120]}",
+            f"HTTP {status} {detail_of(body, 120)}",
         )
         return None
     places = body.get("places") or []
@@ -138,17 +252,14 @@ def pick_place(api: Api, report: Report, query: str) -> dict[str, object] | None
         return None
     best = places[0]
     station = best.get("station") or {}
+    unpinned = [p.get("placeId") for p in places if not station_pinned(p)]
     report.expect(
         "destinations",
-        "every candidate carries a pinned station coordinate",
-        all(
-            isinstance(p.get("station"), dict)
-            and p["station"].get("lat")
-            and p["station"].get("stationKey")
-            for p in places
-        ),
+        "every candidate carries a station key and both coordinates",
+        not unpinned,
         f"{station.get('stationKey')} ({station.get('lat')}, {station.get('lng')}) "
-        f"snap={station.get('snapMetres')}m",
+        f"snap={station.get('snapMetres')}m"
+        + (f"; unpinned: {unpinned}" if unpinned else ""),
     )
     return best
 
@@ -183,7 +294,7 @@ def main() -> int:
         "health",
         "GET /health returns 200 ok",
         status == 200 and isinstance(body, dict) and body.get("status") == "ok",
-        f"HTTP {status} {body}",
+        f"HTTP {status} {detail_of(body)}",
     )
 
     print("=== 1. destination lookup (#14) ===")
@@ -192,7 +303,7 @@ def main() -> int:
     if place_a is None or place_b is None:
         print("\nno destination resolved; the rest of the journey cannot run.")
         return finish(api, report, facts, args, started)
-    facts["destinations"] = {"a": place_a, "b": place_b}
+    facts["destinations"] = {"a": redact(place_a), "b": redact(place_b)}
 
     print("=== 2. repeated lookup should hit the 24h query cache (#14) ===")
     before = len(api.calls)
@@ -221,7 +332,10 @@ def main() -> int:
     )
     if status != 201 or not isinstance(created, dict):
         report.expect(
-            "group", "POST /groups returns 201", False, f"HTTP {status} {created}"
+            "group",
+            "POST /groups returns 201",
+            False,
+            f"HTTP {status} {detail_of(created)}",
         )
         return finish(api, report, facts, args, started)
     report.expect("group", "POST /groups returns 201", True)
@@ -267,7 +381,7 @@ def main() -> int:
             "save",
             f"{who} saves preferences and gets 200",
             ok,
-            f"HTTP {status}" + ("" if ok else f" {str(saved)[:160]}"),
+            f"HTTP {status}" + ("" if ok else f" {detail_of(saved)}"),
         )
         if not ok:
             return finish(api, report, facts, args, started)
@@ -279,32 +393,57 @@ def main() -> int:
         if isinstance(reread, dict)
         else []
     )
-    with_dest = [m for m in members if m.get("destination")]
+    by_id = {m.get("memberId"): m for m in members if isinstance(m, dict)}
+    # What each member saved in stage 4. Counting destinations was not enough:
+    # a reread that gave Member B Member A's destination, or lost B's budget
+    # and commute limit, satisfied "both have a destination".
+    expected = {
+        m1: {"name": "Member A", "place": place_a, "budget": 1400, "maxCommute": 45},
+        m2: {"name": "Member B", "place": place_b, "budget": 1400, "maxCommute": 45},
+    }
+    ids_match = set(expected) <= set(by_id)
     report.expect(
         "reload",
-        "reread with the second member's token keeps both destinations",
-        status == 200 and len(with_dest) == 2,
-        f"{len(with_dest)}/2 members have a destination",
+        "the reread returns both members by id",
+        status == 200 and ids_match,
+        f"{len(by_id)} members, ids {'match' if ids_match else 'differ'}",
     )
-    if with_dest:
-        snapshot = with_dest[0]["destination"]
+    for member_id, want in expected.items():
+        member = by_id.get(member_id) or {}
+        snapshot = member.get("destination")
+        snapshot = snapshot if isinstance(snapshot, dict) else {}
+        station = snapshot.get("station")
+        station = station if isinstance(station, dict) else {}
+        place = want["place"]
+        assert isinstance(place, dict)
+        wanted_station = place.get("station")
+        wanted_station = wanted_station if isinstance(wanted_station, dict) else {}
+        mismatches = []
+        if snapshot.get("placeId") != place.get("placeId"):
+            mismatches.append("placeId")
+        if station.get("stationKey") != wanted_station.get("stationKey"):
+            mismatches.append("stationKey")
+        if not (finite(station.get("lat")) and finite(station.get("lng"))):
+            mismatches.append("station coordinates")
+        if member.get("budget") != want["budget"]:
+            mismatches.append("budget")
+        if member.get("maxCommute") != want["maxCommute"]:
+            mismatches.append("maxCommute")
         report.expect(
             "reload",
-            "the member stores a snapshot with station coordinates, not just a placeId",
-            all(
-                snapshot.get("station", {}).get(k) is not None
-                for k in ("stationKey", "lat", "lng")
-            ),
-            f"{snapshot['station'].get('stationKey')} "
-            f"({snapshot['station'].get('lat')}, {snapshot['station'].get('lng')})",
+            f"{want['name']} reloads the destination and limits they saved",
+            not mismatches,
+            f"{station.get('stationKey')} "
+            f"({station.get('lat')}, {station.get('lng')})"
+            + (f"; wrong: {', '.join(mismatches)}" if mismatches else ""),
         )
-        facts["savedDestination"] = snapshot
+        facts.setdefault("savedDestinations", {})[member_id] = redact(snapshot)  # type: ignore[index]
+    leaked = credential_fields(reread)
     report.expect(
         "reload",
-        "the reread no longer returns inviteToken or memberToken",
-        isinstance(reread, dict)
-        and "inviteToken" not in reread.get("group", {})
-        and "memberToken" not in reread,
+        "the reread carries no issued credential at any depth",
+        not leaked,
+        f"leaked: {leaked}" if leaked else "",
     )
 
     print("=== 6. authorisation (no token / wrong token cannot read or write) ===")
@@ -356,49 +495,79 @@ def main() -> int:
         time.sleep(2.0)
     progress = view.get("progress") if isinstance(view, dict) else None
     ranked = view.get("ranked") or [] if isinstance(view, dict) else []
-    pending = None
-    if isinstance(progress, dict):
-        pending = (
-            int(progress.get("total", 0))
-            - int(progress.get("resolved", 0))
-            - int(progress.get("unavailable", 0))
-        )
+    excluded = view.get("excluded") or [] if isinstance(view, dict) else []
+    pending = pending_pairs(progress)
+    search_status = view.get("status") if isinstance(view, dict) else None
     facts["search"] = {
         "searchId": sid,
-        "status": view.get("status"),
+        "status": search_status,
         "progress": progress,
         "pendingPairs": pending,
         "rankedCount": len(ranked),
-        "data": view.get("data"),
+        "excludedCount": len(excluded),
+        "data": redact(view.get("data") if isinstance(view, dict) else None),
     }
     report.expect(
         "search",
         "search status is readable",
-        isinstance(view, dict)
-        and view.get("status") in {"pending", "complete", "stale"},
-        f"status={view.get('status')} progress={progress}",
+        search_status in {"pending", "complete", "stale"},
+        f"status={search_status} progress={progress}",
     )
 
-    if view.get("status") == "complete" and ranked:
+    # Branch on the status, not on "complete and ranked". Collapsing the rest
+    # into one else reported a finished search whose towns were all excluded,
+    # and a search that was already stale, as "nobody computes commute data".
+    seen = progress if isinstance(progress, dict) else {}
+    counts = (
+        f"total={seen.get('total', '?')} resolved={seen.get('resolved', '?')}"
+        f" unavailable={seen.get('unavailable', '?')} pending={pending}"
+    )
+    if search_status == "complete" and ranked:
         top = ranked[0]
         report.record(
             PASS,
             "search",
             "ranked results are present (#15's worker is running)",
-            f"top {top.get('town')} / {top.get('flatType')}",
+            f"top {top.get('town')} / {top.get('flatType')}; {counts}",
         )
-        facts["topResult"] = top
-    else:
-        seen = progress if isinstance(progress, dict) else {}
+        facts["topResult"] = redact(top)
+    elif search_status == "complete":
+        reasons = sorted(
+            {
+                str(r.get("code"))
+                for area in excluded
+                if isinstance(area, dict)
+                for r in (area.get("reasons") or [])
+                if isinstance(r, dict)
+            }
+        )
+        report.record(
+            PASS,
+            "search",
+            "the search finished and every town was excluded, honestly",
+            f"{len(excluded)} towns excluded, reasons {reasons or '[]'}; {counts}"
+            " - a completed search with no feasible town is a real answer,"
+            " not a missing worker",
+        )
+        facts["exclusionReasons"] = reasons
+    elif search_status == "pending":
         report.record(
             INFO,
             "search",
             "search stays pending: nobody computes commute data yet"
-            " (#15's worker does not exist)",
-            f"{pending} pairs waiting (total={seen.get('total', '?')}"
-            f" resolved={seen.get('resolved', '?')}"
-            f" unavailable={seen.get('unavailable', '?')})"
+            " (#15's worker is not deployed)",
+            f"{pending} pairs waiting ({counts})"
             " - this is the current integration gap, not a failure of this script",
+        )
+    else:
+        # Stage 8 makes a search stale on purpose. Arriving here already stale
+        # means the staleness came from somewhere else, so neither this stage
+        # nor stage 8 can be evaluated.
+        report.expect(
+            "search",
+            "the search is not stale before stage 8 edits a preference",
+            False,
+            f"status={search_status}; {counts}",
         )
 
     print("=== 8. editing preferences must make the old search stale (D08) ===")
@@ -448,6 +617,12 @@ def finish(
         "facts": facts,
         "calls": api.calls,
     }
+    # Last line of defence before stdout and the attachable file: a response
+    # shape that changes, or a field nobody anticipated, must not leak a
+    # capability into evidence that gets pasted into an issue.
+    safe = redact(summary)
+    assert isinstance(safe, dict)
+    summary = safe
     passed = sum(1 for c in report.checks if c["result"] == PASS)
     info = sum(1 for c in report.checks if c["result"] == INFO)
     summary["verdict"] = "PASS" if not report.failed else "FAIL"

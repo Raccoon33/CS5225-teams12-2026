@@ -183,10 +183,10 @@ def main() -> int:
 
         # Deliberately no SQS depth watcher here: Moto's queue state only
         # exists in this process, and a thread reporting it said 0 while the
-        # API's own progress reported 50 pairs still waiting. A diagnostic that
+        # API's own progress reported pairs still waiting. A diagnostic that
         # lies is worse than none. `acceptance.py` derives the waiting count
-        # from the API's progress (`total - resolved - unavailable`), which
-        # also holds after deployment.
+        # from the API's progress (`total - resolved`, since `resolved` already
+        # counts the unavailable pairs), which also holds after deployment.
         print(f"[serve] http://127.0.0.1:{args.port}  (docs: /docs)")
         print("[serve] in another terminal: python3 tools/acceptance/acceptance.py")
         uvicorn.run(app, host="127.0.0.1", port=args.port, log_level="warning")
