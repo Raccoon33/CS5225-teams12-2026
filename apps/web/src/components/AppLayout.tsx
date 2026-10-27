@@ -14,7 +14,7 @@ export function NotFoundPage() {
   return (
     <main id="main-content" className="status-shell">
       <h1>Page not found</h1>
-      <Link to="/" search={{ review: 'create' }}>
+      <Link to="/" search={{}}>
         Return home
       </Link>
     </main>

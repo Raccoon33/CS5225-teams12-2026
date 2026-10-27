@@ -3,6 +3,7 @@ import { Construct } from 'constructs';
 import { Api } from './api.js';
 import { Data } from './data.js';
 import { Ops } from './ops.js';
+import { RentIngestion } from './rent-ingestion.js';
 import { Web } from './web.js';
 
 export interface FlatSplitStackProps extends StackProps {
@@ -19,6 +20,9 @@ export class FlatSplitStack extends Stack {
       props.stage === 'prod' ? RemovalPolicy.RETAIN : RemovalPolicy.DESTROY;
 
     const data = new Data(this, 'Data', { removalPolicy });
+    const rentIngestion = new RentIngestion(this, 'RentIngestion', {
+      removalPolicy,
+    });
     const api = new Api(this, 'Api', {
       stage: props.stage,
       removalPolicy,
@@ -37,6 +41,12 @@ export class FlatSplitStack extends Stack {
     });
     new CfnOutput(this, 'ApiUrl', { value: api.httpApi.apiEndpoint });
     new CfnOutput(this, 'TableName', { value: data.table.tableName });
+    new CfnOutput(this, 'RentRawBucketName', {
+      value: rentIngestion.bucket.bucketName,
+    });
+    new CfnOutput(this, 'RentIngestionFunctionName', {
+      value: rentIngestion.handler.functionName,
+    });
     new CfnOutput(this, 'CommuteQueueUrl', {
       value: api.commuteJobsQueue.queueUrl,
     });

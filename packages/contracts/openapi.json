@@ -1,0 +1,899 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "Powertools for AWS Lambda (Python) API",
+    "version": "1.0.0"
+  },
+  "servers": [{ "url": "/" }],
+  "paths": {
+    "/groups/{group_id}": {
+      "get": {
+        "summary": "GET /groups/{group_id}",
+        "operationId": "readGroup",
+        "parameters": [
+          {
+            "required": true,
+            "schema": { "type": "string", "title": "Group Id" },
+            "name": "group_id",
+            "in": "path"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/GroupResponse" }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/HTTPValidationError" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/groups/{group_id}/members": {
+      "post": {
+        "summary": "POST /groups/{group_id}/members",
+        "operationId": "joinGroup",
+        "parameters": [
+          {
+            "required": true,
+            "schema": { "type": "string", "title": "Group Id" },
+            "name": "group_id",
+            "in": "path"
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "properties": {
+                  "name": {
+                    "type": "string",
+                    "maxLength": 30,
+                    "minLength": 1,
+                    "title": "Name"
+                  }
+                },
+                "type": "object",
+                "required": ["name"],
+                "title": "JoinGroupRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/MembershipResponse" }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/HTTPValidationError" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/groups/{group_id}/members/{member_id}": {
+      "put": {
+        "summary": "PUT /groups/{group_id}/members/{member_id}",
+        "operationId": "savePreferences",
+        "parameters": [
+          {
+            "required": true,
+            "schema": { "type": "string", "title": "Group Id" },
+            "name": "group_id",
+            "in": "path"
+          },
+          {
+            "required": true,
+            "schema": { "type": "string", "title": "Member Id" },
+            "name": "member_id",
+            "in": "path"
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "properties": {
+                  "name": {
+                    "type": "string",
+                    "maxLength": 30,
+                    "minLength": 1,
+                    "title": "Name"
+                  },
+                  "placeId": {
+                    "type": "string",
+                    "minLength": 1,
+                    "title": "Placeid"
+                  },
+                  "budget": {
+                    "type": "number",
+                    "maximum": 5000,
+                    "minimum": 300,
+                    "title": "Budget"
+                  },
+                  "maxCommute": {
+                    "type": "integer",
+                    "maximum": 120,
+                    "minimum": 10,
+                    "title": "Maxcommute"
+                  }
+                },
+                "type": "object",
+                "required": ["name", "placeId", "budget", "maxCommute"],
+                "title": "PreferencesRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/GroupResponse" }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/HTTPValidationError" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/groups/{group_id}/searches": {
+      "post": {
+        "summary": "POST /groups/{group_id}/searches",
+        "operationId": "startSearch",
+        "parameters": [
+          {
+            "required": true,
+            "schema": { "type": "string", "title": "Group Id" },
+            "name": "group_id",
+            "in": "path"
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/SearchView" }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/HTTPValidationError" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/groups/{group_id}/searches/{search_id}": {
+      "get": {
+        "summary": "GET /groups/{group_id}/searches/{search_id}",
+        "operationId": "readSearch",
+        "parameters": [
+          {
+            "required": true,
+            "schema": { "type": "string", "title": "Group Id" },
+            "name": "group_id",
+            "in": "path"
+          },
+          {
+            "required": true,
+            "schema": { "type": "string", "title": "Search Id" },
+            "name": "search_id",
+            "in": "path"
+          },
+          {
+            "required": false,
+            "schema": {
+              "type": "string",
+              "enum": ["balanced", "fairness", "budget"],
+              "title": "Priority",
+              "default": "balanced"
+            },
+            "name": "priority",
+            "in": "query"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/SearchView" }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/HTTPValidationError" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/health": {
+      "get": {
+        "summary": "GET /health",
+        "operationId": "health",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/HealthResponse" }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/HTTPValidationError" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/places": {
+      "get": {
+        "summary": "GET /places",
+        "operationId": "places",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/PlacesResponse" }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/HTTPValidationError" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/groups": {
+      "post": {
+        "summary": "POST /groups",
+        "operationId": "createGroup",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "properties": {
+                  "groupName": {
+                    "type": "string",
+                    "maxLength": 40,
+                    "minLength": 1,
+                    "title": "Groupname"
+                  },
+                  "size": {
+                    "type": "integer",
+                    "maximum": 5,
+                    "minimum": 2,
+                    "title": "Size"
+                  },
+                  "name": {
+                    "type": "string",
+                    "maxLength": 30,
+                    "minLength": 1,
+                    "title": "Name"
+                  }
+                },
+                "type": "object",
+                "required": ["groupName", "size", "name"],
+                "title": "CreateGroupRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CreatedGroupResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/HTTPValidationError" }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "AreaResult": {
+        "properties": {
+          "town": { "type": "string", "title": "Town" },
+          "displayName": { "type": "string", "title": "Displayname" },
+          "rank": {
+            "anyOf": [{ "type": "integer" }, { "type": "null" }],
+            "title": "Rank"
+          },
+          "score": {
+            "anyOf": [{ "type": "integer" }, { "type": "null" }],
+            "title": "Score"
+          },
+          "wholeFlatRent": {
+            "anyOf": [{ "type": "number" }, { "type": "null" }],
+            "title": "Wholeflatrent"
+          },
+          "rentPerPerson": {
+            "anyOf": [{ "type": "number" }, { "type": "null" }],
+            "title": "Rentperperson"
+          },
+          "rentP25": {
+            "anyOf": [{ "type": "number" }, { "type": "null" }],
+            "title": "Rentp25"
+          },
+          "rentP75": {
+            "anyOf": [{ "type": "number" }, { "type": "null" }],
+            "title": "Rentp75"
+          },
+          "rentMedianCi95Low": {
+            "anyOf": [{ "type": "number" }, { "type": "null" }],
+            "title": "Rentmedianci95Low"
+          },
+          "rentMedianCi95High": {
+            "anyOf": [{ "type": "number" }, { "type": "null" }],
+            "title": "Rentmedianci95High"
+          },
+          "rentSampleSize": {
+            "anyOf": [{ "type": "integer" }, { "type": "null" }],
+            "title": "Rentsamplesize"
+          },
+          "rentQualityStatus": {
+            "anyOf": [
+              { "type": "string", "enum": ["USABLE", "LOW_CONFIDENCE"] },
+              { "type": "null" }
+            ],
+            "title": "Rentqualitystatus"
+          },
+          "averageCommute": {
+            "anyOf": [{ "type": "number" }, { "type": "null" }],
+            "title": "Averagecommute"
+          },
+          "longestCommute": {
+            "anyOf": [{ "type": "number" }, { "type": "null" }],
+            "title": "Longestcommute"
+          },
+          "shortestCommute": {
+            "anyOf": [{ "type": "number" }, { "type": "null" }],
+            "title": "Shortestcommute"
+          },
+          "commuteGap": {
+            "anyOf": [{ "type": "number" }, { "type": "null" }],
+            "title": "Commutegap"
+          },
+          "mostBurdenedMemberId": {
+            "anyOf": [{ "type": "string" }, { "type": "null" }],
+            "title": "Mostburdenedmemberid"
+          },
+          "members": {
+            "items": { "$ref": "#/components/schemas/MemberOutcome" },
+            "type": "array",
+            "title": "Members"
+          },
+          "reasons": {
+            "items": { "$ref": "#/components/schemas/Reason" },
+            "type": "array",
+            "title": "Reasons"
+          }
+        },
+        "type": "object",
+        "required": [
+          "town",
+          "displayName",
+          "rank",
+          "score",
+          "wholeFlatRent",
+          "rentPerPerson",
+          "rentP25",
+          "rentP75",
+          "rentMedianCi95Low",
+          "rentMedianCi95High",
+          "rentSampleSize",
+          "rentQualityStatus",
+          "averageCommute",
+          "longestCommute",
+          "shortestCommute",
+          "commuteGap",
+          "mostBurdenedMemberId",
+          "members",
+          "reasons"
+        ],
+        "title": "AreaResult"
+      },
+      "CreatedGroupResponse": {
+        "properties": {
+          "group": { "$ref": "#/components/schemas/CreatedGroupView" },
+          "memberId": { "type": "string", "title": "Memberid" },
+          "memberToken": { "type": "string", "title": "Membertoken" }
+        },
+        "type": "object",
+        "required": ["group", "memberId", "memberToken"],
+        "title": "CreatedGroupResponse"
+      },
+      "CreatedGroupView": {
+        "properties": {
+          "groupId": { "type": "string", "title": "Groupid" },
+          "groupName": { "type": "string", "title": "Groupname" },
+          "size": { "type": "integer", "title": "Size" },
+          "revision": { "type": "integer", "title": "Revision" },
+          "members": {
+            "items": { "$ref": "#/components/schemas/MemberState" },
+            "type": "array",
+            "title": "Members"
+          },
+          "readyCount": { "type": "integer", "title": "Readycount" },
+          "allReady": { "type": "boolean", "title": "Allready" },
+          "latestSearch": {
+            "anyOf": [
+              { "$ref": "#/components/schemas/SearchSummary" },
+              { "type": "null" }
+            ]
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Createdat"
+          },
+          "expiresAt": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Expiresat"
+          },
+          "inviteToken": { "type": "string", "title": "Invitetoken" }
+        },
+        "type": "object",
+        "required": [
+          "groupId",
+          "groupName",
+          "size",
+          "revision",
+          "members",
+          "readyCount",
+          "allReady",
+          "latestSearch",
+          "createdAt",
+          "expiresAt",
+          "inviteToken"
+        ],
+        "title": "CreatedGroupView"
+      },
+      "GroupResponse": {
+        "properties": { "group": { "$ref": "#/components/schemas/GroupView" } },
+        "type": "object",
+        "required": ["group"],
+        "title": "GroupResponse"
+      },
+      "GroupView": {
+        "properties": {
+          "groupId": { "type": "string", "title": "Groupid" },
+          "groupName": { "type": "string", "title": "Groupname" },
+          "size": { "type": "integer", "title": "Size" },
+          "revision": { "type": "integer", "title": "Revision" },
+          "members": {
+            "items": { "$ref": "#/components/schemas/MemberState" },
+            "type": "array",
+            "title": "Members"
+          },
+          "readyCount": { "type": "integer", "title": "Readycount" },
+          "allReady": { "type": "boolean", "title": "Allready" },
+          "latestSearch": {
+            "anyOf": [
+              { "$ref": "#/components/schemas/SearchSummary" },
+              { "type": "null" }
+            ]
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Createdat"
+          },
+          "expiresAt": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Expiresat"
+          }
+        },
+        "type": "object",
+        "required": [
+          "groupId",
+          "groupName",
+          "size",
+          "revision",
+          "members",
+          "readyCount",
+          "allReady",
+          "latestSearch",
+          "createdAt",
+          "expiresAt"
+        ],
+        "title": "GroupView"
+      },
+      "HTTPValidationError": {
+        "properties": {
+          "detail": {
+            "items": { "$ref": "#/components/schemas/ValidationError" },
+            "type": "array",
+            "title": "Detail"
+          }
+        },
+        "type": "object",
+        "title": "HTTPValidationError"
+      },
+      "HealthResponse": {
+        "properties": {
+          "status": {
+            "type": "string",
+            "const": "ok",
+            "title": "Status",
+            "default": "ok"
+          },
+          "service": {
+            "type": "string",
+            "const": "flatsplit-api",
+            "title": "Service",
+            "default": "flatsplit-api"
+          }
+        },
+        "type": "object",
+        "title": "HealthResponse"
+      },
+      "MemberOutcome": {
+        "properties": {
+          "memberId": { "type": "string", "title": "Memberid" },
+          "commuteMinutes": {
+            "anyOf": [{ "type": "number" }, { "type": "null" }],
+            "title": "Commuteminutes"
+          },
+          "routeStatus": {
+            "type": "string",
+            "enum": ["ok", "pending", "unavailable"],
+            "title": "Routestatus"
+          },
+          "budgetHeadroom": {
+            "anyOf": [{ "type": "number" }, { "type": "null" }],
+            "title": "Budgetheadroom"
+          },
+          "commuteHeadroom": {
+            "anyOf": [{ "type": "number" }, { "type": "null" }],
+            "title": "Commuteheadroom"
+          }
+        },
+        "type": "object",
+        "required": [
+          "memberId",
+          "commuteMinutes",
+          "routeStatus",
+          "budgetHeadroom",
+          "commuteHeadroom"
+        ],
+        "title": "MemberOutcome"
+      },
+      "MemberState": {
+        "properties": {
+          "memberId": { "type": "string", "title": "Memberid" },
+          "name": { "type": "string", "title": "Name" },
+          "isOrganiser": { "type": "boolean", "title": "Isorganiser" },
+          "ready": { "type": "boolean", "title": "Ready" },
+          "destination": {
+            "anyOf": [
+              { "$ref": "#/components/schemas/Place" },
+              { "type": "null" }
+            ]
+          },
+          "budget": {
+            "anyOf": [{ "type": "number" }, { "type": "null" }],
+            "title": "Budget"
+          },
+          "maxCommute": {
+            "anyOf": [{ "type": "integer" }, { "type": "null" }],
+            "title": "Maxcommute"
+          }
+        },
+        "type": "object",
+        "required": [
+          "memberId",
+          "name",
+          "isOrganiser",
+          "ready",
+          "destination",
+          "budget",
+          "maxCommute"
+        ],
+        "title": "MemberState"
+      },
+      "MembershipResponse": {
+        "properties": {
+          "group": { "$ref": "#/components/schemas/GroupView" },
+          "memberId": { "type": "string", "title": "Memberid" },
+          "memberToken": { "type": "string", "title": "Membertoken" }
+        },
+        "type": "object",
+        "required": ["group", "memberId", "memberToken"],
+        "title": "MembershipResponse"
+      },
+      "Place": {
+        "properties": {
+          "placeId": { "type": "string", "title": "Placeid" },
+          "label": { "type": "string", "title": "Label" },
+          "address": { "type": "string", "title": "Address" },
+          "station": { "$ref": "#/components/schemas/Station" }
+        },
+        "type": "object",
+        "required": ["placeId", "label", "address", "station"],
+        "title": "Place"
+      },
+      "PlacesResponse": {
+        "properties": {
+          "places": {
+            "items": { "$ref": "#/components/schemas/Place" },
+            "type": "array",
+            "title": "Places"
+          },
+          "unsupported": {
+            "items": { "$ref": "#/components/schemas/UnsupportedPlace" },
+            "type": "array",
+            "title": "Unsupported"
+          },
+          "ambiguous": { "type": "boolean", "title": "Ambiguous" }
+        },
+        "type": "object",
+        "required": ["places", "unsupported", "ambiguous"],
+        "title": "PlacesResponse",
+        "description": "Selectable candidates, explicit unsupported results, and ambiguity."
+      },
+      "Reason": {
+        "properties": {
+          "code": {
+            "type": "string",
+            "enum": [
+              "OVER_BUDGET",
+              "OVER_COMMUTE",
+              "ROUTE_UNAVAILABLE",
+              "RENT_UNAVAILABLE",
+              "RENT_LOW_CONFIDENCE"
+            ],
+            "title": "Code"
+          },
+          "memberId": {
+            "anyOf": [{ "type": "string" }, { "type": "null" }],
+            "title": "Memberid"
+          },
+          "amount": {
+            "anyOf": [{ "type": "number" }, { "type": "null" }],
+            "title": "Amount"
+          },
+          "message": { "type": "string", "title": "Message" }
+        },
+        "type": "object",
+        "required": ["code", "memberId", "amount", "message"],
+        "title": "Reason"
+      },
+      "SearchDataInfo": {
+        "properties": {
+          "rentPeriod": { "type": "string", "title": "Rentperiod" },
+          "rentSource": {
+            "type": "string",
+            "title": "Rentsource",
+            "default": "HDB rental approvals (data.gov.sg)"
+          },
+          "flatType": { "type": "string", "title": "Flattype" },
+          "commuteBasis": {
+            "type": "string",
+            "title": "Commutebasis",
+            "default": "Public transport, weekday 08:30 departure; station-to-station"
+          }
+        },
+        "type": "object",
+        "required": ["rentPeriod", "flatType"],
+        "title": "SearchDataInfo"
+      },
+      "SearchProgress": {
+        "properties": {
+          "total": { "type": "integer", "title": "Total" },
+          "resolved": { "type": "integer", "title": "Resolved" },
+          "unavailable": { "type": "integer", "title": "Unavailable" }
+        },
+        "type": "object",
+        "required": ["total", "resolved", "unavailable"],
+        "title": "SearchProgress"
+      },
+      "SearchSummary": {
+        "properties": {
+          "searchId": { "type": "string", "title": "Searchid" },
+          "status": {
+            "type": "string",
+            "enum": ["pending", "complete", "stale"],
+            "title": "Status"
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Createdat"
+          }
+        },
+        "type": "object",
+        "required": ["searchId", "status", "createdAt"],
+        "title": "SearchSummary"
+      },
+      "SearchView": {
+        "properties": {
+          "searchId": { "type": "string", "title": "Searchid" },
+          "groupRevision": { "type": "integer", "title": "Grouprevision" },
+          "status": {
+            "type": "string",
+            "enum": ["pending", "complete", "stale"],
+            "title": "Status"
+          },
+          "progress": { "$ref": "#/components/schemas/SearchProgress" },
+          "priority": {
+            "type": "string",
+            "enum": ["balanced", "fairness", "budget"],
+            "title": "Priority"
+          },
+          "weights": { "$ref": "#/components/schemas/Weights" },
+          "data": { "$ref": "#/components/schemas/SearchDataInfo" },
+          "ranked": {
+            "items": { "$ref": "#/components/schemas/AreaResult" },
+            "type": "array",
+            "title": "Ranked"
+          },
+          "excluded": {
+            "items": { "$ref": "#/components/schemas/AreaResult" },
+            "type": "array",
+            "title": "Excluded"
+          }
+        },
+        "type": "object",
+        "required": [
+          "searchId",
+          "groupRevision",
+          "status",
+          "progress",
+          "priority",
+          "weights",
+          "data",
+          "ranked",
+          "excluded"
+        ],
+        "title": "SearchView"
+      },
+      "Station": {
+        "properties": {
+          "stationKey": { "type": "string", "title": "Stationkey" },
+          "codes": {
+            "items": { "type": "string" },
+            "type": "array",
+            "title": "Codes"
+          },
+          "name": { "type": "string", "title": "Name" },
+          "lat": { "type": "number", "title": "Lat" },
+          "lng": { "type": "number", "title": "Lng" },
+          "snapMetres": { "type": "integer", "title": "Snapmetres" },
+          "snapWarning": { "type": "boolean", "title": "Snapwarning" }
+        },
+        "type": "object",
+        "required": [
+          "stationKey",
+          "codes",
+          "name",
+          "lat",
+          "lng",
+          "snapMetres",
+          "snapWarning"
+        ],
+        "title": "Station",
+        "description": "Physical-station identity; persistent coordinate pinning is #14 cache work."
+      },
+      "UnsupportedPlace": {
+        "properties": {
+          "label": { "type": "string", "title": "Label" },
+          "address": { "type": "string", "title": "Address" },
+          "code": {
+            "type": "string",
+            "enum": ["STATION_TOO_FAR", "NO_STATION"],
+            "title": "Code"
+          },
+          "message": { "type": "string", "title": "Message" },
+          "snapMetres": {
+            "anyOf": [{ "type": "integer" }, { "type": "null" }],
+            "title": "Snapmetres"
+          }
+        },
+        "type": "object",
+        "required": ["label", "address", "code", "message", "snapMetres"],
+        "title": "UnsupportedPlace"
+      },
+      "ValidationError": {
+        "properties": {
+          "loc": {
+            "items": { "anyOf": [{ "type": "string" }, { "type": "integer" }] },
+            "type": "array",
+            "title": "Location"
+          },
+          "type": { "type": "string", "title": "Error Type" }
+        },
+        "type": "object",
+        "required": ["loc", "msg", "type"],
+        "title": "ValidationError"
+      },
+      "Weights": {
+        "properties": {
+          "rent": { "type": "number", "title": "Rent" },
+          "averageCommute": { "type": "number", "title": "Averagecommute" },
+          "commuteGap": { "type": "number", "title": "Commutegap" }
+        },
+        "type": "object",
+        "required": ["rent", "averageCommute", "commuteGap"],
+        "title": "Weights"
+      },
+      "ResponseValidationError": {
+        "properties": {
+          "detail": {
+            "items": { "$ref": "#/components/schemas/ValidationError" },
+            "type": "array",
+            "title": "Detail"
+          }
+        },
+        "type": "object",
+        "title": "ResponseValidationError"
+      }
+    }
+  }
+}
