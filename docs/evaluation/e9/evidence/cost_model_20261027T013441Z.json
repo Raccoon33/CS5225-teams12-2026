@@ -1,5 +1,5 @@
 {
-  "generated_utc": "20261027T013113Z",
+  "generated_utc": "20261027T013441Z",
   "issue": 45,
   "experiment": "E9",
   "scale": 1.0,
@@ -24,7 +24,7 @@
         "onemap_lookup_calls": 2880.0,
         "onemap_calls": 4440.0,
         "lambda_invocations": 5011.0,
-        "lambda_gb_seconds": 510.23,
+        "lambda_gb_seconds": 530.9,
         "ddb_read_requests": 19270.0,
         "ddb_rru": 38540.0,
         "ddb_writes": 9860.0,
@@ -50,9 +50,9 @@
           },
           {
             "service": "Lambda compute (arm64)",
-            "driver": "510 GB-s @256 MB",
-            "gross_usd": 0.0068,
-            "free_tier_usd": 0.0068,
+            "driver": "531 GB-s @256 MB",
+            "gross_usd": 0.0071,
+            "free_tier_usd": 0.0071,
             "net_usd": 0.0,
             "free_tier_kind": "always free"
           },
@@ -333,7 +333,7 @@
         "onemap_lookup_calls": 21600.0,
         "onemap_calls": 29400.0,
         "lambda_invocations": 42301.0,
-        "lambda_gb_seconds": 3160.85,
+        "lambda_gb_seconds": 3316.25,
         "ddb_read_requests": 193900.0,
         "ddb_rru": 387800.0,
         "ddb_writes": 69530.0,
@@ -359,9 +359,9 @@
           },
           {
             "service": "Lambda compute (arm64)",
-            "driver": "3,161 GB-s @256 MB",
-            "gross_usd": 0.0421,
-            "free_tier_usd": 0.0421,
+            "driver": "3,316 GB-s @256 MB",
+            "gross_usd": 0.0442,
+            "free_tier_usd": 0.0442,
             "net_usd": 0.0,
             "free_tier_kind": "always free"
           },
@@ -642,7 +642,7 @@
         "onemap_lookup_calls": 108000.0,
         "onemap_calls": 295200.0,
         "lambda_invocations": 460201.0,
-        "lambda_gb_seconds": 52003.25,
+        "lambda_gb_seconds": 52781.75,
         "ddb_read_requests": 1167000.0,
         "ddb_rru": 2334000.0,
         "ddb_writes": 666730.0,
@@ -668,9 +668,9 @@
           },
           {
             "service": "Lambda compute (arm64)",
-            "driver": "52,003 GB-s @256 MB",
-            "gross_usd": 0.6934,
-            "free_tier_usd": 0.6934,
+            "driver": "52,782 GB-s @256 MB",
+            "gross_usd": 0.7038,
+            "free_tier_usd": 0.7038,
             "net_usd": 0.0,
             "free_tier_kind": "always free"
           },
@@ -811,8 +811,8 @@
             "free_tier_kind": ""
           }
         ],
-        "list_price_usd": 13.9,
-        "free_tier_usd": 11.42,
+        "list_price_usd": 13.92,
+        "free_tier_usd": 11.43,
         "payable_usd": 2.49,
         "usd_per_1000_searches": 0.4146
       },
@@ -962,7 +962,7 @@
     {
       "scale": 10.0,
       "aws_payable_usd": 2.68,
-      "aws_list_usd": 15.26,
+      "aws_list_usd": 15.28,
       "onprem_usd": 243.5,
       "nodes": 2,
       "searches": 10000
@@ -970,7 +970,7 @@
     {
       "scale": 100.0,
       "aws_payable_usd": 23.38,
-      "aws_list_usd": 79.56,
+      "aws_list_usd": 79.77,
       "onprem_usd": 274.87,
       "nodes": 3,
       "searches": 100000

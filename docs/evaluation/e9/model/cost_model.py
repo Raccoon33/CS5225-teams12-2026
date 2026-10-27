@@ -420,7 +420,7 @@ def main() -> None:
         f"# FlatSplit cost model output — {stamp}",
         "",
         f"Demand scale factor: **x{args.scale}**. Status: **partially measured** "
-        "(per-request operation counts measured 20 October 2026; demand, Lambda "
+        "(per-request operation counts measured 20 and 27 October 2026; demand, Lambda "
         "duration for non-lookup routes, cold-start share and log volume still "
         "assumed, and still owned by #30 and #34).",
         "",
