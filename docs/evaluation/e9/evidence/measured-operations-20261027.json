@@ -1,5 +1,5 @@
 {
-  "caveats": "Request and item counts, not consumed capacity. Durations are laptop durations; only the OneMap-bound lookup paths feed the model. No commute worker exists (#15), so its result write and routing call remain assumed.",
+  "caveats": "Request and item counts, not consumed capacity. Durations are laptop durations; only the OneMap-bound lookup paths feed the model. The commute worker (#15) is open as PR #74 and not merged, so its result write and routing call remain assumed.",
   "codeRevision": "aa7a88a",
   "experiment": "E9",
   "generatedAtUtc": "2026-10-27T01:29:45Z",

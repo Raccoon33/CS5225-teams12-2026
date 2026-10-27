@@ -64,9 +64,9 @@ _real_urlopen = urllib.request.urlopen
 def _counting_api(self: Any, operation_name: str, api_params: dict) -> Any:
     """Count one AWS API call, the items it mutates, and its condition checks.
 
-    A transaction's `ConditionCheck` action is billed and counts toward the
-    25-action limit, but it changes nothing, so adding it to a write-item total
-    overstates the mutations. The two are counted apart: a preference save is
+    A transaction's `ConditionCheck` action is billed and takes one of the
+    100 action slots, but it changes nothing, so adding it to a write-item
+    total overstates the mutations. The two are counted apart: a preference save is
     two Updates plus one check, and a search submission three Puts plus one.
     """
     service = self.meta.service_model.service_name
@@ -417,8 +417,8 @@ def main() -> int:
                     "caveats": (
                         "Request and item counts, not consumed capacity. Durations are "
                         "laptop durations; only the OneMap-bound lookup paths feed the "
-                        "model. No commute worker exists (#15), so its result write and "
-                        "routing call remain assumed."
+                        "model. The commute worker (#15) is open as PR #74 and not "
+                        "merged, so its result write and routing call remain assumed."
                     ),
                     "requests": MEASURED,
                     "totalCalls": dict(sorted(calls.items())),
