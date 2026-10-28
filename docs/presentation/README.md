@@ -2,6 +2,8 @@
 
 Owner/coordinator Raccoon33; reviewer Hikaru. Initial draft, 29 October 2026 SGT. [Open the HTML deck](index.html) or [review the initial PDF](flatsplit-initial-draft.pdf). No final speaking agreement, all-six review, timed rehearsal or submission is claimed. This is a reviewable initial artifact for the 2 November checkpoint; evidence-backed refresh remains due by 8 November and final submission by 13 November 2026 23:59 SGT.
 
+Current online editing copy: [Google Slides — FlatSplit presentation](https://docs.google.com/presentation/d/1oOLGvCQOW5bwN6hG5KMhkMyFqmR50FqH/edit). Use this for team edits and review. The HTML/PDF files in this directory are the initial versioned snapshots; online edits are not automatically synced back to the repository.
+
 ## View / export
 
 Open index.html locally, use Left/Right or PageUp/PageDown, or print. Assets and SVG are local; no remote script, font, credential or API is required. From the repository root, after installing locked development dependencies and Chromium:
