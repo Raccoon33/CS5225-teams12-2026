@@ -153,3 +153,20 @@ it('handles API Gateway throttles without reflecting its non-contract body', asy
     code: 'RATE_LIMITED',
   });
 });
+
+it('serializes the place query, cancels obsolete lookups and validates response bodies', async () => {
+  transport.mockResolvedValue(
+    json({ places: [], unsupported: [], ambiguous: false }),
+  );
+  const abort = new AbortController();
+  await searchPlaces('Kent Ridge & MRT', abort.signal);
+  const request = transport.mock.calls[0]![0] as Request;
+  expect(new URL(request.url).searchParams.get('q')).toBe('Kent Ridge & MRT');
+  expect(request.headers.has('authorization')).toBe(false);
+  abort.abort();
+  expect(request.signal.aborted).toBe(true);
+  transport.mockResolvedValue(
+    json({ places: [{}], unsupported: [], ambiguous: false }),
+  );
+  await expect(searchPlaces('Kent')).rejects.toThrow();
+});

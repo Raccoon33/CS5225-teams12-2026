@@ -3,11 +3,11 @@ import {
   zGroupResponse,
   zMembershipResponse,
   zSearchView,
+  zPlacesResponse,
 } from '@flatsplit/contracts/api';
 import { queryOptions } from '@tanstack/react-query';
 import { client } from '@/api/generated/client.gen';
 import * as sdk from '@/api/generated/sdk.gen';
-import type { PlacesResponse } from '@/api/generated/types.gen';
 import type { Membership } from './membership';
 
 client.setConfig({
@@ -87,16 +87,20 @@ const auth = (membership: Membership) => ({
   Authorization: `Bearer ${membership.memberToken}`,
 });
 
-export async function searchPlaces(query: string) {
-  // The generated client omits the `q` query parameter because the
-  // backend reads it from the raw query string, so pass it in the URL.
-  // The response shape is the same PlacesResponse the SDK declares.
-  return unwrap(
-    await client.get({
-      url: `/places?q=${encodeURIComponent(query)}`,
-      signal: AbortSignal.timeout(35000),
-    }),
-  ) as PlacesResponse;
+export async function searchPlaces(query: string, signal?: AbortSignal) {
+  // q is read from the raw query string by the resolver and is absent from
+  // OpenAPI; the client query serializer still encodes it normally.
+  return zPlacesResponse.parse(
+    unwrap(
+      await client.get({
+        url: '/places',
+        query: { q: query },
+        signal: signal
+          ? AbortSignal.any([signal, AbortSignal.timeout(35000)])
+          : AbortSignal.timeout(35000),
+      }),
+    ),
+  );
 }
 export async function savePreferences(
   membership: Membership,

@@ -14,6 +14,7 @@ import {
   startSearch,
 } from './api';
 import type { Membership } from './membership';
+import { RankedResults } from './RankedResults';
 
 export function SearchProgress({
   group,
@@ -194,30 +195,12 @@ export function SearchProgress({
               anyone’s preferences.
             </p>
           )}
-          {search.ranked.length > 0 && (
-            <div>
-              <div className="live-town-heading">
-                <span>Neighbourhood</span>
-                <span>Monthly rent / person</span>
-              </div>
-              <ul className="live-town-list">
-                {search.ranked.map((area) => (
-                  <li key={area.town}>
-                    <strong>{area.displayName}</strong>
-                    <span>
-                      {area.rentPerPerson === null
-                        ? 'Rent unavailable'
-                        : `S$${area.rentPerPerson.toLocaleString('en-SG')} per person/month`}
-                    </span>
-                  </li>
-                ))}
-              </ul>
-            </div>
-          )}
-          <p className="live-caption live-rent-note">
-            Equal split of a whole flat, excluding bills. Rent period:{' '}
-            {search.data.rentPeriod}. {search.data.commuteBasis}.
-          </p>
+          <RankedResults
+            key={`${search.searchId}:${search.groupRevision}`}
+            search={search}
+            group={group}
+            checkedAt={status.dataUpdatedAt}
+          />
           {search.progress.unavailable > 0 && (
             <Alert>
               <AlertTitle>
