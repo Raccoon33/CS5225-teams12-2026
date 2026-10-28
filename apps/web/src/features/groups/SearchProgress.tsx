@@ -15,6 +15,7 @@ import {
 } from './api';
 import type { Membership } from './membership';
 import { RankedResults } from './RankedResults';
+import { TownMapResults } from './TownMapResults';
 
 export function SearchProgress({
   group,
@@ -181,8 +182,8 @@ export function SearchProgress({
         </div>
       )}
       {complete && (
-        <div className="live-complete-state" role="status">
-          <h3>
+        <div className="live-complete-state">
+          <h3 role="status">
             {routesFailed
               ? 'We couldn’t calculate your group’s routes.'
               : search.ranked.length
@@ -201,6 +202,7 @@ export function SearchProgress({
             group={group}
             checkedAt={status.dataUpdatedAt}
           />
+          {search.ranked.length > 0 && <TownMapResults search={search} group={group} />}
           {search.progress.unavailable > 0 && (
             <Alert>
               <AlertTitle>

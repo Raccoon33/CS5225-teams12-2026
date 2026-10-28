@@ -1,4 +1,5 @@
 import type {
+  AreaResult,
   CreatedGroupResponse,
   GroupView,
   SearchView,
@@ -122,4 +123,41 @@ export function rankedSearchFixture(): SearchView {
     }),
   );
   return search;
+}
+
+export function mapSearchFixture(): ReturnType<typeof searchFixture> {
+  const group = groupFixture();
+  return {
+    ...searchFixture('complete'),
+    progress: { total: 54, resolved: 54, unavailable: 2 },
+    ranked: ['QUEENSTOWN', 'CLEMENTI', 'BISHAN'].map(
+      (town, index): AreaResult => ({
+        town,
+        displayName: town.charAt(0) + town.slice(1).toLowerCase(),
+        rank: index + 1,
+        score: 80 - index,
+        wholeFlatRent: 2800 + index * 50,
+        rentPerPerson: 1400 + index * 25,
+        rentP25: 2800,
+        rentP75: 3400,
+        rentMedianCi95Low: 2900,
+        rentMedianCi95High: 3100,
+        rentSampleSize: 200,
+        rentQualityStatus: 'USABLE',
+        averageCommute: 28,
+        longestCommute: 30.01 + index,
+        shortestCommute: 25,
+        commuteGap: 5.01 + index,
+        mostBurdenedMemberId: group.members[0]!.memberId,
+        reasons: [],
+        members: group.members.map((member, memberIndex) => ({
+          memberId: member.memberId,
+          commuteMinutes: 30.01 + index - memberIndex,
+          routeStatus: 'ok',
+          budgetHeadroom: 50,
+          commuteHeadroom: 5,
+        })),
+      }),
+    ),
+  };
 }
