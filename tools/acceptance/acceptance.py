@@ -92,6 +92,54 @@ def station_pinned(place: object) -> bool:
     )
 
 
+def same_point(got: object, want: object) -> bool:
+    """One coordinate that survived storage unchanged.
+
+    A pin is written as a `Decimal` and read back as a float, so `==` is the
+    wrong test; 1e-9 degrees is about a tenth of a millimetre, so anything a
+    person would call a different place is still a mismatch. Finiteness alone
+    was not a preservation test at all: Member B's (1.284, 103.8515) could be
+    replaced with (8.12345, 111.12345) and the reload stage still passed.
+    """
+    if not (finite(got) and finite(want)):
+        return False
+    return abs(float(got) - float(want)) <= 1e-9  # type: ignore[arg-type]
+
+
+def saved_mismatches(member: object, want: dict[str, object]) -> list[str]:
+    """Every field of a saved preference the reread did not give back intact.
+
+    Counting destinations was not enough: a reread that gave Member B Member
+    A's destination, or lost B's budget and commute limit, satisfied "both
+    have a destination". Neither was requiring finite coordinates, which any
+    other finite pair also satisfies.
+    """
+    member = member if isinstance(member, dict) else {}
+    snapshot = member.get("destination")
+    snapshot = snapshot if isinstance(snapshot, dict) else {}
+    station = snapshot.get("station")
+    station = station if isinstance(station, dict) else {}
+    place = want.get("place")
+    place = place if isinstance(place, dict) else {}
+    wanted = place.get("station")
+    wanted = wanted if isinstance(wanted, dict) else {}
+
+    mismatches: list[str] = []
+    if snapshot.get("placeId") != place.get("placeId"):
+        mismatches.append("placeId")
+    if station.get("stationKey") != wanted.get("stationKey"):
+        mismatches.append("stationKey")
+    if not same_point(station.get("lat"), wanted.get("lat")):
+        mismatches.append("station lat")
+    if not same_point(station.get("lng"), wanted.get("lng")):
+        mismatches.append("station lng")
+    if member.get("budget") != want.get("budget"):
+        mismatches.append("budget")
+    if member.get("maxCommute") != want.get("maxCommute"):
+        mismatches.append("maxCommute")
+    return mismatches
+
+
 def credential_fields(value: object, path: str = "") -> list[str]:
     """Every path in `value` whose key names a credential, at any depth."""
     found: list[str] = []
@@ -224,6 +272,20 @@ class Report:
 
     def expect(self, gate: str, name: str, ok: bool, detail: str = "") -> bool:
         return self.record(PASS if ok else FAIL, gate, name, detail)
+
+    def no_credentials(self, gate: str, name: str, body: object) -> bool:
+        """Fail if an API response carries an issued credential at any depth.
+
+        The detail names the paths and never the values, so a response shape
+        that starts leaking is reported in evidence that is still safe to
+        attach. A response the gate never inspects cannot be caught by the
+        redaction at the end: `redact` rewrites structure, and a value already
+        formatted into a detail string is past saving.
+        """
+        leaked = credential_fields(body)
+        return self.expect(
+            gate, name, not leaked, f"leaked: {leaked}" if leaked else ""
+        )
 
     @property
     def failed(self) -> list[dict[str, object]]:
@@ -410,25 +472,14 @@ def main() -> int:
     )
     for member_id, want in expected.items():
         member = by_id.get(member_id) or {}
-        snapshot = member.get("destination")
+        snapshot = member.get("destination") if isinstance(member, dict) else None
         snapshot = snapshot if isinstance(snapshot, dict) else {}
         station = snapshot.get("station")
         station = station if isinstance(station, dict) else {}
-        place = want["place"]
-        assert isinstance(place, dict)
-        wanted_station = place.get("station")
-        wanted_station = wanted_station if isinstance(wanted_station, dict) else {}
-        mismatches = []
-        if snapshot.get("placeId") != place.get("placeId"):
-            mismatches.append("placeId")
-        if station.get("stationKey") != wanted_station.get("stationKey"):
-            mismatches.append("stationKey")
-        if not (finite(station.get("lat")) and finite(station.get("lng"))):
-            mismatches.append("station coordinates")
-        if member.get("budget") != want["budget"]:
-            mismatches.append("budget")
-        if member.get("maxCommute") != want["maxCommute"]:
-            mismatches.append("maxCommute")
+        # The pin has to be the one stage 1 handed out, not merely a pair of
+        # numbers: swapping Member B's coordinates for another finite pair,
+        # keeping placeId and stationKey, used to pass.
+        mismatches = saved_mismatches(member, want)
         report.expect(
             "reload",
             f"{want['name']} reloads the destination and limits they saved",
@@ -438,12 +489,8 @@ def main() -> int:
             + (f"; wrong: {', '.join(mismatches)}" if mismatches else ""),
         )
         facts.setdefault("savedDestinations", {})[member_id] = redact(snapshot)  # type: ignore[index]
-    leaked = credential_fields(reread)
-    report.expect(
-        "reload",
-        "the reread carries no issued credential at any depth",
-        not leaked,
-        f"leaked: {leaked}" if leaked else "",
+    report.no_credentials(
+        "reload", "the reread carries no issued credential at any depth", reread
     )
 
     print("=== 6. authorisation (no token / wrong token cannot read or write) ===")
@@ -511,7 +558,14 @@ def main() -> int:
         "search",
         "search status is readable",
         search_status in {"pending", "complete", "stale"},
-        f"status={search_status} progress={progress}",
+        f"status={search_status} progress={detail_of(progress, 200)}",
+    )
+    # The search view was never inspected for credentials, and its raw
+    # `progress` went into the detail line as it stood: an injected
+    # `progress.memberToken` reached stdout and the evidence file and the run
+    # still passed. Nothing a search returns should carry a capability.
+    report.no_credentials(
+        "search", "the search view carries no issued credential at any depth", view
     )
 
     # Branch on the status, not on "complete and ranked". Collapsing the rest
@@ -587,7 +641,12 @@ def main() -> int:
         "search",
         "the earlier search is marked stale after a save",
         isinstance(after, dict) and after.get("status") == "stale",
-        f"status={after.get('status') if isinstance(after, dict) else after}",
+        f"status={after.get('status')}"
+        if isinstance(after, dict)
+        else detail_of(after, 120),
+    )
+    report.no_credentials(
+        "search", "the stale search view carries no issued credential", after
     )
 
     return finish(api, report, facts, args, started)

@@ -33,17 +33,17 @@ The process exits non-zero if any check fails, so it can gate a pipeline.
 
 ## What it checks
 
-| Stage | Check                                                                                                                                              | Issue     |
-| ----- | -------------------------------------------------------------------------------------------------------------------------------------------------- | --------- |
-| 0     | `GET /health`                                                                                                                                      | -         |
-| 1     | Both destinations resolve and **every** candidate carries a station key and both finite coordinates                                                | #14       |
-| 2     | A repeated lookup returns the same `placeId` and the same pin                                                                                      | #14       |
-| 3     | Group create, then a second member joins with the invite token                                                                                     | #12 / #13 |
-| 4     | Both members save preferences by `placeId`                                                                                                         | #14       |
-| 5     | Reopening with the **other** member's token gives **each member** back the destination and limits they saved, and leaks no credential at any depth | gate      |
-| 6     | No token and an invalid token return 401; another member's token cannot edit this member (403)                                                     | #12       |
-| 7     | A search starts, starting again is idempotent, and the status is read as `pending`, `complete` or `stale` on its own terms                         | #16 / #18 |
-| 8     | Saving a preference marks the earlier search `stale`                                                                                               | D08       |
+| Stage | Check                                                                                                                                                                    | Issue     |
+| ----- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | --------- |
+| 0     | `GET /health`                                                                                                                                                            | -         |
+| 1     | Both destinations resolve and **every** candidate carries a station key and both finite coordinates                                                                      | #14       |
+| 2     | A repeated lookup returns the same `placeId` and the same pin                                                                                                            | #14       |
+| 3     | Group create, then a second member joins with the invite token                                                                                                           | #12 / #13 |
+| 4     | Both members save preferences by `placeId`                                                                                                                               | #14       |
+| 5     | Reopening with the **other** member's token gives **each member** back the destination, **the same pin** and the limits they saved, and leaks no credential at any depth | gate      |
+| 6     | No token and an invalid token return 401; another member's token cannot edit this member (403)                                                                           | #12       |
+| 7     | A search starts, starting again is idempotent, the status is read as `pending`, `complete` or `stale` on its own terms, and the view carries no credential               | #16 / #18 |
+| 8     | Saving a preference marks the earlier search `stale`                                                                                                                     | D08       |
 
 ## It does not fail because #15 is open
 
@@ -55,7 +55,10 @@ An acceptance script that is red by construction until everyone else finishes is
 
 ## Honest limits
 
-1. **The gate's own checks are tested.** `tests/test_acceptance.py` runs in `pnpm test:evidence` and holds a regression for each case an earlier version of this script accepted: pending pairs double-counted, a candidate with no longitude, a nested issued token, and a failing creation response printing the tokens it had already handed out. A gate that reports success wrongly is worse than the bug it misses.
+1. **The gate's own checks are tested.** `tests/test_acceptance.py` runs in `pnpm test:evidence` and holds a regression for each case an earlier version of this script accepted: pending pairs double-counted, a candidate with no longitude, a nested issued token, a failing creation response printing the tokens it had already handed out, a reloaded pin moved to another finite coordinate, and a credential inside `progress` reaching a detail line. A gate that reports success wrongly is worse than the bug it misses.
+
+   Two of those are worth stating as rules, because they are easy to reintroduce. A saved value is checked against **the value that was saved**, not merely against its type: finite coordinates are not preserved coordinates, so stage 5 compares the reloaded pin with the one `/places` handed out, to a tolerance of 1e-9 degrees, which is the float round trip through storage and nothing a person would call a different place. And every response-derived string is built through `detail_of`, which redacts first: the `redact(summary)` at the end rewrites structure, so a credential already formatted into a detail line is past saving. Responses that should carry no capability at all are rejected outright by `Report.no_credentials`, which reports the paths and never the values.
+
 2. **`local-moto` is not deployed acceptance.** Moto has no real table contention, no IAM, no cold starts and no CloudFront. The evidence file records `mode`, and comments linking it must say so too.
 3. **Local rent is synthetic.** `POST /searches` returns 503 without a `RENT/CURRENT` pointer, and publishing real summaries is #10. `serve_local.py` seeds five towns, tagging every item `syntheticLocalFixture`. A deployed run uses the real #10 records.
 4. **`/places` calls live OneMap**, so it spends quota and needs a valid token; the token lasts three days and has no renewal endpoint (#27).
