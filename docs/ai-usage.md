@@ -332,4 +332,4 @@ For future entries, record the requested issue, tool, contribution, checks actua
 ## 28 October 2026 — PR #77 main refresh
 
 - Tool: Codex, directed by Hikaru to execute the next repository integration steps. Merged main `b4a4434` into the recovery branch; the only conflict was the append-only AI log. Preserved both histories with main entries first; no application source changed during the refresh.
-- Verification: pending refreshed-branch checks; no new deployment or integrated acceptance is claimed.
+- Verification: root check/test/build/synth and generated API drift check passed on Node 26.0.0; Turbo reused successful task cache entries. Test totals: 297 API, 72 web, eight CDK and three offline evidence tests. No visible code changed, so no new browser run was needed. No new deployment or integrated acceptance is claimed.
