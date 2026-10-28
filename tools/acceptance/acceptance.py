@@ -189,6 +189,20 @@ def detail_of(body: object, limit: int = 160) -> str:
     return text[:limit]
 
 
+def shown(value: object, limit: int = 80) -> str:
+    """One response-derived value, rendered for a detail line.
+
+    A scalar prints as itself. Anything else is redacted first, because a
+    malformed response can put a whole object where a count belonged:
+    `progress.unavailable = {"memberToken": ...}` used to reach stdout and
+    `checks[].detail` through an f-string, and the structural `redact` at the
+    end cannot take a credential back out of a string.
+    """
+    if value is None or isinstance(value, (bool, int, float, str)):
+        return str(value)
+    return detail_of(value, limit)
+
+
 def pending_pairs(progress: object) -> int | None:
     """Pairs with no answer yet.
 
@@ -319,9 +333,10 @@ def pick_place(api: Api, report: Report, query: str) -> dict[str, object] | None
         "destinations",
         "every candidate carries a station key and both coordinates",
         not unpinned,
-        f"{station.get('stationKey')} ({station.get('lat')}, {station.get('lng')}) "
-        f"snap={station.get('snapMetres')}m"
-        + (f"; unpinned: {unpinned}" if unpinned else ""),
+        f"{shown(station.get('stationKey'))} "
+        f"({shown(station.get('lat'))}, {shown(station.get('lng'))}) "
+        f"snap={shown(station.get('snapMetres'))}m"
+        + (f"; unpinned: {shown(unpinned)}" if unpinned else ""),
     )
     return best
 
@@ -484,8 +499,8 @@ def main() -> int:
             "reload",
             f"{want['name']} reloads the destination and limits they saved",
             not mismatches,
-            f"{station.get('stationKey')} "
-            f"({station.get('lat')}, {station.get('lng')})"
+            f"{shown(station.get('stationKey'))} "
+            f"({shown(station.get('lat'))}, {shown(station.get('lng'))})"
             + (f"; wrong: {', '.join(mismatches)}" if mismatches else ""),
         )
         facts.setdefault("savedDestinations", {})[member_id] = redact(snapshot)  # type: ignore[index]
@@ -558,7 +573,7 @@ def main() -> int:
         "search",
         "search status is readable",
         search_status in {"pending", "complete", "stale"},
-        f"status={search_status} progress={detail_of(progress, 200)}",
+        f"status={shown(search_status)} progress={detail_of(progress, 200)}",
     )
     # The search view was never inspected for credentials, and its raw
     # `progress` went into the detail line as it stood: an injected
@@ -573,8 +588,9 @@ def main() -> int:
     # and a search that was already stale, as "nobody computes commute data".
     seen = progress if isinstance(progress, dict) else {}
     counts = (
-        f"total={seen.get('total', '?')} resolved={seen.get('resolved', '?')}"
-        f" unavailable={seen.get('unavailable', '?')} pending={pending}"
+        f"total={shown(seen.get('total', '?'))}"
+        f" resolved={shown(seen.get('resolved', '?'))}"
+        f" unavailable={shown(seen.get('unavailable', '?'))} pending={pending}"
     )
     if search_status == "complete" and ranked:
         top = ranked[0]
@@ -582,13 +598,15 @@ def main() -> int:
             PASS,
             "search",
             "ranked results are present (#15's worker is running)",
-            f"top {top.get('town')} / {top.get('flatType')}; {counts}",
+            f"top {shown(top.get('town'))} / {shown(top.get('flatType'))}; {counts}"
+            if isinstance(top, dict)
+            else f"{shown(top)}; {counts}",
         )
         facts["topResult"] = redact(top)
     elif search_status == "complete":
         reasons = sorted(
             {
-                str(r.get("code"))
+                shown(r.get("code"), 40)
                 for area in excluded
                 if isinstance(area, dict)
                 for r in (area.get("reasons") or [])
@@ -621,7 +639,7 @@ def main() -> int:
             "search",
             "the search is not stale before stage 8 edits a preference",
             False,
-            f"status={search_status}; {counts}",
+            f"status={shown(search_status)}; {counts}",
         )
 
     print("=== 8. editing preferences must make the old search stale (D08) ===")
@@ -641,7 +659,7 @@ def main() -> int:
         "search",
         "the earlier search is marked stale after a save",
         isinstance(after, dict) and after.get("status") == "stale",
-        f"status={after.get('status')}"
+        f"status={shown(after.get('status'))}"
         if isinstance(after, dict)
         else detail_of(after, 120),
     )

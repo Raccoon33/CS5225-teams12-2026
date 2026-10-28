@@ -1,4 +1,4 @@
-"""Regressions for the seven findings in @wkkuu's #67 reviews.
+"""Regressions for the eight findings in @wkkuu's #67 reviews.
 
 The gate is the thing that decides whether a deployment passed, so a bug in
 it is worse than a bug it fails to catch: it reports success. Each test here
@@ -24,6 +24,7 @@ from acceptance import (  # noqa: E402
     redact,
     same_point,
     saved_mismatches,
+    shown,
     station_pinned,
 )
 
@@ -211,6 +212,39 @@ class SearchViewPrivacy(unittest.TestCase):
         self.assertTrue(ok)
         self.assertEqual(report.failed, [])
         self.assertEqual(report.checks[-1]["detail"], "")
+
+
+class CountDetails(unittest.TestCase):
+    """A count slot can hold an object, and f-strings do not redact."""
+
+    MARKER = "WK67_SYNTHETIC_PRIVATE_MARKER"
+
+    def test_a_scalar_prints_as_itself(self) -> None:
+        for value in (0, 0.0, 54, -1, 1.5, "pending", True, None, "?"):
+            self.assertEqual(shown(value), str(value))
+
+    def test_a_nested_credential_in_a_count_slot_is_redacted(self) -> None:
+        """The counter probe: progress.unavailable is a dict with a token."""
+        progress = {
+            "total": 54,
+            "resolved": 2,
+            "unavailable": {"memberToken": self.MARKER},
+        }
+        counts = (
+            f"total={shown(progress.get('total', '?'))}"
+            f" resolved={shown(progress.get('resolved', '?'))}"
+            f" unavailable={shown(progress.get('unavailable', '?'))}"
+        )
+        self.assertNotIn(self.MARKER, counts)
+        self.assertIn(REDACTED, counts)
+        self.assertIn("total=54", counts)
+
+    def test_a_credential_at_any_depth_of_a_detail_value_is_redacted(self) -> None:
+        nested = {"codes": [{"detail": {"invite_token": self.MARKER}}]}
+        self.assertNotIn(self.MARKER, shown(nested, limit=400))
+
+    def test_a_long_object_in_a_count_slot_is_truncated(self) -> None:
+        self.assertEqual(len(shown({"x": "y" * 500}, limit=40)), 40)
 
 
 class Credentials(unittest.TestCase):
