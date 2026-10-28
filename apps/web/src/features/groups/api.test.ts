@@ -6,7 +6,9 @@ import {
   createGroup,
   joinGroup,
   groupOptions,
+  savePreferences,
   searchOptions,
+  searchPlaces,
   startSearch,
   groupKey,
 } from './api';
@@ -89,6 +91,49 @@ describe('generated API transport and response boundaries', () => {
     await expect(
       createGroup({ groupName: 'Group', size: 2, name: 'Alex' }),
     ).rejects.toThrow();
+  });
+  it('searches places and saves preferences with the member capability only', async () => {
+    const places = {
+      places: [
+        {
+          placeId: 'P'.repeat(10),
+          label: 'Kent Ridge',
+          address: 'Kent Ridge, Singapore',
+          station: {
+            stationKey: 'S'.repeat(10),
+            name: 'Kent Ridge',
+            codes: ['CC24'],
+            lat: 1.29,
+            lng: 103.78,
+            snapMetres: 120,
+            snapWarning: false,
+          },
+        },
+      ],
+      unsupported: [],
+      ambiguous: false,
+    };
+    transport
+      .mockResolvedValueOnce(json(places))
+      .mockResolvedValueOnce(json({ group: groupFixture() }));
+    expect(await searchPlaces('Kent Ridge')).toEqual(places);
+    const body = {
+      name: 'Alex',
+      placeId: 'P'.repeat(10),
+      budget: 1600,
+      maxCommute: 45,
+    };
+    expect(await savePreferences(membership, body)).toEqual(groupFixture());
+    const [, save] = transport.mock.calls.map(
+      ([request]) => request as Request,
+    );
+    expect(save!.url).toBe(
+      `https://flatsplit.test/api/groups/${membership.groupId}/members/${membership.memberId}`,
+    );
+    expect(save!.headers.get('authorization')).toBe(
+      `Bearer ${membership.memberToken}`,
+    );
+    expect(await save!.json()).toEqual(body);
   });
   it('reads and resubmits the same server search without fabricating progress', async () => {
     transport.mockImplementation(async () => json(searchFixture('complete')));
