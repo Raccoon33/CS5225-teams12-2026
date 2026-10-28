@@ -331,4 +331,4 @@ For future entries, record the requested issue, tool, contribution, checks actua
 ## 28 October 2026 — PR #78 main refresh
 
 - Tool: Codex, directed by Hikaru to execute the next repository integration steps. Merged main `b4a4434` into the E10 kit branch; the only conflict was the append-only AI log. Preserved both histories with main entries first; study materials and application source are unchanged.
-- Verification: pending refreshed-branch checks; no participant session, deployment or integrated acceptance is claimed.
+- Verification: root check/test/build/synth, generated API drift check and E10 generator --check passed on Node 26.0.0; Turbo reused successful task cache entries. Test totals: 297 API, 65 web, eight CDK and three offline evidence tests. No participant session, deployment or integrated acceptance is claimed.
