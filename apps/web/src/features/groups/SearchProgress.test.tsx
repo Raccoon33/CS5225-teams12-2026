@@ -96,7 +96,7 @@ describe('real search lifecycle UI', () => {
     const before = structuredClone(group);
     mount(group);
     await screen.findByText(
-      'The request took too long. Your saved group inputs are unchanged. Try again.',
+      'The request took too long. We could not confirm the result. Refresh your group before retrying.',
     );
     expect(screen.queryByText('private transport text')).toBeNull();
     expect(
@@ -124,7 +124,7 @@ describe('real search lifecycle UI', () => {
       screen.getByRole('button', { name: 'Find our neighbourhoods' }),
     );
     await screen.findByText(
-      'The request took too long. Your saved group inputs are unchanged. Try again.',
+      'The request took too long. We could not confirm the result. Refresh your group before retrying.',
     );
     fireEvent.click(
       screen.getByRole('button', { name: 'Find our neighbourhoods' }),
@@ -290,9 +290,7 @@ describe('real search lifecycle UI', () => {
     await screen.findByText('We couldn’t calculate your group’s routes.');
     expect(screen.getByText('Routes unavailable')).toBeTruthy();
     expect(screen.queryByText('Ready')).toBeNull();
-    expect(
-      screen.queryByText('No neighbourhoods to compare.'),
-    ).toBeNull();
+    expect(screen.queryByText('No neighbourhoods to compare.')).toBeNull();
     fireEvent.click(
       screen.getByRole('button', { name: 'Retry route calculations' }),
     );
@@ -388,9 +386,7 @@ describe('real search lifecycle UI', () => {
       </QueryClientProvider>,
     );
     expect(screen.getByText('Your group has changed')).toBeTruthy();
-    expect(
-      screen.queryByText('No neighbourhoods to compare.'),
-    ).toBeNull();
+    expect(screen.queryByText('No neighbourhoods to compare.')).toBeNull();
   });
   it('recovers a status outage without issuing another POST', async () => {
     const pending = searchFixture();

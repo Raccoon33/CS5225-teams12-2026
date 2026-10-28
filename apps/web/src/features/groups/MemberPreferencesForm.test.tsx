@@ -297,3 +297,37 @@ it('reopens saved edits for the editor and a second member with separate fresh q
   const last = transport.mock.calls.at(-1)![0] as Request;
   expect(last.headers.get('authorization')).toBe(`Bearer ${'N'.repeat(43)}`);
 });
+
+it('does not claim a timed-out PUT left saved preferences unchanged', async () => {
+  const serverGroup = readyGroup();
+  transport.mockImplementation(async (input) => {
+    const body = await (input as Request).json();
+    serverGroup.members[0]!.budget = body.budget;
+    throw new DOMException('response lost after commit', 'TimeoutError');
+  });
+  mount();
+  field('Your monthly rent budget (SGD)', '1850');
+  submit();
+  await screen.findByText(/We could not confirm the result/);
+  expect(serverGroup.members[0]!.budget).toBe(1850);
+  expect(screen.queryByText(/saved group inputs are unchanged/)).toBeNull();
+  expect(
+    (
+      screen.getByLabelText(
+        'Your monthly rent budget (SGD)',
+      ) as HTMLInputElement
+    ).value,
+  ).toBe('1850');
+});
+
+it('focuses the first invalid field and associates its validation message', () => {
+  mount();
+  field('Your monthly rent budget (SGD)', '299');
+  submit();
+  const input = screen.getByLabelText('Your monthly rent budget (SGD)');
+  expect(document.activeElement).toBe(input);
+  expect(
+    document.getElementById(input.getAttribute('aria-describedby')!)!
+      .textContent,
+  ).toContain('S$300');
+});

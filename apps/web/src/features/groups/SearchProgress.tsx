@@ -98,7 +98,9 @@ export function SearchProgress({
               : routesFailed
                 ? 'Routes unavailable'
                 : complete
-                  ? search.ranked.length ? 'Ready' : 'No matches'
+                  ? search.ranked.length
+                    ? 'Ready'
+                    : 'No matches'
                   : pending
                     ? search.progress.resolved > search.progress.unavailable
                       ? 'Checking routes'
@@ -203,7 +205,9 @@ export function SearchProgress({
             group={group}
             checkedAt={status.dataUpdatedAt}
           />
-          {search.ranked.length > 0 && <TownMapResults search={search} group={group} />}
+          {search.ranked.length > 0 && (
+            <TownMapResults search={search} group={group} />
+          )}
           {search.progress.unavailable > 0 && (
             <Alert>
               <AlertTitle>
@@ -222,7 +226,9 @@ export function SearchProgress({
               </AlertDescription>
             </Alert>
           )}
-          {!search.ranked.length && <SearchExclusions search={search} group={group} />}
+          {!search.ranked.length && (
+            <SearchExclusions search={search} group={group} />
+          )}
         </div>
       )}
       <div className="live-search-actions">
