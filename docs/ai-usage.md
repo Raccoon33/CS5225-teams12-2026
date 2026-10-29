@@ -396,6 +396,24 @@ For future entries, record the requested issue, tool, contribution, checks actua
 - Provenance, decided on #80: the correction stays schema-neutral and no interpreter field is added. WK's answer is that future runs should record implementation and exact version, source revision, input identities and invocation in a timestamp-matched receipt or sidecar, following the existing `codeRevision`/`toolRevision` convention — and that old artifacts keep their original caveats, with no interpreter guessed back into them.
 - Not done: the artifact still does not record which interpreter produced it. Adding a version field would make any future discrepancy self-explaining, but it also adds a key to the JSON and would show up as a diff in the byte-identical comparison @wkkuu runs, so it is offered on the PR as a separate decision rather than bundled here. No price, assumption, measured count or scenario figure was touched, and no deployment, billing query or measurement was run.
 
+## 25 October 2026 — issue 10 validated rent summaries
+
+- Tool: Codex, directed by Mani.
+- Contribution: implemented trailing-12-month HDB town/flat-type summaries with R-7 quantiles, deterministic block-cluster bootstrap confidence intervals, low-confidence retention, DynamoDB snapshot publication and a monotonic `RENT/CURRENT` pointer.
+- Verification: 279 API tests, eight CDK tests, API lint/type checks, Markdown formatting and CDK synthesis passed. AWS deployment and live scheduled execution remain outstanding.
+
+## 27 October 2026 — issue 10 review fixes
+
+- Tool: Codex, directed by Mani.
+- Contribution: made one-block summaries low-confidence, fenced same-month pointer updates by raw retrieval time, versioned summary snapshot IDs by aggregation algorithm, and corrected the UTC EventBridge date.
+- Verification: added regressions for the confidence and pointer/versioning rules; deployment remains pending merge and shared-account acceptance.
+
+## 28 October 2026 — shared dev redeployment checks
+
+- Tool: Claude Code (Claude Opus 5.5), directed by Shyam.
+- Contribution: decoded and validated the new OneMap token locally (claims and expiry; live search, nearest-station and routing calls through the API's own `find_places`, without writing the token to any file). Ran the read-only `cdk diff` for main `b4a4434`, identified that it would undo Mani's unmerged #75 deployment (schedule and `ListBucket` permission), confirmed via read-only queries that no rent had been published, and posted the heads-up on #75. Shyam wrote the secret and ran the deploy; the assistant's own secret write was blocked by the permission classifier. After the deploy, ran read-only stack and endpoint checks and the #29 journey against the shared URL, and recorded the results in `docs/aws-dev-handoff.md`.
+- Not done: no rent publication, worker deployment or token rotation; those remain #10/#75, #15/#74 and #72.
+
 ## 28 October 2026 — PR #78 main refresh
 
 - Tool: Codex, directed by Hikaru to execute the next repository integration steps. Merged main `b4a4434` into the E10 kit branch; the only conflict was the append-only AI log. Preserved both histories with main entries first; study materials and application source are unchanged.
