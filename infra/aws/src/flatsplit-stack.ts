@@ -23,6 +23,7 @@ export class FlatSplitStack extends Stack {
     const data = new Data(this, 'Data', { removalPolicy });
     const rentIngestion = new RentIngestion(this, 'RentIngestion', {
       removalPolicy,
+      table: data.table,
     });
     const api = new Api(this, 'Api', {
       stage: props.stage,
