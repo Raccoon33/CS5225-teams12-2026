@@ -16,3 +16,15 @@ This is a reviewable progress record, not an issue-closing instruction. Existing
 Worker implementation #74 and operational #79 were reported clean at reviewed heads; do not describe their code as absent. They are not part of main b4a4434's worker runtime and are not deployed merely by this local frontend branch. #75's latest timestamp correction needs formal acceptance. Shared OneMap custody/rotation and deployment receipts remain their owners' work. #67's evidence-privacy findings were independently verified resolved at 92a480c; the earlier slide packet's open-privacy statement is superseded. No real latency, capacity, AWS bill, participant study, final sign-off or submission is supplied by our local tests.
 
 GitHub API identity access previously returned Forbidden. This branch does not switch tokens/accounts, close issues, approve on anyone's behalf, merge upstream PRs or publish status comments automatically. The user reports completing reviews of #76–#78. #85 includes the original #84 commit; #84 can be closed as superseded without closing issue #8 or deleting the feature branch. #85 may enter formal review once its title/body reflect readiness and the known acceptance limits. Local composition preserves their authorship/history and all AI-usage records.
+
+## Reviewed merge sequence — 29 October 2026
+
+Use merge commits in this order: **#78 → #76 → #85 → #77 → #86**. The refreshed heads preserve predecessor ancestry, so each PR's diff shrinks after its predecessor merges. Avoid squash/rebase merges for this stack; they discard the ancestry used to prevent repeated conflicts.
+
+1. #78: independent E10 study materials, placed first to avoid another AI-log collision. This is preparation, not completed sessions.
+2. #76: town reference map and accessible details.
+3. #85: member input/editing and ranked comparisons, composed with #76; includes neutral service-error guidance for writes whose result is uncertain.
+4. #77: empty/error recovery, retaining both the ranked comparisons and map; includes the preference-safe timeout wording and regression.
+5. #86: validation focus/contrast, combined browser QA, reproducible demo and initial presentation.
+
+All contributions and both acceptance/browser evidence ignore paths are preserved. Local checks and synthetic browser proof do not close the issues' real-data/deployed acceptance gates. This sequence is prepared and pushed for review; no upstream PR was merged during the integration work. Recheck current main and CI before an eventual merge if unrelated work lands meanwhile.
