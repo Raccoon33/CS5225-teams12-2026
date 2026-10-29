@@ -298,6 +298,33 @@ it('reopens saved edits for the editor and a second member with separate fresh q
   expect(last.headers.get('authorization')).toBe(`Bearer ${'N'.repeat(43)}`);
 });
 
+it.each([500, 502, 503, 504])(
+  'does not promise unchanged preferences after a committed PUT returns %s',
+  async (status) => {
+    const serverGroup = readyGroup();
+    transport.mockImplementation(async (input) => {
+      const body = await (input as Request).json();
+      serverGroup.members[0]!.budget = body.budget;
+      return json({ error: { code: 'SERVICE_UNAVAILABLE' } }, status);
+    });
+    mount();
+    field('Your monthly rent budget (SGD)', '1850');
+    submit();
+    await screen.findByText(/Could not save your preferences/);
+    expect(serverGroup.members[0]!.budget).toBe(1850);
+    expect(screen.queryByText(/saved group inputs are unchanged/)).toBeNull();
+    expect(screen.getByText(/Refresh your group to confirm/)).toBeTruthy();
+    expect(saved).not.toHaveBeenCalled();
+    expect(
+      (
+        screen.getByLabelText(
+          'Your monthly rent budget (SGD)',
+        ) as HTMLInputElement
+      ).value,
+    ).toBe('1850');
+  },
+);
+
 it('does not claim a timed-out PUT left saved preferences unchanged', async () => {
   const serverGroup = readyGroup();
   transport.mockImplementation(async (input) => {
