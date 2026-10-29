@@ -384,3 +384,9 @@ For future entries, record the requested issue, tool, contribution, checks actua
 - Tool: Codex, directed by Mani.
 - Contribution: made one-block summaries low-confidence, fenced same-month pointer updates by raw retrieval time, versioned summary snapshot IDs by aggregation algorithm, and corrected the UTC EventBridge date.
 - Verification: added regressions for the confidence and pointer/versioning rules; deployment remains pending merge and shared-account acceptance.
+
+## 28 October 2026 — shared dev redeployment checks
+
+- Tool: Claude Code (Claude Opus 5.5), directed by Shyam.
+- Contribution: decoded and validated the new OneMap token locally (claims and expiry; live search, nearest-station and routing calls through the API's own `find_places`, without writing the token to any file). Ran the read-only `cdk diff` for main `b4a4434`, identified that it would undo Mani's unmerged #75 deployment (schedule and `ListBucket` permission), confirmed via read-only queries that no rent had been published, and posted the heads-up on #75. Shyam wrote the secret and ran the deploy; the assistant's own secret write was blocked by the permission classifier. After the deploy, ran read-only stack and endpoint checks and the #29 journey against the shared URL, and recorded the results in `docs/aws-dev-handoff.md`.
+- Not done: no rent publication, worker deployment or token rotation; those remain #10/#75, #15/#74 and #72.
