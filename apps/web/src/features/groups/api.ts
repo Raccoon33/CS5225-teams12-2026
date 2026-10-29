@@ -74,7 +74,7 @@ function unwrap<T>(result: {
     CONFLICT: 'The group changed at the same time. Refresh it and try again.',
     RATE_LIMITED: 'Too many requests. Wait a moment, then try again.',
     SERVICE_UNAVAILABLE:
-      'The service or rental data is temporarily unavailable. Your saved group inputs are unchanged.',
+      'The service or rental data is temporarily unavailable. Refresh your group to confirm its saved inputs before retrying.',
   };
   throw new ApiError(
     result.response?.status ?? 0,

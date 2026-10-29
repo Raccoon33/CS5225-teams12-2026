@@ -110,7 +110,7 @@ describe('real search lifecycle UI', () => {
       screen.getByRole('button', { name: 'Find our neighbourhoods' }),
     );
     await screen.findByText('Could not start the search');
-    expect(screen.getByText(/saved group inputs are unchanged/)).toBeTruthy();
+    expect(screen.getByText(/Refresh your group to confirm/)).toBeTruthy();
     expect(transport).toHaveBeenCalledTimes(1);
     fireEvent.click(
       screen.getByRole('button', { name: 'Find our neighbourhoods' }),
